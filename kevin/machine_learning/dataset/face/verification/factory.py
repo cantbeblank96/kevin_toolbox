@@ -1,5 +1,6 @@
 import numpy as np
 import torch
+from kevin.machine_learning.patch_for_torch.dimension import compatible_tile as torch_tile
 from kevin.data_flow.reader import Unified_Reader_Base, UReader
 
 
@@ -192,7 +193,7 @@ class Face_Verification_DataSet_Factory:
                                        dtype=torch.float32)
             # samples [i_len, j_len, 2]
             res["samples"] = torch.stack(
-                (torch.tile(fid_outer_i, (1, j_len)), torch.tile(fid_outer_j.t(), (i_len, 1))), dim=2)
+                (torch_tile(fid_outer_i, (1, j_len)), torch_tile(fid_outer_j.t(), (i_len, 1))), dim=2)
 
         # reshape 并转换为 np.array
         for key in need_to_generate:
