@@ -39,9 +39,14 @@
       - my_around() 保留到指定的小数位数。（类似于 np.around() 函数）
       - get_y_at_x() 对于 xs :=> ys 定义的离散函数，获取给定 x 下 y 的取值
 
-    - dimension：与维度变换相关
-      - compatible_tile 兼容低版本pytorch的torch.tile
+    - compatible：兼容低版本pytorch
+      - tile
+      - where
 
+- env_info：与环境的配置、版本有关
+  - version
+    - parse_to_array 将版本的字符串转换为数组的形式
+    - compare 在两个版本号之间比较大小
 - developing：一些正在开发中的模块，开发完并通过测试后，将整合到其他package下。
   - decorator：装饰器
     - restore_original_work_path 装饰器，在运行函数 func 前备份当前工作目录，并在函数运行结束后还原到原始工作目录。

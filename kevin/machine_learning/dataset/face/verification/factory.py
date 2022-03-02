@@ -1,6 +1,6 @@
 import numpy as np
 import torch
-from kevin.machine_learning.patch_for_torch.dimension import compatible_tile as torch_tile
+from kevin.machine_learning.patch_for_torch.compatible import tile as torch_tile
 from kevin.data_flow.reader import Unified_Reader_Base, UReader
 
 

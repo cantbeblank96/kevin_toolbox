@@ -1,5 +1,6 @@
 import torch
 from .convert import convert_to_numpy
+from kevin.machine_learning.patch_for_torch.compatible import where as torch_where
 
 # 计算设备（尽量使用gpu来加速计算）
 device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
@@ -7,32 +8,32 @@ device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cp
 
 def merge_cfm_ls(cfm_ls, to_numpy=True, **kwargs):
     """
-    将多个混淆矩阵进行合并
+        将多个混淆矩阵进行合并
 
-    参数：
-        cfm_ls:                 list of confusion_matrices，每个 confusion matrices 都是一个包含
-                                thresholds、tp_ls、tn_ls、fp_ls、fn_ls 等字段的 dict
-                                        其具体介绍参见函数 binary_classification.cal_cfm()
-        to_numpy（可选）:           boolean，是否将结果从 tensor 转换为 numpy
-                                        默认为True
-    工作流程：
-        我们以合并两个 confusion_matrices 为例，
-            对于递增的 tp_ls 字段，
-                首先计算它的每两个相邻的 threshold 之间 tp 的差值：
-                    diff_tp_ls = tp_ls.copy()
-                    diff_tp_ls[1:] -= tp_ls[:-1]  # 其中 diff_tp_ls[m] 表示 threshold=thresholds[m] 时刚好取到的 tp 样本
-                然后根据 thresholds，对两个 diff_tp_ls 进行合并，比如：
-                    thresholds_0：   [0.9, 0.8, 0,7]
-                    diff_tp_ls_0：   [1, 4, 5]
-                    thresholds_1：   [0.8, 0.6, 0,5]
-                    diff_tp_ls_1：   [2, 3, 7]
-                那么合并后就是：
-                    thresholds：     [0.9, 0.8, 0,7, 0.6, 0,5]
-                    diff_tp_ls：     [1, 4+2, 5, 3, 7]
-                最后再根据 diff_tp_ls，使用 cumsum 累积出合并后的 tp_ls：
-                    tp_ls:          [1, 7, 12, 15, 22]
-            对于递增的 fp_ls 字段也有类似的操作，
-            对于递减的 tn_ls 和 fn_ls 字段，则根据 tp_ls、fp_ls 得出。
+        参数：
+            cfm_ls:                 list of confusion_matrices，每个 confusion matrices 都是一个包含
+                                    thresholds、tp_ls、tn_ls、fp_ls、fn_ls 等字段的 dict
+                                            其具体介绍参见函数 binary_classification.cal_cfm()
+            to_numpy（可选）:           boolean，是否将结果从 tensor 转换为 numpy
+                                            默认为True
+        工作流程：
+            我们以合并两个 confusion_matrices 为例，
+                对于递增的 tp_ls 字段，
+                    首先计算它的每两个相邻的 threshold 之间 tp 的差值：
+                        diff_tp_ls = tp_ls.copy()
+                        diff_tp_ls[1:] -= tp_ls[:-1]  # 其中 diff_tp_ls[m] 表示 threshold=thresholds[m] 时刚好取到的 tp 样本
+                    然后根据 thresholds，对两个 diff_tp_ls 进行合并，比如：
+                        thresholds_0：   [0.9, 0.8, 0,7]
+                        diff_tp_ls_0：   [1, 4, 5]
+                        thresholds_1：   [0.8, 0.6, 0,5]
+                        diff_tp_ls_1：   [2, 3, 7]
+                    那么合并后就是：
+                        thresholds：     [0.9, 0.8, 0,7, 0.6, 0,5]
+                        diff_tp_ls：     [1, 4+2, 5, 3, 7]
+                    最后再根据 diff_tp_ls，使用 cumsum 累积出合并后的 tp_ls：
+                        tp_ls:          [1, 7, 12, 15, 22]
+                对于递增的 fp_ls 字段也有类似的操作，
+                对于递减的 tn_ls 和 fn_ls 字段，则根据 tp_ls、fp_ls 得出。
     """
     assert isinstance(cfm_ls, (list,)) and len(cfm_ls) > 0
 
@@ -65,8 +66,8 @@ def merge_cfm_ls(cfm_ls, to_numpy=True, **kwargs):
     # 去除相同 threshold 下的结果
     diff_thresholds = res["thresholds"].clone()
     diff_thresholds[:-1] -= res["thresholds"][1:]  # 取梯度
-    diff_thresholds[-1] = -1  # 保证最后一个元素被下面的 patch_for_torch.where 取出
-    diff_indices = torch.where(diff_thresholds != 0)
+    diff_thresholds[-1] = -1  # 保证最后一个元素被下面的 torch.where 取出
+    diff_indices = torch_where(diff_thresholds != 0)
     for key, value in res.items():
         res[key] = value[diff_indices]
 

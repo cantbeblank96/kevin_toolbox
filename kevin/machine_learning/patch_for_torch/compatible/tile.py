@@ -1,6 +1,7 @@
 import torch
+from kevin.env_info import version
 
-low_version = torch.__version__.startswith("1") and int(torch.__version__.split(".", -1)[1]) <= 7
+low_version = version.compare(torch.__version__, "<", "1.8")
 
 
 def compatible_tile(x, multiples):

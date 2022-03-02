@@ -1,5 +1,6 @@
 import torch
 from kevin.machine_learning.patch_for_torch.math import my_around
+from kevin.machine_learning.patch_for_torch.compatible import where as torch_where
 from .convert import convert_to_numpy
 
 # 计算设备（尽量使用gpu来加速计算）
@@ -71,8 +72,8 @@ def cal_cfm(scores, labels, to_numpy=True, decimals_of_scores=None, **kwargs):
     # 找出 scores 不同的取值下的结果
     diff_scores = sorted_scores.clone()
     diff_scores[:-1] -= sorted_scores[1:]  # 取梯度
-    diff_scores[-1, 0] = -1  # 保证最后一个元素被下面的 patch_for_torch.where 取出
-    diff_indices = torch.where(diff_scores != 0)
+    diff_scores[-1, 0] = -1  # 保证最后一个元素被下面的 torch.where 取出
+    diff_indices = torch_where(diff_scores != 0)
     #
     tp_ls = tp_ls[diff_indices]
     fp_ls = fp_ls[diff_indices]
