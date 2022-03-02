@@ -78,6 +78,8 @@ def cal_cfm(scores, labels, to_numpy=True, decimals_of_scores=None, **kwargs):
     tp_ls = tp_ls[diff_indices]
     fp_ls = fp_ls[diff_indices]
 
+    print(44444444444444444444444444,fp_ls)
+
     res = dict(thresholds=sorted_scores[diff_indices],
                tp_ls=tp_ls, fp_ls=fp_ls,
                tn_ls=fp_ls[-1] - fp_ls, fn_ls=tp_ls[-1] - tp_ls)

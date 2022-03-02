@@ -16,13 +16,14 @@ def compatible_where(*args):
     global low_version
 
     if len(args) == 1 and low_version:
-        return np.where(*args)
+        return np.where(args[0].cpu())
     else:
         return torch.where(*args)
 
 
 if __name__ == '__main__':
-    x_ = torch.tensor([[1], [2], [3]])
+    device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+    x_ = torch.tensor([[1], [2], [3]], device=device)
 
     print(f"x {x_}, res {compatible_where(x_ > 0)}")
 
