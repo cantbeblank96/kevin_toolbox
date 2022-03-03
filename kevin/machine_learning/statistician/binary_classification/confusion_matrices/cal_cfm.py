@@ -66,8 +66,8 @@ def cal_cfm(scores, labels, to_numpy=True, decimals_of_scores=None, **kwargs):
 
     # 统计取前 m 个预测为正时，模型的预测结果
     # 其中 tp_ls[m] 表示前 m 个样本中，都多少个是label为真的。
-    tp_ls = torch.cumsum(sorted_labels, dim=0, dtype=torch.int32)
-    fp_ls = torch.cumsum(sorted_labels == 0, dim=0, dtype=torch.int32)
+    tp_ls = torch.cumsum(sorted_labels, dim=0, dtype=torch.int64)
+    fp_ls = torch.cumsum(sorted_labels == 0, dim=0, dtype=torch.int64)
 
     # 找出 scores 不同的取值下的结果
     diff_scores = sorted_scores.clone()

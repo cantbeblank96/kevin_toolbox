@@ -61,7 +61,7 @@ def merge_cfm_ls(cfm_ls, to_numpy=True, **kwargs):
     # 按照 thresholds 从大到小进行排序，然后进行累加
     res["thresholds"], sorted_indices = torch.sort(res["thresholds"], descending=True, dim=0)
     for key in {"tp_ls", "fp_ls"}:
-        res[key] = torch.cumsum(res[key][sorted_indices.reshape(-1)], dim=0)
+        res[key] = torch.cumsum(res[key][sorted_indices.reshape(-1)], dim=0, dtype=torch.int64)
 
     # 去除相同 threshold 下的结果
     diff_thresholds = res["thresholds"].clone()
