@@ -182,7 +182,7 @@ class Face_Verification_DataSet_Factory:
             cluster_outer_j = torch.tensor(self.paras["clusters"].read(j_0, j_1), device=self.device,
                                            dtype=torch.float32)
             # labels [i_len, j_len, 1]
-            res["labels"] = (cluster_outer_i == cluster_outer_j.t()).unsqueeze(-1)
+            res["labels"] = (cluster_outer_i.reshape(-1, 1) == cluster_outer_j.reshape(1, -1)).unsqueeze(-1)
 
         # 计算 samples
         if "samples" in need_to_generate:
