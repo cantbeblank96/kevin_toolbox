@@ -47,7 +47,7 @@ def merge_cfm_ls(cfm_ls, to_numpy=True, **kwargs):
                 tensor_ls.append(prediction[key].to(device))
             else:
                 tensor_ls.append(torch.tensor(prediction[key], device=device))
-        res[key] = torch.concat(tensor_ls, dim=0)
+        res[key] = torch.cat(tensor_ls, dim=0)
         temp[key] = tensor_ls
 
     # 计算 diff
