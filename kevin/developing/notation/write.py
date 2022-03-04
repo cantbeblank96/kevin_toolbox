@@ -123,6 +123,7 @@ class Kevin_Notation_Writer:
 
     # ------------------------------------ magic func ------------------------------------ #
 
+    # self.key = value
     def __setattr__(self, key, value):
         """
             支持直接通过 self.key = value 的方式来写入 metadata 和 contents
@@ -137,6 +138,13 @@ class Kevin_Notation_Writer:
                 self.write_metadata(key, value)
             else:
                 self.write_contents(value)
+
+    # with 上下文管理器
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        del self
 
     def __del__(self):
         try:
@@ -162,3 +170,14 @@ if __name__ == "__main__":
     writer.contents_begin()
     writer.contents = values
     writer.contents_end()
+
+    with Kevin_Notation_Writer(file_path="./test2.txt") as writer:
+        writer.metadata_begin()
+        writer.title = "this is the title"
+        writer.column_name = ["epoch", "loss", "model_name"]
+        writer.column_type = {"value": ["int", "float", "str"], "sep": " "}
+        writer.metadata_end()
+
+        writer.contents_begin()
+        writer.contents = values
+        writer.contents_end()
