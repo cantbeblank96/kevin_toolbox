@@ -7,8 +7,8 @@ if __name__ == '__main__':
     print("构造测试数据")
 
     # all
-    dummy_factory = dummy.Factory(human_nums=50, dims_of_feature=256, gallery_nums=30)
-    data = dummy_factory.generate(nums=100)
+    dummy_factory = dummy.Factory(human_nums=50, dims_of_feature=25, gallery_nums=30)
+    data = dummy_factory.generate(nums=20)
     # print(data)
 
     print("构造数据集")
@@ -19,7 +19,7 @@ if __name__ == '__main__':
     print(dataset.keys())
     print(dataset)
 
-    dataset = factory.generate_by_samples(np.array(list(zip([1, 2, 3], [4, 5, 6]))))
+    dataset = factory.generate_by_samples(np.array(list(zip([11, 16, 17], [11, 16, 17]))))
     print(dataset.keys())
     print(dataset)
 
