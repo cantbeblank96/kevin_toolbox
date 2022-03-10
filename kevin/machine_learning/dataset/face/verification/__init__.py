@@ -1,3 +1,5 @@
 from .factory import Face_Verification_DataSet_Factory as Factory
 from .generator_by_block import get_generator_by_block
 from .generator_by_samples import get_generator_by_samples
+from .get_generator import get_generator_by_samples as get_generator_by_samples_2
+from .get_generator import get_generator_by_block as get_generator_by_block_2

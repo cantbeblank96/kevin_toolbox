@@ -27,8 +27,8 @@ if __name__ == '__main__':
 
     print("构造迭代器")
 
-    generator = verification.get_generator_by_block(mode="triangle", factory=factory, chunk_step=30,
-                                                    need_to_generate={"scores", "labels", "samples"})
+    generator = verification.get_generator_by_block_2(mode="triangle", factory=factory, chunk_step=30,
+                                                      need_to_generate={"scores", "labels", "samples"})
     lens = []
     for db in generator:
         lens.append(len(db["scores"]))
@@ -37,8 +37,8 @@ if __name__ == '__main__':
 
     #
     samples = UReader(var=np.array(list(zip([1, 2, 3], [4, 5, 6]))))
-    generator = verification.get_generator_by_samples(samples=samples, factory=factory, chunk_step=2,
-                                                      need_to_generate={"scores", "labels", "samples"})
+    generator = verification.get_generator_by_samples_2(samples=samples, factory=factory, chunk_step=2,
+                                                        need_to_generate={"scores", "labels", "samples"})
     lens = []
     for db in generator:
         lens.append(len(db["scores"]))

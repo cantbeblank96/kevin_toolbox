@@ -4,7 +4,7 @@ import os
 class File_Iterative_Reader:
     """
         分批次读取文件内容的迭代器
-        a generator to read the file piece by piece
+        a get_generator to read the file piece by piece
     """
 
     def __init__(self, **kwargs):

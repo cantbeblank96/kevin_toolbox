@@ -127,6 +127,29 @@ class Face_Verification_DataSet_Factory:
         # 计算设备（尽量使用gpu来加速计算）
         self.device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
+    @staticmethod
+    def __check_paras_of_block(i_0, i_1, j_0, j_1, **kwargs):
+        """
+            检查 generate_by_block() 的输入参数
+        """
+        # (i_0, i_1, j_0, j_1)
+        i_len = i_1 - i_0 if isinstance(i_0, (int,)) else len(i_0)
+        j_len = j_1 - j_0 if isinstance(j_0, (int,)) else len(j_0)
+        assert i_len > 0 and j_len > 0
+
+        # pick_triangle
+        pick_triangle = kwargs.get("pick_triangle", False)
+
+        # include_diagonal
+        include_diagonal = kwargs.get("include_diagonal", True)
+
+        # need_to_generate
+        __support_to_generate = {"scores", "labels", "samples"}
+        need_to_generate = kwargs.get("need_to_generate", __support_to_generate)
+        assert isinstance(need_to_generate, (set,)) and need_to_generate.issubset(__support_to_generate)
+
+        return i_len, j_len, pick_triangle, include_diagonal, need_to_generate
+
     def generate_by_block(self, i_0, i_1, j_0, j_1, **kwargs):
         """
             根据 feature_id 的相互矩阵来构建数据集
@@ -150,18 +173,9 @@ class Face_Verification_DataSet_Factory:
                 need_to_generate:   指定数据集中需要生成的字段
                                         目前支持的字段有： {"scores", "labels", "samples"}
         """
-        i_len = i_1 - i_0 if isinstance(i_0, (int,)) else len(i_0)
-        j_len = j_1 - j_0 if isinstance(j_0, (int,)) else len(j_0)
-        assert i_len > 0 and j_len > 0
-        # print(i_0, i_1, j_0, j_1)
-
-        pick_triangle = kwargs.get("pick_triangle", False)
-        include_diagonal = kwargs.get("include_diagonal", True)
-
-        __support_to_generate = {"scores", "labels", "samples"}
-        need_to_generate = kwargs.get("need_to_generate", __support_to_generate)
-        assert isinstance(need_to_generate, (set,)) and need_to_generate.issubset(__support_to_generate)
-
+        i_len, j_len, pick_triangle, include_diagonal, need_to_generate = self.__check_paras_of_block(i_0, i_1,
+                                                                                                      j_0, j_1,
+                                                                                                      **kwargs)
         res = dict()
 
         # 计算 scores
@@ -208,6 +222,40 @@ class Face_Verification_DataSet_Factory:
 
         return res
 
+    def cal_size_of_block(self, i_0, i_1, j_0, j_1, **kwargs):
+        """
+            计算 generate_by_block() 将会产生的数据集的大小
+            参数：
+                与 generate_by_block() 完全相同
+        """
+        i_len, j_len, pick_triangle, include_diagonal, _ = self.__check_paras_of_block(i_0, i_1, j_0, j_1, **kwargs)
+        if pick_triangle:
+            offset = 0 if include_diagonal else 1
+            size = (j_len - offset) * (j_len + 1 - offset)
+            if i_len < j_len:
+                size -= (j_len - i_len - offset) * (j_len - i_len + 1 - offset)
+            size /= 2
+        else:
+            size = i_len * j_len
+        return int(size)
+
+    def __check_paras_of_samples(self, samples, **kwargs):
+        """
+            检查 generate_by_samples() 的输入参数
+        """
+        # samples
+        assert samples.ndim == 2 and samples.shape[1] == 2, \
+            Exception(f"Error: shape {samples.shape} of samples does not satisfy [sample_nums, 2]!")
+
+        # need_to_generate
+        __support_to_generate = {"scores", "labels", "samples"}
+        need_to_generate = kwargs.get("need_to_generate", __support_to_generate)
+        assert isinstance(need_to_generate, (set,)) and need_to_generate.issubset(__support_to_generate)
+
+        # feature_ids_is_sequential
+        feature_id_is_sequential = kwargs.get("feature_id_is_sequential", self.paras["feature_ids_is_sequential"])
+        return samples, need_to_generate, feature_id_is_sequential
+
     def generate_by_samples(self, samples, **kwargs):
         """
             根据输入的 samples 来生成数据集
@@ -226,14 +274,7 @@ class Face_Verification_DataSet_Factory:
                                         对于任意的 feature_id，就可以直接根据找到的关系式 index = feature_id + offset，
                                         检索到对应的 feature = features[index]，提高检索效率。
         """
-        assert samples.ndim == 2 and samples.shape[1] == 2, \
-            Exception(f"Error: shape {samples.shape} of samples does not satisfy [sample_nums, 2]!")
-
-        __support_to_generate = {"scores", "labels", "samples"}
-        need_to_generate = kwargs.get("need_to_generate", __support_to_generate)
-        assert isinstance(need_to_generate, (set,)) and need_to_generate.issubset(__support_to_generate)
-
-        feature_id_is_sequential = kwargs.get("feature_id_is_sequential", self.paras["feature_ids_is_sequential"])
+        samples, need_to_generate, feature_id_is_sequential = self.__check_paras_of_samples(samples, **kwargs)
 
         # 获取 index
         if feature_id_is_sequential:
