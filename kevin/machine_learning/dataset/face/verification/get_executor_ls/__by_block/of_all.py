@@ -1,13 +1,13 @@
 from kevin.developing.executor import Executor
-from .along_axis import get_executor_ls_along_axis
+from .along_axis import get_executor_ls_by_block_along_axis
 
 
 def get_executor_ls_by_block_of_all(factory, chunk_step, need_to_generate, **kwargs):
     """
         通过调用 verification.Factory 中的 generate_by_block() 函数，
             来对整个矩阵，
-            生成一系列的执行器 get_executor_ls，
-            每个执行器在被 get_executor_ls() 调用后都将返回一个数据集
+            生成一系列的执行器 executor_ls，
+            每个执行器在被 executor() 调用后都将返回一个数据集
         参数：
             factory:                verification.Factory 实例
             chunk_step:             每个分块的大小
@@ -49,13 +49,13 @@ def get_executor_ls_by_block_of_all(factory, chunk_step, need_to_generate, **kwa
     # 注意：
     #     对于最后一个可能残缺的矩阵（亦即大小不满足下界），
     #     该部分将与接下来的最后一列的部分头部组成一个dataset
-    executor_ls_temp, size_ls_temp = get_executor_ls_along_axis(factory,
-                                                                i_0=(chunk_nums - 1) * chunk_step,
-                                                                i_1=width,
-                                                                j_0=0,
-                                                                j_1=width,
-                                                                axis_to_split="j", size_upper=size_upper,
-                                                                need_to_generate=need_to_generate)
+    executor_ls_temp, size_ls_temp = get_executor_ls_by_block_along_axis(factory,
+                                                                         i_0=(chunk_nums - 1) * chunk_step,
+                                                                         i_1=width,
+                                                                         j_0=0,
+                                                                         j_1=width,
+                                                                         axis_to_split="j", size_upper=size_upper,
+                                                                         need_to_generate=need_to_generate)
     executor_ls.extend(executor_ls_temp)
     size_ls.extend(size_ls_temp)
 
@@ -69,15 +69,15 @@ def get_executor_ls_by_block_of_all(factory, chunk_step, need_to_generate, **kwa
     #     dataset_size <= chunk_step * (chunk_step + 1)
     # 这里承接上面的  res
     if chunk_nums > 1:
-        executor_ls_temp, size_ls_temp = get_executor_ls_along_axis(factory,
-                                                                    i_0=0,
-                                                                    i_1=(chunk_nums - 1) * chunk_step,
-                                                                    j_0=(chunk_nums - 1) * chunk_step,
-                                                                    j_1=width,
-                                                                    axis_to_split="i", size_upper=size_upper,
-                                                                    need_to_generate=need_to_generate,
-                                                                    pre_executor=executor_ls.pop(-1),
-                                                                    pre_size=size_ls.pop(-1))
+        executor_ls_temp, size_ls_temp = get_executor_ls_by_block_along_axis(factory,
+                                                                             i_0=0,
+                                                                             i_1=(chunk_nums - 1) * chunk_step,
+                                                                             j_0=(chunk_nums - 1) * chunk_step,
+                                                                             j_1=width,
+                                                                             axis_to_split="i", size_upper=size_upper,
+                                                                             need_to_generate=need_to_generate,
+                                                                             pre_executor=executor_ls.pop(-1),
+                                                                             pre_size=size_ls.pop(-1))
         executor_ls.extend(executor_ls_temp)
         size_ls.extend(size_ls_temp)
 

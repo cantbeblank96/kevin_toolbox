@@ -1,11 +1,14 @@
 from kevin.machine_learning.dataset.face import dummy, verification
 from kevin.data_flow.reader import UReader
+import numpy as np
+import torch
+
+seed = 233
+np.random.seed(seed)
+torch.manual_seed(seed)
+torch.cuda.manual_seed_all(seed)
 
 if __name__ == '__main__':
-    import numpy as np
-
-    np.random.seed(123)
-
     print("构造测试数据")
 
     # all
@@ -13,7 +16,7 @@ if __name__ == '__main__':
     data = dummy_factory.generate(nums=20)
     # print(data)
 
-    print("构造数据集")
+    print("测试 Factory")
 
     factory = verification.Factory(features=UReader(var=data["features"]),
                                    clusters=UReader(var=data["clusters"]))
@@ -25,22 +28,31 @@ if __name__ == '__main__':
     print(dataset.keys())
     print(dataset)
 
-    print("构造迭代器")
+    print("测试 executor、generator")
 
-    generator = verification.get_generator_by_block(mode="triangle", factory=factory, chunk_step=30,
-                                                    need_to_generate={"scores", "labels", "samples"})
+    # executor_ls
+    executor_ls, size_ls = verification.get_executor_ls.by_block(mode="triangle", factory=factory, chunk_step=30,
+                                                                 need_to_generate={"scores", "labels", "samples"})
+    # generator
+    generator = verification.build_generator(executor_ls, size_ls)
     lens = []
-    for db in generator:
-        lens.append(len(db["scores"]))
+    for i, db in enumerate(generator):
+        lens.append(size_ls[i])
         print(lens[-1])
     print(f"sum {sum(lens)}")
 
-    #
+    print("测试 executor、iterator")
+
+    # executor_ls
     samples = UReader(var=np.array(list(zip([1, 2, 3], [4, 5, 6]))))
-    generator = verification.get_generator_by_samples(samples=samples, factory=factory, chunk_step=2,
-                                                      need_to_generate={"scores", "labels", "samples"})
+    executor_ls, size_ls = verification.get_executor_ls.by_samples(samples=samples, factory=factory, chunk_step=2,
+                                                                   need_to_generate={"scores", "labels", "samples"})
+
+    # iterator
+    iterator = verification.build_iterator(executor_ls, size_ls)
     lens = []
-    for db in generator:
-        lens.append(len(db["scores"]))
+    for i, db in enumerate(iterator):
+        lens.append(size_ls[i])
         print(lens[-1])
+        print(db)
     print(f"sum {sum(lens)}")

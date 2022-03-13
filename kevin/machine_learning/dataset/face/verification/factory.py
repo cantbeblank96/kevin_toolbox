@@ -3,6 +3,8 @@ import torch
 from kevin.machine_learning.patch_for_torch.compatible import tile as torch_tile
 from kevin.data_flow.reader import Unified_Reader_Base, UReader
 
+SUPPORT_TO_GENERATE = {"scores", "labels", "samples"}
+
 
 class Face_Verification_DataSet_Factory:
     """
@@ -144,9 +146,12 @@ class Face_Verification_DataSet_Factory:
         include_diagonal = kwargs.get("include_diagonal", True)
 
         # need_to_generate
-        __support_to_generate = {"scores", "labels", "samples"}
-        need_to_generate = kwargs.get("need_to_generate", __support_to_generate)
-        assert isinstance(need_to_generate, (set,)) and need_to_generate.issubset(__support_to_generate)
+        need_to_generate = kwargs.get("need_to_generate", None)
+        if need_to_generate is not None:
+            assert isinstance(need_to_generate, (set,)) and need_to_generate.issubset(SUPPORT_TO_GENERATE),\
+                ValueError(f"need_to_generate should be a subset of {SUPPORT_TO_GENERATE}")
+        else:
+            need_to_generate = SUPPORT_TO_GENERATE
 
         return i_len, j_len, pick_triangle, include_diagonal, need_to_generate
 
@@ -248,9 +253,12 @@ class Face_Verification_DataSet_Factory:
             Exception(f"Error: shape {samples.shape} of samples does not satisfy [sample_nums, 2]!")
 
         # need_to_generate
-        __support_to_generate = {"scores", "labels", "samples"}
-        need_to_generate = kwargs.get("need_to_generate", __support_to_generate)
-        assert isinstance(need_to_generate, (set,)) and need_to_generate.issubset(__support_to_generate)
+        need_to_generate = kwargs.get("need_to_generate", None)
+        if need_to_generate is not None:
+            assert isinstance(need_to_generate, (set,)) and need_to_generate.issubset(SUPPORT_TO_GENERATE), \
+                ValueError(f"need_to_generate should be a subset of {SUPPORT_TO_GENERATE}")
+        else:
+            need_to_generate = SUPPORT_TO_GENERATE
 
         # feature_ids_is_sequential
         feature_id_is_sequential = kwargs.get("feature_id_is_sequential", self.paras["feature_ids_is_sequential"])

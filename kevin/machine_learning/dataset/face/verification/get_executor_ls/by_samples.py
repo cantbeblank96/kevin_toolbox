@@ -1,37 +1,58 @@
 from kevin.developing.executor import Executor
+from kevin.data_flow.reader import Unified_Reader_Base
+from kevin.machine_learning.dataset.face.verification import Factory
 
 
-def get_executor_ls_by_samples(factory, samples, chunk_step, need_to_generate, **kwargs):
+def get_executor_ls_by_samples(factory, samples, **kwargs):
     """
         通过调用 verification.Factory 中的 generate_by_samples() 函数，
-            来根据 samples 生成一系列的执行器 get_executor_ls，
-            每个执行器在被 get_executor_ls() 调用后都将返回一个数据集
+            来根据 samples 生成一系列的执行器 executor_ls，
+            每个执行器在被 executor() 调用后都将返回一个数据集
+
         参数：
-            factory:                verification.Factory 实例
             samples:                list of feature_id pairs
                                         np.array with dtype=np.int
                                         shape [sample_nums, 2]
                                         需要被 Unified_Reader_Base 包裹
-            chunk_step:             每个分块的大小
+            factory:                verification.Factory 实例
+
+        设定数据集大小：
+            chunk_step:             每次返回的数据集的大小的上界（根据实际内存容量来选择）
+            upper_bound_of_dataset_size：    chunk_step 参数的别名
+                                        同时设置时，以两者最小值为准。
+
+        输入到 Factory.generate_by_samples 中：
             need_to_generate:       需要生成的字段
                                         （参见 Factory.generate_by_samples() 中的介绍）
             feature_ids_is_sequential:       boolean，feature_ids 是否以1为间距递增的
                                         （参见 Factory.generate_by_samples() 中的介绍）
+
         返回：
             executor_ls：            list of get_executor_ls that can generate dataset by using get_executor_ls()
             size_ls：                产生的数据集的预期大小
     """
+    "paras"
+    # 校验参数
+    # samples
+    assert isinstance(samples, (Unified_Reader_Base,)), \
+        Exception(f"The type of input factory should be {Unified_Reader_Base}, but get a {type(samples)}!")
+    # factory
+    assert isinstance(factory, (Factory,)), \
+        Exception(f"The type of input factory should be {Factory}, but get a {type(factory)}!")
+    # chunk_step / upper_bound_of_dataset_size
+    chunk_step = min([kwargs.get("upper_bound_of_dataset_size", len(samples)), kwargs.get("chunk_step", len(samples))])
+    assert isinstance(chunk_step, (int,)) and chunk_step > 0
+
+    "body"
     executor_ls, size_ls = [], []
     #
-    len_ = len(samples)
     count = 0
-    while count < len_:
+    while count < len(samples):
         # step
-        step = min(chunk_step, len_ - count)
+        step = min(chunk_step, len(samples) - count)
         # 计算
         executor_ls.append(Executor(func=factory.generate_by_samples,
-                                    f_kwargs=dict(samples=Executor(func=samples.read, args=[count, count + step]),
-                                                  need_to_generate=lambda: need_to_generate),
+                                    f_kwargs=dict(samples=Executor(func=samples.read, args=[count, count + step])),
                                     kwargs=kwargs))
         size_ls.append(step)
         #

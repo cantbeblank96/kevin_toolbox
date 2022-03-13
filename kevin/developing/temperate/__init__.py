@@ -13,3 +13,4 @@ get_generator（生成器）
 from .my_iterator_base import My_Iterator_Base
 from .iterator_base import Iterator_Base
 from .sequence_map_base import Sequence_Map_Base
+from .my_iterator import My_Iterator

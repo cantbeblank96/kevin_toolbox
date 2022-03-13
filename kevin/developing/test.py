@@ -1,7 +1,7 @@
-from kevin.developing.temperate.my_list import My_list
+from kevin.developing.temperate.my_iterator import My_Iterator
 
 if __name__ == '__main__':
-    a = My_list([1, 2, 3, 4, 5])
+    a = My_Iterator([1, 2, 3, 4, 5])
     a.set_range(1, 3)
     print(len(a))
     for i in a:

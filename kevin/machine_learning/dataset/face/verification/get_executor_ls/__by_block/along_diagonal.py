@@ -2,13 +2,13 @@ from kevin.developing.executor import Executor
 from kevin.machine_learning.dataset.face.verification.merge import merge
 
 
-def get_executor_ls_along_diagonal(factory, i_0, i_1, j_0, j_1, chunk_step, need_to_generate,
-                                   pick_triangle=True, include_diagonal=True):
+def get_executor_ls_by_block_along_diagonal(factory, i_0, i_1, j_0, j_1, chunk_step, need_to_generate,
+                                            pick_triangle=True, include_diagonal=True):
     """
         通过调用 verification.Factory 中的 generate_by_block() 函数，
             来在（i_0, i_1, j_0, j_1）指定的子矩阵范围内，
-            沿着 对角线，以 chunk_step 为间隔生成一系列的执行器 get_executor_ls，
-            每个执行器在被 get_executor_ls() 调用后都将返回一个数据集
+            沿着 对角线，以 chunk_step 为间隔生成一系列的执行器 executor_ls，
+            每个执行器在被 executor() 调用后都将返回一个数据集
         参数：
             factory:                verification.Factory 实例
             i_0, i_1, j_0, j_1:     子矩阵的范围
