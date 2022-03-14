@@ -40,8 +40,13 @@ def get_executor_ls_by_samples(factory, samples, **kwargs):
     assert isinstance(factory, (Factory,)), \
         Exception(f"The type of input factory should be {Factory}, but get a {type(factory)}!")
     # chunk_step / upper_bound_of_dataset_size
-    chunk_step = min([kwargs.get("upper_bound_of_dataset_size", len(samples)), kwargs.get("chunk_step", len(samples))])
-    assert isinstance(chunk_step, (int,)) and chunk_step > 0
+    temp_ls = []
+    if kwargs["upper_bound_of_dataset_size"] is not None:
+        temp_ls.append(kwargs["upper_bound_of_dataset_size"])
+    if kwargs["chunk_step"] is not None:
+        temp_ls.append(kwargs["chunk_step"])
+    assert len(temp_ls) > 0
+    chunk_step = min(temp_ls)
 
     "body"
     executor_ls, size_ls = [], []

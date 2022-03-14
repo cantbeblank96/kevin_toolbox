@@ -35,7 +35,7 @@ def get_executor_ls_by_block(**kwargs):
         "chunk_step": None,
         "upper_bound_of_dataset_size": None,
         "need_to_generate": None,
-        "include_diagonal": True,
+        "include_diagonal": False,
     }
 
     # 获取参数
