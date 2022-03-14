@@ -32,6 +32,14 @@ def get_executor_ls_by_samples(factory, samples, **kwargs):
             size_ls：                产生的数据集的预期大小
     """
     "paras"
+    paras = {
+        "chunk_step": None,
+        "upper_bound_of_dataset_size": None,
+    }
+
+    # 获取参数
+    paras.update(kwargs)
+
     # 校验参数
     # samples
     assert isinstance(samples, (Unified_Reader_Base,)), \
@@ -41,10 +49,10 @@ def get_executor_ls_by_samples(factory, samples, **kwargs):
         Exception(f"The type of input factory should be {Factory}, but get a {type(factory)}!")
     # chunk_step / upper_bound_of_dataset_size
     temp_ls = []
-    if kwargs["upper_bound_of_dataset_size"] is not None:
-        temp_ls.append(kwargs["upper_bound_of_dataset_size"])
-    if kwargs["chunk_step"] is not None:
-        temp_ls.append(kwargs["chunk_step"])
+    if paras["upper_bound_of_dataset_size"] is not None:
+        temp_ls.append(paras["upper_bound_of_dataset_size"])
+    if paras["chunk_step"] is not None:
+        temp_ls.append(paras["chunk_step"])
     assert len(temp_ls) > 0
     chunk_step = min(temp_ls)
 

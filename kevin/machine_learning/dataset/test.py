@@ -31,7 +31,7 @@ if __name__ == '__main__':
     print("测试 executor、generator")
 
     # executor_ls
-    executor_ls, size_ls = verification.get_executor_ls.by_block(mode="triangle", factory=factory, chunk_step=30,
+    executor_ls, size_ls = verification.get_executor_ls.by_block(mode="triangle", factory=factory, chunk_step=2,
                                                                  need_to_generate={"scores", "labels", "samples"})
     # generator
     generator = verification.build_generator(executor_ls, size_ls)
