@@ -150,6 +150,9 @@ class Unified_Reader_Base(ABC):
         end = begin + 1 if end is None else end
         assert begin < end
 
+        if begin >= len(self):
+            return np.array([])
+
         if self.mode == 0:
             data = self.paras["var"][begin:end]
         else:
