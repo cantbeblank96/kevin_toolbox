@@ -7,11 +7,11 @@ class Executor:
         用法：
             1.定义执行过程
                 get_executor_ls = Executor()
-                get_executor_ls.set_config(func = <function>,
-                                    args = <list/tuple>,
-                                    kwargs = <dict>,
-                                    f_args = <list of functions>,
-                                    f_kwargs = <dict of (key, function) pairs>)
+                get_executor_ls.set_config( func = <function>,
+                                            args = <list/tuple>,
+                                            kwargs = <dict>,
+                                            f_args = <list of functions>,
+                                            f_kwargs = <dict of (key, function) pairs>)
                 # 其中 func 是执行过程的主体函数
                 # args 和 kwargs 是运行该函数时，要输入的参数
                 # f_args 和 f_kwargs 的前缀 f_ 是 fixtures 固件的缩写
