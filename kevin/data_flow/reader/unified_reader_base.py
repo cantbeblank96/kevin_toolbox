@@ -202,6 +202,50 @@ class Unified_Reader_Base(ABC):
 
         return data
 
+    # ------------------------------------ 查找数据 ------------------------------------ #
+
+    def find(self, value, try_to_build_hash_table=True, beg_index=0):
+        """
+            查找元素第一次出现的序号。
+                本次改进：
+                原始版本中每次查找都是O(n)的，效率太低。
+                因此加入通过hash表来支持检索的功能，从而将效率提高到O(1)。
+            参数：
+                value：              要检索的元素。
+                beg_index:          从哪个序号（包含给定元素）开始检索。
+                                        默认为0。
+                try_to_build_hash_table:      尝试构建hash表，一次构建，后面可以反复利用，从而加速检索。
+        """
+        assert isinstance(beg_index, (int,)) and 0 <= beg_index < len(self), \
+            f"beg_index should be integer between [0,{len(self)}), but get a {beg_index}!"
+
+        # 尝试创建 hash 表
+        if try_to_build_hash_table and "__hash_table" in self.paras:
+            try:
+                self.index = -1
+                hash_table = dict()
+                for i, j in enumerate(self):
+                    if j not in hash_table:
+                        hash_table[j] = [i]
+                    else:
+                        hash_table[j].append(i)
+                self.paras["__hash_table"] = hash_table
+            except:
+                pass
+
+        if "__hash_table" in self.paras:
+            index_ls = self.paras["__hash_table"].get(value, [])
+            for index in index_ls:
+                # 可以改成二分查找
+                if beg_index<=index:
+                    return index
+        else:
+            self.index = beg_index - 1
+            for i, j in enumerate(self):
+                if j == value:
+                    return i
+        return None
+
     # ------------------------------------ 数据处理 ------------------------------------ #
 
     @abstractmethod
@@ -247,10 +291,3 @@ class Unified_Reader_Base(ABC):
                 else:
                     self.paras["shape"] = []
         return self.paras["shape"]
-
-    def find(self, value):
-        self.index = -1
-        for i, j in enumerate(self):
-            if j == value:
-                return i
-        return None
