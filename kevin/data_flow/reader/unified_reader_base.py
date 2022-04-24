@@ -220,24 +220,26 @@ class Unified_Reader_Base(ABC):
             f"beg_index should be integer between [0,{len(self)}), but get a {beg_index}!"
 
         # 尝试创建 hash 表
-        if try_to_build_hash_table and "__hash_table" in self.paras:
+        if try_to_build_hash_table and "__hash_table" not in self.paras:
             try:
                 self.index = -1
                 hash_table = dict()
                 for i, j in enumerate(self):
-                    if j not in hash_table:
-                        hash_table[j] = [i]
+                    v = j[0]
+                    if v not in hash_table:
+                        hash_table[v] = [i]
                     else:
-                        hash_table[j].append(i)
+                        hash_table[v].append(i)
                 self.paras["__hash_table"] = hash_table
+                print("Hash table was successfully built.")
             except:
-                pass
+                print("Warn: Failed to build hash table!")
 
         if "__hash_table" in self.paras:
             index_ls = self.paras["__hash_table"].get(value, [])
             for index in index_ls:
                 # 可以改成二分查找
-                if beg_index<=index:
+                if beg_index <= index:
                     return index
         else:
             self.index = beg_index - 1
