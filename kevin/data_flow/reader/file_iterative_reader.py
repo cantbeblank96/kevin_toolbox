@@ -107,7 +107,7 @@ class File_Iterative_Reader:
             self.__jump_func(self.file, paras["jump_size"], paras["filter_"])
 
             #
-            if len(lines) == 0:
+            if end:
                 # 没有读到内容
                 if not self.now_in_beginning and paras["loop_num"] != 0:
                     # 到达末尾，而且还有循环次数
@@ -148,12 +148,14 @@ class File_Iterative_Reader:
                 continue
             # 添加
             lines.append(line)
-        # 是否丢弃
-        lines = [] if drop and len(lines) < chunk_size else lines
-        # 后处理
-        lines = list(map(map_func, lines)) if map_func is not None else lines
-        lines = convert_func(lines) if convert_func is not None else lines
-        return lines, len(lines) == 0
+        end = len(lines) == 0
+        if not end:
+            # 是否丢弃
+            lines = [] if drop and len(lines) < chunk_size else lines
+            # 后处理
+            lines = list(map(map_func, lines)) if map_func is not None else lines
+            lines = convert_func(lines) if convert_func is not None else lines
+        return lines, end
 
     @staticmethod
     def __jump_lines(file, jump_size, filter_):
@@ -186,14 +188,16 @@ class File_Iterative_Reader:
         """
 
         bytes_ = file.read(chunk_size)
-        # 过滤
-        bytes_ = '' if filter_ is not None and not filter_(bytes_) else bytes_
-        # 是否丢弃
-        bytes_ = '' if drop and len(bytes_) < chunk_size else bytes_
-        # 后处理
-        bytes_ = "".join([map_func(i) for i in bytes_]) if map_func is not None else bytes_
-        bytes_ = convert_func(bytes_) if convert_func is not None else bytes_
-        return bytes_, len(bytes_) == 0
+        end = len(bytes_) == 0
+        if not end:
+            # 过滤
+            bytes_ = '' if filter_ is not None and not filter_(bytes_) else bytes_
+            # 是否丢弃
+            bytes_ = '' if drop and len(bytes_) < chunk_size else bytes_
+            # 后处理
+            bytes_ = "".join([map_func(i) for i in bytes_]) if map_func is not None else bytes_
+            bytes_ = convert_func(bytes_) if convert_func is not None else bytes_
+        return bytes_, end
 
     @staticmethod
     def __jump_bytes(file, jump_size, filter_):

@@ -86,7 +86,7 @@ class Kevin_Notation_Writer:
         # key
         self.file.write(f"# {key}")
         if len(paras) > 0:
-            self.file.write(f" ({', '.join([f'{k}={v}' for k, v in paras.items()])})")
+            self.file.write(f" ({','.join([f'{k}={v}' for k, v in paras.items()])})")
         self.file.write(f"\n")
         # value
         self.file.write(f"{sep.join([f'{v}' for v in value])}\n")
