@@ -6,8 +6,10 @@ if __name__ == '__main__':
     from kevin.data_flow.reader import UReader
 
     print("构造测试数据")
+    # scores = np.asarray([0.7, 0.5, 0.6, 0.4, 0.1, 0.4, 0.3]).reshape((-1, 1))
+    # labels = np.asarray([1, 0, 1, 1, 0, 0, 1]).reshape((-1, 1))
     scores = np.asarray([0.7, 0.5, 0.6, 0.4, 0.1, 0.4, 0.3]).reshape((-1, 1))
-    labels = np.asarray([1, 0, 1, 1, 0, 0, 1]).reshape((-1, 1))
+    labels = np.asarray([1, 1, 1, 1, 1, 1, 1]).reshape((-1, 1))
 
     print("计算混淆矩阵")
 
