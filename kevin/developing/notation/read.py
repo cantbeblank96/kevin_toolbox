@@ -5,6 +5,7 @@ converter = dict(
     int=lambda x: int(x),
     float=lambda x: float(x),
     str=lambda x: str(x),
+    float_ls=lambda x: eval(x),
 )
 
 
