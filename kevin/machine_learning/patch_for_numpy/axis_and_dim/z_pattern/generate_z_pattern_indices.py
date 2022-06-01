@@ -1,4 +1,5 @@
 import numpy as np
+from kevin.machine_learning.patch_for_numpy.axis_and_dim import convert
 
 
 def generate_z_pattern_indices(**kwargs):
@@ -46,7 +47,7 @@ def generate_z_pattern_indices(**kwargs):
 
         参数：
             shape：              <list/tuple of integers>
-            trans_to_zip_type：  <boolean> 是否转换成适用于 numpy/torch 坐标引用的格式
+            convert_to_zip_type：<boolean> 是否转换成适用于 numpy/torch 坐标引用的格式
                                     例如将 [[1,1], [2,2], [2,3] , ...] 转化为 ([1,2,2,...], [1,2,3,...])
                                     默认为 True
     """
@@ -55,7 +56,7 @@ def generate_z_pattern_indices(**kwargs):
         # 必要参数
         "shape": None,
         #
-        "trans_to_zip_type": True,
+        "convert_to_zip_type": True,
     }
 
     # 获取参数
@@ -94,9 +95,9 @@ def generate_z_pattern_indices(**kwargs):
     res = np.concatenate(res, axis=0)
     assert len(res) == np.prod(paras["shape"])
 
-    if paras["trans_to_zip_type"]:
+    if paras["convert_to_zip_type"]:
         # 转换成适用与 numpy/torch 的坐标格式 例如： ([1,2,2],[1,2,2])
-        res = tuple([res[:, i].astype(dtype=np.int32) for i in range(res.shape[1])])
+        res = convert.indices_to_zip_type(indices_ls=res)
 
     return res
 
