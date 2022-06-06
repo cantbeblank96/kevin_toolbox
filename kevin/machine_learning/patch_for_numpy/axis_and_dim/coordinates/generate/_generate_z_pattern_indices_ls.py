@@ -1,11 +1,11 @@
 import numpy as np
-from kevin.machine_learning.patch_for_numpy.axis_and_dim import convert
 
 
-def generate_z_pattern_indices(**kwargs):
+def generate_z_pattern_indices_ls(**kwargs):
     """
         生成 从原点出发进行之字形（Z形）遍历 的下标列表
             本质上就是从原点出发，按照汉明距离（各axis的坐标之和）在 shape 对应的长方体内进行宽度优先遍历
+            生成的坐标列表是 indices_ls 格式，index_ls 的具体定义参见 coordinates.convert()
 
         原理：
             约定：
@@ -47,16 +47,14 @@ def generate_z_pattern_indices(**kwargs):
 
         参数：
             shape：              <list/tuple of integers>
-            convert_to_zip_type：<boolean> 是否转换成适用于 numpy/torch 坐标引用的格式
-                                    例如将 [[1,1], [2,2], [2,3] , ...] 转化为 ([1,2,2,...], [1,2,3,...])
-                                    默认为 True
+
+        返回：
+            indices_ls：         <nparray of nparray> 坐标列表。
     """
     # 默认参数
     paras = {
         # 必要参数
         "shape": None,
-        #
-        "convert_to_zip_type": True,
     }
 
     # 获取参数
@@ -94,10 +92,6 @@ def generate_z_pattern_indices(**kwargs):
     res = [i for i in res if i is not None]
     res = np.concatenate(res, axis=0)
     assert len(res) == np.prod(paras["shape"])
-
-    if paras["convert_to_zip_type"]:
-        # 转换成适用与 numpy/torch 的坐标格式 例如： ([1,2,2],[1,2,2])
-        res = convert.indices_to_zip_type(indices_ls=res)
 
     return res
 
