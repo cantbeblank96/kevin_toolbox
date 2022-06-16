@@ -1,0 +1,1 @@
+from .transpose_inside_axis import transpose_inside_axis as inside_axis

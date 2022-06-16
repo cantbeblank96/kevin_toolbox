@@ -12,7 +12,7 @@ def generate_coordinates(**kwargs):
             shape:              <list/tuple of integers> 坐标所属的多维变量的形状。
             pattern:            <str> 生成/遍历坐标的模式
                                     目前支持：
-                                        "reshape" :
+                                        "z_pattern" :
                                             生成 从原点出发进行之字形（Z形）遍历 的下标列表。
                                             核心调用的是 generate_z_pattern_indices_ls()
                                         "shuffle_inside_block" :

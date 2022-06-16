@@ -13,7 +13,9 @@ def generate_shuffled_index_ls(**kwargs):
         参数：
             shape:                      形状
             kernel_size：                卷积核的大小
+                                            默认为 None 表示使用整个 shape 作为 kernel_size
             stride：                     卷积的步长
+                                            默认为 None 表示与 kernel_size 相等
             seed:                       随机种子
             allow_duplicates:           允许出现重复值。
                                             默认为 False
