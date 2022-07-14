@@ -1,11 +1,6 @@
+import os
 import numpy as np
 from kevin.geometry import for_boxes
-
-import os
-import sys
-
-sys.path.insert(0, os.path.join(os.path.split(__file__)[0], '../../../kevin_toolbox'))
-
 from kevin.machine_learning.patch_for_numpy.axis_and_dim import coordinates
 
 U_OPERATION_CHOICES = {None, "not"}

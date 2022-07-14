@@ -1,6 +1,3 @@
-import sys
-
-
 # 针对唯一标识符的单例模式
 class Singleton_for_uid:
     """
