@@ -1,6 +1,6 @@
 import os
 from kevin.data_flow.reader import File_Iterative_Reader
-from converter import CONVERTER_FOR_READER
+from .converter import CONVERTER_FOR_READER
 
 
 class Kevin_Notation_Reader:
@@ -196,11 +196,3 @@ class Kevin_Notation_Reader:
             del self.paras, self.metadata, self.reader
         except Exception as e:
             print(e)
-
-
-if __name__ == '__main__':
-    file_path = "test2.txt"
-    k_reader = Kevin_Notation_Reader(file_path=file_path, chunk_size=2)
-    print(k_reader.metadata)
-    for content in k_reader:
-        print(content)

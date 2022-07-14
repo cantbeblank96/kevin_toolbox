@@ -1,8 +1,8 @@
 import os
 import copy
 import numpy as np
-from converter import CONVERTER_FOR_WRITER
-from kevin_reader import Kevin_Notation_Reader
+from .converter import CONVERTER_FOR_WRITER
+from .kevin_reader import Kevin_Notation_Reader
 
 
 class Kevin_Notation_Writer:
@@ -213,26 +213,3 @@ class Kevin_Notation_Writer:
             self.file.close()
         except Exception as e:
             print(e)
-
-
-if __name__ == "__main__":
-    import numpy as np
-
-    values = [[0, 2.31, "m0.pkt"], [1, 2.22, "m1.pkt"]]
-
-    with Kevin_Notation_Writer(file_path="./test.txt", mode="w") as writer:
-        writer.metadata_begin()
-        writer.title = "this is the title"
-        writer.column_name = ["epoch", "loss", "model_name"]
-        writer.column_type = {"value": ["int", "float", "str"], "sep": " "}
-        writer.metadata_end()
-
-        writer.contents_begin()
-        writer.contents = values
-        writer.contents_end()
-
-    values = [[10, 12.31, "m01.pkt"], [11, 12.22, "m11.pkt"]]
-
-    with Kevin_Notation_Writer(file_path="./test.txt", mode="a") as writer:
-        writer.contents = values
-        writer.contents_end()

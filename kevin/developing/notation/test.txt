@@ -15,5 +15,3 @@ int float str
 1	2.22	m1.pkt
 10	12.31	m01.pkt
 11	12.22	m11.pkt
-10	12.31	m01.pkt
-11	12.22	m11.pkt
