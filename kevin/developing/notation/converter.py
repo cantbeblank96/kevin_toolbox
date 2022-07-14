@@ -79,7 +79,7 @@ class Converter:
             if paras["use_default"]:
                 converter = SETTINGS[paras["mode"]].get("default")
             else:
-                raise KeyError
+                raise KeyError(f"the most recent CONVERTER does not support type {key}")
 
         return converter
 

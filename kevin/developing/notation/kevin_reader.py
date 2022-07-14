@@ -129,9 +129,9 @@ class Kevin_Notation_Reader:
         #
         if "column_type" in res:
             unknown_types = set(res["column_type"]).difference(set(CONVERTER_FOR_READER.keys()))
-            assert len(unknown_types) == 0, \
-                f"There are unknown types {unknown_types} in column_type. " \
-                f"Currently supported types are {set(CONVERTER_FOR_READER.keys())}"
+            if len(unknown_types) > 0:
+                print(f"Warning: There are unknown types {unknown_types} in column_type. "
+                      f"Currently supported types are {set(CONVERTER_FOR_READER.keys())}")
 
         return res, count
 

@@ -60,8 +60,11 @@ class Kevin_Notation_Writer:
             # 采用追加写模式
             # 尝试打开已有文件
             assert os.path.isfile(self.paras["file_path"])
-            # 要求 metadata 已被写入
-            reader = Kevin_Notation_Reader(file_path=self.paras["file_path"])
+            try:
+                # 要求 metadata 已被写入
+                reader = Kevin_Notation_Reader(file_path=self.paras["file_path"])
+            except Exception as e:
+                raise Exception(f'file {self.paras["file_path"]} existed, but is not a standard kevin document!')
             self.metadata = copy.deepcopy(reader.metadata)
             del reader
             # 获取文件对象
