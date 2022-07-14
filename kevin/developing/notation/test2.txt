@@ -13,4 +13,3 @@ int float str
 # --contents--
 0	2.31	m0.pkt
 1	2.22	m1.pkt
-

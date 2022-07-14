@@ -1,12 +1,6 @@
 import os
 from kevin.data_flow.reader import File_Iterative_Reader
-
-converter = dict(
-    int=lambda x: int(x),
-    float=lambda x: float(x),
-    str=lambda x: str(x),
-    float_ls=lambda x: eval(x),
-)
+from converter import CONVERTER_FOR_READER
 
 
 class Kevin_Notation_Reader:
@@ -74,7 +68,6 @@ class Kevin_Notation_Reader:
             map_func=lambda x: x.strip()
         ))
         #
-        success = False
         for count in range(1, try_times + 1):
             line = next(reader)
             if line.startswith("#"):
@@ -127,14 +120,18 @@ class Kevin_Notation_Reader:
             res[key] = value
 
         # 最后检验内容
-        if "column_name" in res and "column_type" in res:
-            assert len(res["column_name"]) == len(res["column_type"])
+        # 与 column 数量相关的字段是否相互一致
+        num_ls = [len(res[key]) for key in ["column_name", "column_type", "column_num"] if key in res]
+        assert len(set(num_ls)) <= 1
+        #
+        if len(num_ls) > 0:
+            res["column_num"] = num_ls[0]
         #
         if "column_type" in res:
-            unknown_types = set(res["column_type"]).difference(set(converter.keys()))
+            unknown_types = set(res["column_type"]).difference(set(CONVERTER_FOR_READER.keys()))
             assert len(unknown_types) == 0, \
                 f"There are unknown types {unknown_types} in column_type. " \
-                f"Currently supported types are {set(converter.keys())}"
+                f"Currently supported types are {set(CONVERTER_FOR_READER.keys())}"
 
         return res, count
 
@@ -158,8 +155,11 @@ class Kevin_Notation_Reader:
             value_ls = line.split(metadata["sep"])
             if "column_type" in metadata:
                 assert len(value_ls) == len(metadata["column_type"])
-                value_ls = [converter[metadata["column_type"][i]](value) for i, value in
-                            enumerate(value_ls)]
+                type_ls = metadata["column_type"]
+            else:
+                # use default converter
+                type_ls = ["default"] * len(value_ls)
+            value_ls = [CONVERTER_FOR_READER[type_](value) for type_, value in zip(type_ls, value_ls)]
             if res is None:
                 res = [[] for _ in range(len(value_ls))]
             for i, value in enumerate(value_ls):
