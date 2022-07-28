@@ -1,7 +1,7 @@
 import numpy as np
 import torch
-from kevin.machine_learning.patch_for_torch.compatible import tile as torch_tile
-from kevin.data_flow.reader import Unified_Reader_Base, UReader
+from kevin.patches.for_torch import tile as torch_tile
+from kevin.data_flow.core.reader import Unified_Reader_Base, UReader
 
 SUPPORT_TO_GENERATE = {"scores", "labels", "samples"}
 

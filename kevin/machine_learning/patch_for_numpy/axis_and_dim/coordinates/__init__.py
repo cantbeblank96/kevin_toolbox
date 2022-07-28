@@ -1,2 +1,0 @@
-from kevin.machine_learning.patch_for_numpy.axis_and_dim.coordinates.convert import convert_coordinates as convert
-from kevin.machine_learning.patch_for_numpy.axis_and_dim.coordinates.generate import generate_coordinates as generate

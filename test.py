@@ -1,5 +1,5 @@
 from kevin.machine_learning.dataset.face import dummy, verification
-from kevin.data_flow.reader import UReader
+from kevin.data_flow.core.reader import UReader
 import numpy as np
 import torch
 

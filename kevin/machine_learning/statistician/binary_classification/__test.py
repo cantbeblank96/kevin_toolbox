@@ -3,7 +3,7 @@ from kevin.machine_learning.statistician.binary_classification import cal_cfm, m
 
 if __name__ == '__main__':
     import numpy as np
-    from kevin.data_flow.reader import UReader
+    from kevin.data_flow.core.reader import UReader
 
     print("构造测试数据")
     # scores = np.asarray([0.7, 0.5, 0.6, 0.4, 0.1, 0.4, 0.3]).reshape((-1, 1))

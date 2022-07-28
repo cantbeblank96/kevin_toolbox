@@ -1,6 +1,6 @@
 import torch
 from .convert import convert_to_numpy
-from kevin.machine_learning.patch_for_torch.compatible import where as torch_where
+from kevin.patches.for_torch import where as torch_where
 
 # 计算设备（尽量使用gpu来加速计算）
 device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')

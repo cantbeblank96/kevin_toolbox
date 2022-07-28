@@ -1,5 +1,5 @@
 import os
-from kevin.data_flow.reader import File_Iterative_Reader
+from kevin.data_flow.core.reader import File_Iterative_Reader
 from .converter import CONVERTER_FOR_READER
 
 
