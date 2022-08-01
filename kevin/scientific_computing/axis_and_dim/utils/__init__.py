@@ -1,1 +1,0 @@
-from .get_function_table_for_array_and_tensor import get_function_table_for_array_and_tensor

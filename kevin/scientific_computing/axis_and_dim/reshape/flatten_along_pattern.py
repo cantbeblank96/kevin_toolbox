@@ -1,7 +1,5 @@
-import torch
-import numpy as np
-
-from kevin.scientific_computing.axis_and_dim import coordinates, utils
+from kevin.scientific_computing.axis_and_dim import coordinates
+from kevin.scientific_computing import utils
 
 
 def flatten_along_pattern(**kwargs):

@@ -1,6 +1,5 @@
-import numpy as np
-import torch
-from kevin.scientific_computing.axis_and_dim import transpose, utils
+from kevin.scientific_computing.axis_and_dim import transpose
+from kevin.scientific_computing import utils
 
 
 def transpose_inside_axis(**kwargs):

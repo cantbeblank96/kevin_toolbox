@@ -95,3 +95,8 @@ def generate_z_pattern_indices_ls(**kwargs):
 
     return res
 
+
+# if __name__ == '__main__':
+#     shape = [3, 3]
+#     indices_ls = generate_z_pattern_indices_ls(shape=shape)
+#     print(indices_ls)

@@ -1,4 +1,4 @@
-from kevin.scientific_computing.axis_and_dim import utils
+from kevin.scientific_computing import utils
 
 
 def split_blocks(x, block_shape):

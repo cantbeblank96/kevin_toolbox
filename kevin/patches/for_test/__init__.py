@@ -1,1 +1,1 @@
-from .check_deviation import check_deviation
+from .check_consistency import check_consistency

@@ -101,7 +101,8 @@ def generate_shuffled_index_ls(**kwargs):
 
     return index_ls
 
-# if __name__ == '__main__':
-#     shape = [3, 4, 4]
-#     index_ls = generate_shuffled_index_ls(shape=shape, stride_ls=[2, 2], kernel_size=[3, 3], seed=114)
-#     print(index_ls.reshape(shape))
+
+if __name__ == '__main__':
+    shape = [3, 4, 4]
+    index_ls = generate_shuffled_index_ls(shape=shape, stride=[1, 1], kernel_size=[3, 3], seed=114)
+    print(index_ls.reshape(shape))
