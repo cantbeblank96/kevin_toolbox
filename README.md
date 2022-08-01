@@ -146,6 +146,8 @@ kevin_toolbox
 
 与数据集相关的处理工具
 
+【finished 单元测试已完成50%】
+
 - face
   - dummy
     - Factory 用于生成人脸识别的伪数据
@@ -158,6 +160,8 @@ kevin_toolbox
 ### statistician
 
 与统计相关的计算工具，比如混淆矩阵、tpr和fpr
+
+【finished 单元测试已完成50%】
 
 - binary_classification
   - cal_cfm
@@ -510,6 +514,8 @@ TODO 单元测试未完成：
 ### for_boxes
 
 针对 box 数据结构的算法
+
+【finished 单元测试已完成】
 
 - cal_iou(box_0, box_1)
   - 计算 box_0 和 box_1 之间的交并比 iou

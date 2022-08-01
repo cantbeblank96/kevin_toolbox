@@ -101,7 +101,11 @@ class Kevin_Notation_Reader:
         res = dict(sep=sep)
         #
         count = 2
-        for (key, value) in reader:
+        for chunk in reader:
+            if len(chunk) == 2:
+                key, value = chunk
+            else:
+                key, value = chunk[0], None
             assert key.startswith("# "), f"{key}:{value}"
             if key.startswith("# --contents--"):
                 break

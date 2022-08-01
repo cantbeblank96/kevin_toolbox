@@ -1,9 +1,10 @@
 import pytest
 import numpy as np
+from kevin.patches.for_test import check_consistency
 # 待测试模块
 from kevin.geometry import for_boxes
 # 测试数据
-from kevin.geometry.for_boxes.test_data.data_all import boxes_ls, relations_ls
+from kevin.geometry.for_boxes.test.test_data.data_all import boxes_ls, relations_ls
 
 
 @pytest.mark.parametrize("boxes, expected",
@@ -22,7 +23,7 @@ def test_cal_iou(boxes, expected):
 
 
 @pytest.mark.parametrize("boxes",
-                         boxes_ls)
+                         boxes_ls[:1])
 def test_convert(boxes):
     print("test for_boxes.convert_from_coord_to_grid_index()")
 
@@ -33,9 +34,8 @@ def test_convert(boxes):
 
     boxes_recover = for_boxes.convert_from_coord_to_grid_index(boxes=grids, settings_for_grid=settings_for_grid,
                                                                reverse=True)
-
     boxes_input = np.sort(boxes, axis=1)
-    assert np.max(np.abs(boxes_recover - boxes_input)) == 0
+    check_consistency(boxes_recover, boxes_input)
 
     print("grid_coverage_mode closed with grid_size")
     temp_ls = [boxes]
@@ -49,7 +49,7 @@ def test_convert(boxes):
         boxes_recover = for_boxes.convert_from_coord_to_grid_index(boxes=grids, settings_for_grid=settings_for_grid,
                                                                    reverse=True)
         temp_ls.append(boxes_recover)
-    assert np.max(np.abs(temp_ls[-1] - temp_ls[-2])) == 0
+    check_consistency(*temp_ls[1:])
 
     print("grid_coverage_mode open")
     temp_ls = [boxes]
@@ -59,7 +59,7 @@ def test_convert(boxes):
         boxes_recover = for_boxes.convert_from_coord_to_grid_index(boxes=grids, settings_for_grid=settings_for_grid,
                                                                    reverse=True)
         temp_ls.append(boxes_recover)
-    assert np.max(np.abs(temp_ls[-1] - temp_ls[-2])) == 0
+    check_consistency(*temp_ls[1:])
 
 
 test_input = []
@@ -138,4 +138,4 @@ def test_detect_overlap(boxes, relations):
     for node in node_ls:
         area += for_boxes.cal_area(boxes=node.description["by_boxes"]) * len(
             node.description["by_item_ids"]["intersection"])
-    assert for_boxes.cal_area(boxes=boxes) == area
+    check_consistency(for_boxes.cal_area(boxes=boxes, is_sorted=False), area)
