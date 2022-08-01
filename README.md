@@ -232,7 +232,7 @@ TODO 单元测试未完成：
 
 
 
-### axis_and_dim
+### dimension
 
 与维度变换相关
 

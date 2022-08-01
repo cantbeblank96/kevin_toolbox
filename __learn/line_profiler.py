@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 import torch
 from kevin.scientific_computing.transform import dct, utils
-from kevin.scientific_computing.axis_and_dim import reshape, coordinates
+from kevin.scientific_computing.dimension import reshape, coordinates
 
 
 def func():

@@ -1,6 +1,6 @@
 import math
 import numpy as np
-from kevin.scientific_computing.axis_and_dim import coordinates
+from kevin.scientific_computing.dimension import coordinates
 
 
 def generate_shuffled_index_ls(**kwargs):

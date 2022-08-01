@@ -1,3 +1,5 @@
+import pytest
+
 from kevin.machine_learning.dataset.face import dummy, verification
 from kevin.data_flow.core.reader import UReader
 import numpy as np
@@ -8,7 +10,8 @@ np.random.seed(seed)
 torch.manual_seed(seed)
 torch.cuda.manual_seed_all(seed)
 
-if __name__ == '__main__':
+
+def test_face():
     print("构造测试数据")
 
     # all
@@ -38,7 +41,7 @@ if __name__ == '__main__':
     lens = []
     for i, db in enumerate(generator):
         lens.append(size_ls[i])
-        print(lens[-1])
+        # print(lens[-1])
     print(f"sum {sum(lens)}")
 
     print("测试 executor、iterator")

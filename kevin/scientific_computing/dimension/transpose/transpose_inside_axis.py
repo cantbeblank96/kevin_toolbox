@@ -1,4 +1,4 @@
-from kevin.scientific_computing.axis_and_dim import transpose
+from kevin.scientific_computing.dimension import transpose
 from kevin.scientific_computing import utils
 
 
@@ -10,7 +10,7 @@ def transpose_inside_axis(**kwargs):
             x:          <np.array/torch.tensor>
             axis:       <integer>
                             默认为 -1
-            index_ls:   <list> 格式具体参考 axis_and_dim.coordinates
+            index_ls:   <list> 格式具体参考 dimension.coordinates
             reverse:    <boolean>
                             默认为 False
                             当设置为 True 时进行转置的逆

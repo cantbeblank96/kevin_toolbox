@@ -1,6 +1,6 @@
 import torch
-from kevin.patches.for_torch import my_around
-from kevin.patches.for_torch import where as torch_where
+from kevin.patches.for_torch.math import my_around
+from kevin.patches.for_torch.compatible import where as torch_where
 from .convert import convert_to_numpy
 
 # 计算设备（尽量使用gpu来加速计算）

@@ -32,7 +32,7 @@ def convert_coordinates(**kwargs):
 
         为什么要区分这三种坐标格式？
             这几种坐标有不同的使用场景，且这些场景还是比较高频出现的：
-            - index_ls      在使用 np.transpose() 对 axis 进行转置，或者使用 patch_for_numpy.axis_and_dim.transpose.inside_axis()
+            - index_ls      在使用 np.transpose() 对 axis 进行转置，或者使用 dimension.transpose.inside_axis()
                                 对 axis 内各个维度进行转置时，就需要使用 index_ls 形式的坐标来指定转置后各个 axis/维度 的位置。
             - indices_ls    遍历时有可能会用到。
             - zip_indices   适用于 numpy/torch 进行按照坐标的索引取值。

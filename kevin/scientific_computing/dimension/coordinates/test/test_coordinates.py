@@ -2,7 +2,7 @@ import pytest
 from kevin.patches.for_test import check_consistency
 import numpy as np
 
-from kevin.scientific_computing.axis_and_dim import coordinates, reshape
+from kevin.scientific_computing.dimension import coordinates, reshape
 
 
 @pytest.mark.parametrize("format_, var, shape",

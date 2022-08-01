@@ -1,5 +1,5 @@
 import numpy as np
-from kevin.scientific_computing.axis_and_dim import coordinates, transpose
+from kevin.scientific_computing.dimension import coordinates, transpose
 
 
 def unflatten_along_pattern(**kwargs):

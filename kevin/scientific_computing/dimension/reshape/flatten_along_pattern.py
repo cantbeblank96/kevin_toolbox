@@ -1,4 +1,4 @@
-from kevin.scientific_computing.axis_and_dim import coordinates
+from kevin.scientific_computing.dimension import coordinates
 from kevin.scientific_computing import utils
 
 

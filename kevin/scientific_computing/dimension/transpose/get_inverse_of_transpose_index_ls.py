@@ -6,7 +6,7 @@ def get_inverse_of_transpose_index_ls(index_ls):
             恒成立。
 
         参数：
-            index_ls:   <list> 格式具体参考 axis_and_dim.coordinates
+            index_ls:   <list> 格式具体参考 dimension.coordinates
     """
 
     pairs = [[r_i, i] for r_i, i in enumerate(index_ls)]

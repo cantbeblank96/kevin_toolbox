@@ -3,7 +3,7 @@ from kevin.patches.for_test import check_consistency
 import numpy as np
 import torch
 
-from kevin.scientific_computing.axis_and_dim import transpose
+from kevin.scientific_computing.dimension import transpose
 
 
 @pytest.mark.parametrize("x_shape, axis",

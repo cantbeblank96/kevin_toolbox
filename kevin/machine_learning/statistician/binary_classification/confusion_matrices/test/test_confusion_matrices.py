@@ -1,10 +1,13 @@
-from kevin.machine_learning.statistician.binary_classification import cal_cfm, merge_cfm_ls, cal_cfm_iteratively_by_chunk, cal_tpr_and_fpr, \
+import pytest
+import numpy as np
+from kevin.data_flow.core.reader import UReader
+
+from kevin.machine_learning.statistician.binary_classification import cal_cfm, merge_cfm_ls, \
+    cal_cfm_iteratively_by_chunk, cal_tpr_and_fpr, \
     Accumulator_for_Cfm
 
-if __name__ == '__main__':
-    import numpy as np
-    from kevin.data_flow.core.reader import UReader
 
+def test_confusion_matrices():
     print("构造测试数据")
     # scores = np.asarray([0.7, 0.5, 0.6, 0.4, 0.1, 0.4, 0.3]).reshape((-1, 1))
     # labels = np.asarray([1, 0, 1, 1, 0, 0, 1]).reshape((-1, 1))
