@@ -93,8 +93,8 @@ def generate_shuffled_index_ls(**kwargs):
     for i in range(index_ls.shape[0]):
         for beg, end in zip(beg_indices, end_indices):
             x = index_ls[i]
-            cmd = "x[" + ",".join([f"{int(b)}:{int(e)}" for b, e in zip(beg, end)]) + "]"
-            crop = eval(cmd)
+            slices = tuple([slice(int(b), int(e)) for b, e in zip(beg, end)])
+            crop = x[slices]
             crop[:] = rd.choice(crop.reshape(-1), crop.size, replace=paras["allow_duplicates"]).reshape(crop.shape)
     #
     index_ls = index_ls.reshape(-1)

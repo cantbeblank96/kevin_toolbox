@@ -25,9 +25,9 @@ def convert_boxes_from_coord_to_grid_index(**kwargs):
                                 在不同的格点覆盖模式 mode 下，有不同的设置方式。
                                 目前支持以下三种方式：
                                     mode=open，以 grid_size 为基准
-                                        grid_size:      <list/integer> 各个维度上网格的大小
+                                        grid_size:      <list/integer/float> 各个维度上网格的大小
                                                             设置为单个 integer 时，默认所有维度使用同一大小的网格划分
-                                        offset：         <list/integer> 网格点的原点相对于原始坐标的偏移量
+                                        offset：         <list/integer/float> 网格点的原点相对于原始坐标的偏移量
                                                             默认为 [0,...]，无偏移
                                                             设置为单个 integer 时，默认所有维度使用同一大小的 offset
                                             例子：

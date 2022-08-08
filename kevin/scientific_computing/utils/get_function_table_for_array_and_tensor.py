@@ -3,14 +3,25 @@ import numpy as np
 
 FUNCTION_TABLE_GALLERY = dict(
     np_array=dict(
-        swapaxes=np.swapaxes,  # 用法 swapaxes(x, dim0, dim1)
-        permute=np.transpose,  # permute(x, dim_ls)
+        swapaxes=lambda x, axis_0, axis_1: np.swapaxes(x, axis_0, axis_1),
+        permute=lambda x, axis_ls: np.transpose(x, axis_ls),
+        concat=lambda x_ls, axis: np.concatenate(x_ls, axis=axis),
+        flatten=lambda x, axis_0, axis_1: x.reshape(list(x.shape[:axis_0]) + [-1] + list(x.shape[axis_1 + 1:]))
     ),
     torch_tensor=dict(
-        swapaxes=torch.transpose,
-        permute=lambda x, dim_ls: x.permute(*dim_ls),
+        swapaxes=lambda x, axis_0, axis_1: torch.transpose(x, axis_0, axis_1),
+        permute=lambda x, axis_ls: x.permute(*axis_ls),
+        concat=lambda x_ls, axis: torch.cat(x_ls, dim=axis),
+        flatten=lambda x, axis_0, axis_1: torch.flatten(x, start_dim=axis_0, end_dim=axis_1),
     )
 )
+"""
+已注册函数及其使用方法：
+    - swapaxes(x, axis_0, axis_1)
+    - permute(x, axis_ls)
+    - concat(x_ls, axis)
+    - flatten(x, axis_0, axis_1)  将 axis_0 到 axis_1 之间的轴进行展平
+"""
 
 
 def get_function_table_for_array_and_tensor(x):

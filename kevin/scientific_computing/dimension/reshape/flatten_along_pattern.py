@@ -7,7 +7,7 @@ def flatten_along_pattern(**kwargs):
         将 x 的最后 dim_num 个维度按照 generate_func 指定的遍历顺序进行打平展开
 
         参数：
-            x：                  <nparray/tensor>
+            x：                  <np.array/tensor>
             dim_num：            <integer>
             generate_func：      用于指定对 block 的遍历顺序
                                     默认使用 coordinates.generate(pattern="z_pattern", output_format="zip_indices") 进行遍历

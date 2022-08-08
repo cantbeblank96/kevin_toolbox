@@ -310,6 +310,95 @@ TODO 单元测试未完成：
 
 
 
+#### concat_and_split
+
+- concat_crops_into_whole(**kwargs)
+
+```python
+    """
+        将 crop 按照对应的 box 指示的位置，以行优先的内存顺序，进行拼接、展平
+
+        工作流程：
+            首先根据 box_ls 构建 computational_tree，然后将 crop 按照对应的 box 分配到计算图中对应的叶节点，调用计算图中的 concat()
+            进行合并，最后从计算图的根节点中取出最后合并得到的结果。
+
+        参数：
+            crop_ls:        <list of np.array/tensor>
+            box_ls:         <list of np.arrays>
+                                each element is an array with shape [2, dimensions]
+                                各个维度的意义为：
+                                    2：          box 的两个轴对称点
+                                    dimensions： 坐标的维度
+                                要求：
+                                    - 各个 box 应该是已经 sorted 的，亦即小坐标在前大坐标在后。
+                                        例如 box=[[1,2],[0,4]] 是错误的。
+                                        而 box=[[0,2],[1,4]] 是合法的。
+                                    - 各个 box 在坐标轴上的投影之间没有重叠部分
+                                    函数 geometry.for_boxes.boolean_algebra() 返回的 boxes 结果，以及
+                                    函数 geometry.for_boxes.detect_collision() 返回的 node_ls 中每个 node 下面
+                                    的 node.description["by_boxes"] 都符合该要求。
+            beg_axis:       <integer> 上面提供的 box 中指定的坐标是从 crop 的第几个 axis 开始对应的。
+                                例如： beg_axis=1 时，box=[[i,j],[m,n]] 表示该 crop 是从原张量的 [:, i:m, j:n, ...] 部分截取出来的。
+            computational_tree: <Node> 计算图
+                                默认为 None，函数将根据输入的 box_ls 自动构建计算图。
+                                你也可以将已有的计算图代入该参数中，以跳过构建计算图的步骤，节省计算量。
+            return_details: <boolean> 是否以详细信息的形式返回结果
+                                默认为 False，此时返回：
+                                    whole:  <np.array/tensor> 对 crop_ls 进行合并后的结果
+                                当设置为 True，将返回一个 dict：
+                                    details = dict(
+                                        whole = <np.array/tensor>,  # 对 crop_ls 进行合并后的结果
+                                        box_ls = <list of np.arrays>,  # 按照 内存顺序 对 box_ls 进行排序后的结果
+                                        crop_ls = <list of np.array/tensor>,  # 按照 内存顺序 对 crop_ls 进行排序后的结果
+                                        beg_axis = beg_axis,  # 对应与输入的 beg_axis
+                                        computational_tree = <Node>,  # 计算图
+                                    )
+        返回：
+            whole 或者 details
+    """
+```
+
+
+
+- split_whole_into_crops(**kwargs)
+
+```python
+    """
+        将变量 whole 按照 box_ls 指示的位置，以行优先的内存顺序，拆解成多个 crop
+            系 concat_crops_into_whole() 的逆变换
+
+        参数：
+            whole:          <np.array/tensor>
+            box_ls:         <list of np.arrays>
+            beg_axis:       <integer> 要对 x 进行分割的轴
+            computational_tree: <Node> 计算图
+            return_details: <boolean> 是否以详细信息的形式返回结果
+                                默认为 False，此时返回：
+                                    crop_ls:  <list of np.array/tensor> 分割结果
+                                当设置为 True，将返回一个 dict：
+                                    details = dict(
+                                        whole = <np.array/tensor>,  # 对 crop_ls 进行合并后的结果
+                                        box_ls = <list of np.arrays>,  # 按照 内存顺序 对 box_ls 进行排序后的结果
+                                        crop_ls = <list of np.array/tensor>,  # 按照 内存顺序 对 crop_ls 进行排序后的结果
+                                        beg_axis = beg_axis,  # 对应与输入的 beg_axis
+                                        computational_tree = <Node>,  # 计算图
+                                    )
+                （以上参数的详细介绍参见 concat_crops_in_memory_order()）
+        返回：
+            crop_ls 或者 details
+    """
+```
+
+
+
+- Node
+
+计算图节点
+
+以上函数 concat_crops_into_whole() 和 split_whole_into_crops() 的内核
+
+
+
 ### transform
 
 信号/图像处理，时域频域变换等
@@ -503,7 +592,57 @@ TODO 单元测试未完成：
 
 
 
+- get_crop_by_box(x, box_ls, beg_axis=0)
 
+```python
+"""
+    根据 boxes/box_ls 选定的区域，将 crop_ls 从源张量 x 中截取出来。
+
+    参数：
+        x:              <np.array/tensor>
+        box_ls:         <list of box>
+                            each box is a np.array with shape [batch_size, 2, dimensions]，各个维度的意义为：
+                                2：          box的两个轴对称点
+                                dimensions： 坐标的维度
+                            要求：
+                                - 各个 box 应该是已经 sorted 的，亦即小坐标在前大坐标在后。
+                                    例如 box=[[1,2],[0,4]] 是错误的。
+                                    而 box=[[0,2],[1,4]] 是合法的。
+        beg_axis:       <integer> 上面提供的 boxes 中指定的坐标是从 x/crop 的第几个 axis 开始对应的。
+                            例如： beg_axis=1 时，box=[[i,j],[m,n]] 表示该 crop 是从原张量的 x[:, i:m, j:n, ...] 部分截取出来的。
+
+    返回：
+        crop_ls:        <list of np.array/tensor>
+"""
+```
+
+
+
+- set_crop_by_box(x, box_ls, crop_ls, beg_axis=0)
+
+```python
+"""
+    将 crop_ls 填充到 x 中 boxes 指定的区域
+        将直接在输入的 x 上进行 inplace 赋值操作
+
+    参数：
+        x:              <np.array/tensor>
+        box_ls:         <list of box>
+                            each box is a np.array with shape [batch_size, 2, dimensions]，各个维度的意义为：
+                                2：          box的两个轴对称点
+                                dimensions： 坐标的维度
+                            要求：
+                                - 各个 box 应该是已经 sorted 的，亦即小坐标在前大坐标在后。
+                                    例如 box=[[1,2],[0,4]] 是错误的。
+                                    而 box=[[0,2],[1,4]] 是合法的。
+        crop_ls:        <list of np.array/tensor> 需要与 boxes 一一对应
+        beg_axis:       <integer> 上面提供的 boxes 中指定的坐标是从 x/crop 的第几个 axis 开始对应的。
+                            例如： beg_axis=1 时，box=[[i,j],[m,n]] 表示该 crop 是从原张量的 x[:, i:m, j:n, ...] 部分截取出来的。
+
+    返回：
+        x:              <np.array/tensor>
+"""
+```
 
 
 
@@ -518,25 +657,258 @@ TODO 单元测试未完成：
 【finished 单元测试已完成】
 
 - cal_iou(box_0, box_1)
-  - 计算 box_0 和 box_1 之间的交并比 iou
 
-- cal_area(boxes)
-  - 计算体积
+```python
+    """
+        计算 box_0 和 box_1 之间的交并比 iou
+
+        参数：
+            box_0:          <np.array>
+                                shape [2, dimensions]，各个维度的意义为：
+                                    2：          box的两个轴对称点
+                                    dimensions： 坐标的维度
+            box_1:          <np.array>
+                                与 box_0 类似。
+            return_details: <boolean> 是否以详细信息的形式返回结果
+                                默认为 False，此时返回：
+                                    iou <float>
+                                当设置为 True，将返回一个 dict：
+                                    details = dict(
+                                        iou=<float>,
+                                        intersection=dict(area=<float>, box=<np.array>,),  # area 表示面积
+                                        union=dict(area=<float>),
+                                        box_0=dict(area=<float>, box=<np.array>,),
+                                        box_1=dict(area=<float>, box=<np.array>,),
+                                    )
+    """
+```
+
+
+
+- cal_area(boxes, is_sorted=True)
+
+计算体积
+
+
 
 - convert_from_coord_to_grid_index(boxes, settings_for_grid, reverse)
-  - 对输入的 boxes，进行 实数坐标 与 网格点序号坐标 之间的坐标转换
+
+```python
+    """
+        对输入的 boxes，进行 实数坐标 与 网格点序号坐标 之间的坐标转换
+            注意：
+            - 这种转换可能是可逆的， 实数坐标 ==> 网格点序号坐标 的转换一般会使得 box 的实际范围扩大。
+            - 特别地，当使用 grid_coverage_mode=closed 模式，并配合从 boxes 中获取的坐标（可以通过for_boxes.get_ticks()获取）时，
+                转换是完全可逆的。
+            - 网格点的 index 包头不包尾， beg, end = 0, 1 表示 0 号网格。
+
+        参数：
+            boxes:          <3 axis np.array> 需要转换的 box
+                                shape [batch_size, 2, dimensions]，各个维度的意义为：
+                                    batch_size： 有多少个 box
+                                    2：          box的两个轴对称点
+                                    dimensions： 坐标的维度
+            settings_for_grid:      <dict of paras> 用于设定网格位置、范围的参数列表。
+                                目前支持两种格点覆盖模式 mode：
+                                    mode:     <string> 格点覆盖模式
+                                        支持以下两种模式：
+                                            "open"：     开放式，将构建一个覆盖整个空间的格点阵列。
+                                            "closed"：   封闭式，仅在指定范围内构建格点阵列。对于超出范围外的坐标，将投影到格点阵列的边界上。
+                                在不同的格点覆盖模式 mode 下，有不同的设置方式。
+                                目前支持以下三种方式：
+                                    mode=open，以 grid_size 为基准
+                                        grid_size:      <list/integer/float> 各个维度上网格的大小
+                                                            设置为单个 integer 时，默认所有维度使用同一大小的网格划分
+                                        offset：         <list/integer/float> 网格点的原点相对于原始坐标的偏移量
+                                                            默认为 [0,...]，无偏移
+                                                            设置为单个 integer 时，默认所有维度使用同一大小的 offset
+                                            例子：
+                                                当 grid_size=[1,5] , offset=[3,1]，
+                                                表示以 coord=(3,1) 为原点，对维度dim=0以size=1划分网格，对dim=1以size=5划分网格。
+                                    mode=closed，以 ticks 为基准
+                                        ticks：          <list of np.array> 在各个维度下，网格点的划分坐标
+                                                            ticks[i][0] 就是网格的原点坐标，与上面的 offset 相同
+                                    mode=closed，以 grid_size 为基准
+                                        grid_size:      <list of np.array/list> 在各个维度下，网格点的一系列划分大小
+                                        offset：         <list/integer>
+                                            函数将会首先把 grid_size 和 offset 转换为对应的 ticks，然后再按照 ticks 执行划分。
+            reverse:        <boolean> 决定转换的方向
+                                默认为 False，此时为 coord ==> grid_index
+                                True 时为 grid_index ==> coord
+    """
+```
+
+
 
 - get_ticks(boxes)
-  - 获取 boxes 中涉及到的坐标刻度 ticks
+
+获取 boxes 中涉及到的坐标刻度 ticks
+
+
 
 - detect_collision(boxes, complexity_correction_factor_for_aixes_check, duplicate_records)
-  - 碰撞检测
+
+  ```python
+      """
+          碰撞检测
+              Adapt the entry of different detection functions
+              当输入参数中有 boxes 时，调用 detect_collision_inside_boxes() 进行碰撞检测，此时将 boxes 中的每个 box 视为一个 item
+              当输入参数中有 boxes_ls 时，调用 detect_collision_among_boxes_ls()，此时将 boxes_ls 中的每个 boxes 视为一个 item
+      """
+  ```
+
+  - detect_collision_inside_boxes(**kwargs)
+
+    ```python
+        """
+            基于分离轴定理，对 box（属于凸多边形），进行碰撞检测
+                特点：
+                    - 时复杂度为 O( N*log(N) + M ) 其中 N 表示 box 的数量，M 表示发生碰撞的 pairs 数量。
+                    - 不需要像AABB包围盒和四叉树那样依赖树结构。
+                    - 可以配合 for_boxes.convert_from_coord_to_grid_index() 将 boxes 映射到格点阵列内，
+                        从而实现多阶段碰撞检测的 Broad-Phase 和 Narrow-Phase。
+                注意：
+                    - 我们将接触但不重合的情况也视为是碰撞。
+    
+            基本流程：
+                1. 计算各个轴的碰撞概率
+                2. 选取碰撞概率最小的轴开始进行 aixes_check
+                    （aixes_check 是基于分离轴定理，使用 Sort and Sweep 的方式进行的碰撞粗检测）
+                3. 比较后续进行 aixes_check 和 fine_check 的时间成本，选择成本最低的方式进行迭代
+                    （fine_check 是对前面碰撞粗检测得到的潜在碰撞 box pairs 进行逐一精细准确的碰撞检测）
+    
+            参数：
+                boxes:          <3 axis np.array> 需要检测的 box
+                                    shape [batch_size, 2, dimensions]，各个维度的意义为：
+                                        batch_size： 有多少个 box
+                                        2：          box的两个轴对称点
+                                        dimensions： 坐标的维度
+                complexity_correction_factor_for_aixes_check:   <float/integer> 进行 aixes_check 的复杂度修正系数
+                                    通过设置该系数，可以调整 aixes_check 与 fine_check 的复杂度比例。
+                                    - 该系数越大，计算得到 aixes_check 的复杂度越高，程序对于进行 fine_check 的偏好越大。
+                                    - 该系数越小，对进行 aixes_check 的偏好越大。
+                                    系数默认为 1.0，建议根据不同设备的实际情况（最好进行测试比较）进行调整。
+                duplicate_records:  <boolean> 是否在输出的 collision_groups 的每个 box_id 下都记录一次碰撞。
+                                        默认为 False，此时对于每个碰撞对，只会在其中一个 box_id 下的 set 中记录一次。
+                                            至于碰撞对的具体分配方式则是随机的，不应作为后续流程依仗的特征。
+                                        当设置为 True，则会重复记录。
+            输出：
+                collision_groups:   <dict of integers set> 检出的碰撞对。
+                                    其中的第 i 个 set 记录了 box_id==i 的 box 与其他哪些 box 存在碰撞
+                                        比如：  collision_groups[0] = {1, 2} 表示0号 box 与1、2号 box 发生了碰撞
+        """
+    ```
+
+    
+
+  - detect_collision_among_boxes_ls(**kwargs)
+
+    ```python
+        """
+            将 boxes_ls 中的每个 boxes 视为一个 item，进行碰撞检测
+                本函数是在 detect_collision_between_boxes() 的基础上实现的，具体工作原理请参见该函数。
+    
+            参数：
+                boxes_ls:       <list of boxes/None> 需要检测的 item
+                                    each boxes inside the list is an np.array with shape [batch_size, 2, dimensions]
+                                    各个维度的意义为：
+                                        batch_size： 有多少个 box
+                                        2：          box的两个轴对称点
+                                        dimensions： 坐标的维度
+                                    支持使用 None 作为占位符，标记为 None 的 item 将不与任一其他 item 发生碰撞
+                complexity_correction_factor_for_aixes_check:   <float/integer>
+                                        参见 detect_collision_between_boxes() 的介绍
+                duplicate_records:  <boolean>
+                                        参见 detect_collision_between_boxes() 的介绍
+            输出：
+                collision_groups:   <dict of integers set> 检出的碰撞对。
+                                    其中的第 i 个 set 记录了 id==i 的 boxes 表示的 item 与其他哪些 items 存在碰撞
+                                        比如：  collision_groups[0] = {1, 2} 表示0号 item 与1、2号 items 发生了碰撞
+        """
+    ```
+
+
 
 - boolean_algebra(boxes_ls, binary_operation_ls, unary_operation_ls)
-  - 布尔运算
+
+```python
+    """
+        布尔运算
+            对 boxes_ls 中的各个 boxes，按照 binary_operation_ls、unary_operation_ls 中指定的操作进行布尔运算
+
+        参数：
+            boxes_ls:          <list of boxes/None>
+                                where boxes is <np.array> with shape [batch, 2, dimensions]
+                                各个维度的意义为：
+                                    batch：      box的数量
+                                    2：          box的两个轴对称点
+                                    dimensions： 坐标的维度
+                                where None represents the empty set
+            binary_operation_ls:    <list of string> 二元运算操作（对两个相邻的 box进行操作）
+                                支持以下运算符：
+                                    "and":      与
+                                    "or":       或
+                                    "diff":     减去， a diff b 等效于 a and (not b)
+                                注意：
+                                    - 因为二元运算符是对两个 box 进行操作的，因此 binary_operation_ls 的长度需要比 boxes_ls 小 1
+            unary_operation_ls:     <list> 一元运算符
+                                支持以下运算符：
+                                    "not":      取反
+                                    None:       不进行运算
+                                默认为 None，表示不进行任何一元运算
+                                注意：
+                                    - 当 unary_operation_ls 设定有具体值时，要求其长度与 boxes_ls 相等
+                                    - ！！当使用 "not" 运算时，默认使用 boxes_ls 的最小外切长方体作为全集。
+                                        如果要指定全集 U 的范围，建议在第一个元素 a 前添加操作 U and a，
+                                        该操作将显式地声明全集范围。
+        返回：
+            boxes 当结果为空集时，返回 None
+    """
+```
+
+
+
+
 
 - detect_overlap(boxes_ls)
-  - 检测重叠区域
+
+```python
+    """
+        在将 boxes_ls 中的每个 boxes 视为一个 item，检测所有 item 之间的重叠区域
+
+        参数：
+            boxes_ls:       <3 axis np.array> 需要检测的 item
+                                each boxes inside the list is an np.array with shape [batch_size, 2, dimensions]
+                                各个维度的意义为：
+                                    batch_size： 有多少个 box
+                                    2：          box的两个轴对称点
+                                    dimensions： 坐标的维度
+        输出：
+            node_ls:        <list of Node> 由于重叠分割出的不同区域
+                                每个区域由一个 node 表示，其中：
+                                    node.description["by_item_ids"]["intersection"]     <set of item_id> 这个区域是由哪些 item 相交而成的
+                                    node.description["by_item_ids"]["difference"]       <set of item_id> 在上面交集的基础上，应该减去哪些 item
+                                    node.description["by_boxes"]                        <boxes> 该区域由哪些 box 组成
+                                可见 node.description["by_item_ids"] 描述了该区域的“来源”，
+                                node.description["by_boxes"] 描述了该区域的形状。
+                注意：
+                    - 将排除所有体积为0的区域
+                    - node_ls 中除了 item 之间的重叠区域，也记录了各个 item 的独有区域
+    """
+    
+class Node:
+    def __init__(self):
+        # 用矢量描述
+        self.description = dict(
+            by_item_ids=dict(
+                difference=set(),
+                intersection=set(),
+            ),
+            by_boxes=None,
+        )
+```
+
+
 
 
 

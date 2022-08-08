@@ -177,7 +177,7 @@ def recursion(collisions, input_node_ls, output_node_ls):
 
 
 if __name__ == '__main__':
-    from developing.geometry.for_boxes.test_data.data_1 import boxes
+    from test.test_data.data_1 import boxes
 
     # boxes = boxes[[0, 1, 2, 3], ...]
     print(boxes.shape)

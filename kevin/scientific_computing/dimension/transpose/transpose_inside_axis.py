@@ -1,5 +1,4 @@
 from kevin.scientific_computing.dimension import transpose
-from kevin.scientific_computing import utils
 
 
 def transpose_inside_axis(**kwargs):
@@ -32,11 +31,12 @@ def transpose_inside_axis(**kwargs):
     paras.update(kwargs)
 
     # 校验参数
-    _, function_table = utils.get_function_table_for_array_and_tensor(paras["x"])
-    swapaxes = function_table["swapaxes"]
+    assert paras["x"] is not None
     x = paras["x"]
     #
-    assert isinstance(paras["axis"], (int,)) and paras["axis"] < x.ndim
+    if paras["axis"] < 0:
+        paras["axis"] += x.ndim
+    assert isinstance(paras["axis"], (int,)) and 0 <= paras["axis"] < x.ndim
     axis = paras["axis"]
     #
     assert isinstance(paras["index_ls"], (list, tuple,)) and len(paras["index_ls"]) == x.shape[axis], \
@@ -45,7 +45,6 @@ def transpose_inside_axis(**kwargs):
     if paras["reverse"]:
         index_ls = transpose.get_inverse_index_ls(index_ls=index_ls)
 
-    x = swapaxes(x, axis, -1)
-    x = x[..., index_ls]
-    y = swapaxes(x, axis, -1)
+    slices = tuple([slice(None, None)] * axis + [index_ls])
+    y = x[slices]
     return y
