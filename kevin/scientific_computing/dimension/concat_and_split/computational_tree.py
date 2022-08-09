@@ -372,7 +372,7 @@ class Node:
             if node.details["size"] * self.details["size"] == 0:
                 end = beg
             else:
-                end = beg + int(node.details["size"] / self.details["size"] * self.var.shape[axis])
+                end = beg + round(node.details["size"] / self.details["size"] * self.var.shape[axis])
             slices[axis] = slice(beg, end)
             #
             sub_var = self.var[tuple(slices)]
