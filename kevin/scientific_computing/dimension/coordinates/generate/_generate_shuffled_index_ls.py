@@ -87,7 +87,15 @@ def generate_shuffled_index_ls(**kwargs):
     end_indices = beg_indices + np.array([kernel_size])
 
     # 随机生成器
-    rd = np.random.RandomState(seed=paras["seed"])
+    np.random.seed(paras["seed"])
+
+    #
+    if paras["allow_duplicates"]:
+        shuffle_func = lambda u: np.random.choice(u.reshape(-1), u.size,
+                                                  replace=paras["allow_duplicates"]).reshape(u.shape)
+    else:
+        # permutation 稍微快一点
+        shuffle_func = lambda u: np.random.permutation(u)
 
     # 随机打乱
     for i in range(index_ls.shape[0]):
@@ -95,14 +103,28 @@ def generate_shuffled_index_ls(**kwargs):
             x = index_ls[i]
             slices = tuple([slice(int(b), int(e)) for b, e in zip(beg, end)])
             crop = x[slices]
-            crop[:] = rd.choice(crop.reshape(-1), crop.size, replace=paras["allow_duplicates"]).reshape(crop.shape)
-    #
+            crop[:] = shuffle_func(crop[:])
+            #
     index_ls = index_ls.reshape(-1)
 
     return index_ls
 
 
 if __name__ == '__main__':
-    shape = [3, 4, 4]
-    index_ls = generate_shuffled_index_ls(shape=shape, stride=[1, 1], kernel_size=[3, 3], seed=114)
-    print(index_ls.reshape(shape))
+    # shape = [3, 4, 4]
+    # index_ls = generate_shuffled_index_ls(shape=shape, stride=[1, 1], kernel_size=[3, 3], seed=114)
+    # print(index_ls.reshape(shape))
+
+    from line_profiler import LineProfiler
+    import time
+
+    lp = LineProfiler()
+
+    lp_wrapper = lp(generate_shuffled_index_ls)
+    lp_wrapper(shape=[8181], seed=1145141919)
+    lp.print_stats()
+
+    time_start = time.time()
+    generate_shuffled_index_ls(shape=[818100], seed=1145141919)
+    time_end = time.time()
+    print('time cost', time_end - time_start, 's')

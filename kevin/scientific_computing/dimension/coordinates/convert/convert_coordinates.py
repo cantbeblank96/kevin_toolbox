@@ -15,13 +15,13 @@ def convert_coordinates(**kwargs):
             shape:              坐标所属的多维变量的形状。
 
         这三种坐标格式是什么？有什么区别？
-            - index_ls      <nparray of integer> 坐标列表。
+            - index_ls      <np.array of integer> 坐标列表。
                                 其中基本元素为 integer，每个 integer 对应着将多维变量打平 reshape(-1) 后某个元素的位置。
                                 shape [n_num, ]
-            - indices_ls    <nparray of nparray> 坐标列表。
+            - indices_ls    <np.array of np.array> 坐标列表。
                                 其中每个 nparray 对应着将多维变量中某个元素的位置。
                                 shape [n_num, index_num]
-            - zip_indices   <tuple of nparray> 坐标列表。
+            - zip_indices   <tuple of np.array> 坐标列表。
                                 是 indices_ls 进行维度变换后的产物。
                                 shape [index_num, n_num]
 

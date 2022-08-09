@@ -51,3 +51,13 @@ def convert_dtype(x, target_type):
         raise TypeError(f"type of x should be np.ndarray or torch.tensor, but get a {type(x)}")
 
     return y
+
+
+if __name__ == '__main__':
+    from line_profiler import LineProfiler
+
+    lp = LineProfiler()
+    lp_wrapper = lp(convert_dtype)
+    x = torch.rand([1, 3, 928, 11200], device=torch.device("cuda"))
+    lp_wrapper(x=x, target_type="uint8")
+    lp.print_stats()

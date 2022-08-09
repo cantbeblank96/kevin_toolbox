@@ -39,7 +39,7 @@ def transpose_inside_axis(**kwargs):
     assert isinstance(paras["axis"], (int,)) and 0 <= paras["axis"] < x.ndim
     axis = paras["axis"]
     #
-    assert isinstance(paras["index_ls"], (list, tuple,)) and len(paras["index_ls"]) == x.shape[axis], \
+    assert len(paras["index_ls"]) == x.shape[axis], \
         f'{len(paras["index_ls"])} == {x.shape[axis]}？'
     index_ls = paras["index_ls"]
     if paras["reverse"]:

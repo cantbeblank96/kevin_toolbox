@@ -1,3 +1,6 @@
+import numpy as np
+
+
 def get_inverse_of_transpose_index_ls(index_ls):
     """
         获取转置的逆
@@ -6,10 +9,14 @@ def get_inverse_of_transpose_index_ls(index_ls):
             恒成立。
 
         参数：
-            index_ls:   <list> 格式具体参考 dimension.coordinates
+            index_ls:   <np.array> 格式具体参考 dimension.coordinates
     """
-
-    pairs = [[r_i, i] for r_i, i in enumerate(index_ls)]
-    pairs.sort(key=lambda x: x[-1])
-    r_index_ls = [i[0] for i in pairs]
+    r_index_ls = np.empty_like(index_ls)
+    r_index_ls[index_ls] = np.arange(len(index_ls))
     return r_index_ls
+
+
+if __name__ == '__main__':
+    import numpy as np
+
+    print(get_inverse_of_transpose_index_ls(index_ls=np.array([0, 4, 1, 5, 2, 3])))
