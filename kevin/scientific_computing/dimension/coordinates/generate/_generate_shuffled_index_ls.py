@@ -2,6 +2,8 @@ import math
 import numpy as np
 from kevin.scientific_computing.dimension import coordinates
 
+DEFAULT_RD = np.random.RandomState()
+
 
 def generate_shuffled_index_ls(**kwargs):
     """
@@ -16,12 +18,14 @@ def generate_shuffled_index_ls(**kwargs):
                                             默认为 None 表示使用整个 shape 作为 kernel_size
             stride：                     卷积的步长
                                             默认为 None 表示与 kernel_size 相等
-            seed:                       随机种子
             allow_duplicates:           允许出现重复值。
                                             默认为 False
             generate_func_of_traversal_order_for_blocks：  用于指定对 block 的遍历顺序
                                             默认使用 coordinates.generate(pattern="z_pattern", output_format="indices_ls") 进行遍历
                                             你也可以自定义一个根据参数 shape 生成 zip_indices 格式的坐标列表的函数，来指定遍历顺序
+            seed:                       随机种子
+            rd:                         随机生成器
+                                            （默认不需要设置）
 
         blocks 相关变量的计算公式：
             第i个维度上 block 的数量 n_i = argmin_{n_i} stride[i] * n_i + kernel[i] >= shape[i]  s.t. n_i>=0
@@ -36,11 +40,13 @@ def generate_shuffled_index_ls(**kwargs):
         #
         "kernel_size": None,
         "stride": None,
-        "seed": None,
         "allow_duplicates": False,
         #
         "generate_func_of_traversal_order_for_blocks":
             lambda shape: coordinates.generate(pattern="z_pattern", output_format="indices_ls", shape=shape),
+        #
+        "seed": None,
+        "rd": DEFAULT_RD,
     }
 
     # 获取参数
@@ -68,6 +74,10 @@ def generate_shuffled_index_ls(**kwargs):
     stride_ls = list(paras["stride"])
     # generate_func_of_traversal_order_for_blocks
     assert callable(paras["generate_func_of_traversal_order_for_blocks"])
+    # 随机生成器
+    assert paras["rd"] is not None
+    rd = paras["rd"]
+    rd.seed(paras["seed"])
 
     # 构建索引矩阵
     index_ls = np.arange(0, np.prod(shape))
@@ -86,16 +96,13 @@ def generate_shuffled_index_ls(**kwargs):
     beg_indices = indices * np.array([stride_ls])
     end_indices = beg_indices + np.array([kernel_size])
 
-    # 随机生成器
-    np.random.seed(paras["seed"])
-
     #
     if paras["allow_duplicates"]:
-        shuffle_func = lambda u: np.random.choice(u.reshape(-1), u.size,
-                                                  replace=paras["allow_duplicates"]).reshape(u.shape)
+        shuffle_func = lambda u: rd.choice(u.reshape(-1), u.size,
+                                           replace=paras["allow_duplicates"]).reshape(u.shape)
     else:
         # permutation 稍微快一点
-        shuffle_func = lambda u: np.random.permutation(u)
+        shuffle_func = lambda u: rd.permutation(u)
 
     # 随机打乱
     for i in range(index_ls.shape[0]):

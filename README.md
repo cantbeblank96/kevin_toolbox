@@ -1,4 +1,4 @@
-kevin_toolbox
+# kevin_toolbox
 
 一个通用的工具代码包集合
 
@@ -7,6 +7,17 @@ kevin_toolbox
 包含以下package：
 
 [TOC]
+
+环境要求
+
+```shell
+numpy>=1.19
+pytorch>=1.10
+```
+
+
+
+
 
 ## data_flow
 
