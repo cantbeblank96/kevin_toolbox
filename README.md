@@ -27,13 +27,24 @@ pytorch>=1.10
 
 与底层操作相关
 
-- cache：缓存的生成与管理
-  - Cache_Manager_for_Iterator 适用于迭代器/生成器的缓存管理器
-  - Strategies 现有策略
-- reader：读取内存、外存中的数据
-  - File_Iterative_Reader 分批次读取文件内容的迭代器
-  - Unified_Reader_Base 按行读取数据的抽象基类
-  - UReader
+
+
+#### cache
+
+缓存的生成与管理
+
+- Cache_Manager_for_Iterator 适用于迭代器/生成器的缓存管理器
+- Strategies 现有策略
+
+
+
+#### reader
+
+读取内存、外存中的数据
+
+- File_Iterative_Reader 分批次读取文件内容的迭代器
+- Unified_Reader_Base 按行读取数据的抽象基类
+- UReader
 
 
 
