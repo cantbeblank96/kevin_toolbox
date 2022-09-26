@@ -38,7 +38,7 @@ def check_consistency(*args, tolerance=1e-7, require_same_shape=True):
             assert issubclass(v.dtype.type, (np.number, np.bool_,))
             if args[0].size > 0:
                 assert np.max(np.abs(args[0] - v)) < tolerance, \
-                    f"{args[0]}， {v}"
+                    f"{args[0]}, {v}, deviation: {np.max(np.abs(args[0] - v))}"
         elif issubclass(args[0].dtype.type, (np.flexible, object,)):
             # 可变长度类型
             assert issubclass(v.dtype.type, (np.flexible, object,))

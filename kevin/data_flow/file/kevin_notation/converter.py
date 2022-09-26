@@ -7,15 +7,21 @@ RAW_SETTINGS = dict(
         read=lambda x: int(x)
     ),
     float=dict(
-        read=lambda x: float(x),
+        read=lambda x: float(x.replace("None", "nan")),
     ),
     str=dict(
         read=lambda x: str(x),
     ),
     list=dict(
-        read=lambda x: eval(x),
+        read=lambda x: eval(deal_nan(x, None)),
     ),
 )
+
+
+def deal_nan(x, replace_with=None):
+    x = x.replace("nan", str(replace_with))
+    return x
+
 
 SETTINGS = dict(
     read=dict(),

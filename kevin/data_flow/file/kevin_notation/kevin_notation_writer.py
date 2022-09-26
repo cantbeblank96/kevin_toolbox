@@ -171,6 +171,9 @@ class Kevin_Notation_Writer:
     def write_contents(self, value):
         assert self.state["stage"] == 2, \
             Exception(f"Error: please call contents_begin() before write_contents!")
+        if isinstance(value, (dict,)):
+            value = list(zip(*[value[k] for k in self.metadata["column_name"]]))
+
         if len(value) == 0:
             return
 
@@ -211,7 +214,15 @@ class Kevin_Notation_Writer:
             assert self.state["stage"] > 0, \
                 Exception(f"Error: please call metadata_begin() or contents_begin() before write!")
             if self.state["stage"] == 1:
-                self.write_metadata(key, value)
+                if key == "metadata":
+                    assert isinstance(value, (dict,))
+                    for key, value in value.items():
+                        if key == "sep":
+                            pass
+                        else:
+                            self.write_metadata(key, value)
+                else:
+                    self.write_metadata(key, value)
             else:
                 self.write_contents(value)
 

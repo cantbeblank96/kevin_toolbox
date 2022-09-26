@@ -40,26 +40,32 @@ def test_writer(expected_metadata, expected_content, file_path):
     values = list(zip(*[expected_content[key][:-part] for key in expected_metadata["column_name"]]))
     with kevin_notation.Writer(file_path=file_path, mode="w", sep=expected_metadata["sep"]) as writer:
         writer.metadata_begin()
-        for key, value in expected_metadata.items():
-            if key == "sep":
-                pass
-            elif key == "column_name":
-                writer.column_name = value
-            elif key == "column_type":
-                # 尝试使用局部指定的 sep
-                writer.column_type = {"value": value, "sep": " "}
-            else:
-                writer.write_metadata(key, value)
+        if part % 2 == 0:
+            # 逐个写入
+            for key, value in expected_metadata.items():
+                if key == "sep":
+                    pass
+                elif key == "column_name":
+                    writer.column_name = value
+                elif key == "column_type":
+                    # 尝试使用局部指定的 sep
+                    writer.column_type = {"value": value, "sep": " "}
+                else:
+                    writer.write_metadata(key, value)
+        else:
+            # 整体写入
+            writer.metadata = expected_metadata
         writer.metadata_end()
 
         writer.contents_begin()
-        writer.contents = values
+        writer.contents = values  # 列表方式写入
         writer.contents_end()
 
     # 续写
-    values = list(zip(*[expected_content[key][-part:] for key in expected_metadata["column_name"]]))
+    # values = list(zip(*[expected_content[key][-part:] for key in expected_metadata["column_name"]]))
+    values = {k: v[-part:] for k, v in expected_content.items()}
     with kevin_notation.Writer(file_path=file_path, mode="a") as writer:
-        writer.contents = values
+        writer.contents = values  # 字典方式写入
         writer.contents_end()
 
     # 检验

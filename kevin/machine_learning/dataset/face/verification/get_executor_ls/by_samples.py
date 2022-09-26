@@ -71,7 +71,7 @@ def get_executor_ls_by_samples(factory, samples, **kwargs):
         # 填充参数（动态生成）
         f_kwargs = dict(samples=Executor(func=samples.read, args=[count, count + step]))
         for key in SUPPORT_TO_GENERATE:
-            if key in kwargs:
+            if key in kwargs and kwargs[key] is not None:
                 f_kwargs[key] = Executor(func=kwargs[key].read, args=[count, count + step])
         # 计算
         executor_ls.append(Executor(func=factory.generate_by_samples,
