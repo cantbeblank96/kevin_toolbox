@@ -1,6 +1,6 @@
 import pytest
 
-from kevin.machine_learning.dataset.face import dummy, verification
+from kevin.machine_learning.dataset.face import dummy, verification, analysis
 from kevin.data_flow.core.reader import UReader
 import numpy as np
 import torch
@@ -59,3 +59,22 @@ def test_face():
         print(lens[-1])
         print(db)
     print(f"sum {sum(lens)}")
+
+
+def test_analysis():
+    print("构造测试数据")
+    dummy_factory = dummy.Factory(human_nums=50, dims_of_feature=25, gallery_nums=30)
+    data = dummy_factory.generate(nums=1000)
+
+    factory = verification.Factory(features=UReader(var=data["features"]),
+                                   clusters=UReader(var=data["clusters"]))
+
+    executor_ls, size_ls = verification.get_executor_ls.by_block(mode="triangle", factory=factory, chunk_step=10,
+                                                                 need_to_generate={"scores", "labels", "samples"})
+    # iterator
+    iterator = verification.build_iterator(executor_ls, size_ls)
+
+    print("测试 get_fail_case_from_iterator")
+
+    fp_db, fn_db = analysis.get_fail_case_from_iterator(iterator=iterator, threshold=0.3, upper_bound=3, verbose=False)
+    print(fp_db, fn_db)
