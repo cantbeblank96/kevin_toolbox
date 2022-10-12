@@ -246,6 +246,9 @@ class Unified_Reader_Base(ABC):
         return self.paras["shape"]
 
     def find(self, value):
+        """非常耗时
+        改进：cache生成n个dict，然后保存。dict的文件名就是一个hash值，各个元素将被分配到hash值对应的dict。
+        每个dict代表一个hash值范围，添加时，当dict的大小超过目标大小的1/n时则强制拆分为两个，最后再合并，保证各个dict大小均衡。或者尝试通过加盐来提高均匀程度"""
         self.index = -1
         for i, j in enumerate(self):
             if j == value:
