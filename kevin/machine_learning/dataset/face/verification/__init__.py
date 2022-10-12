@@ -1,5 +1,5 @@
 #
-from .factory import Face_Verification_DataSet_Factory as Factory
+from .factory import Face_Verification_DataSet_Factory as Factory, SUPPORT_TO_GENERATE
 #
 from .get_executor_ls import by_block
 from .get_executor_ls import by_samples

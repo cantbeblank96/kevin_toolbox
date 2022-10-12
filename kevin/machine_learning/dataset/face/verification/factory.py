@@ -1,7 +1,7 @@
 import numpy as np
 import torch
-from kevin.machine_learning.patch_for_torch.compatible import tile as torch_tile
-from kevin.data_flow.reader import Unified_Reader_Base, UReader
+from kevin.patches.for_torch.compatible import tile as torch_tile
+from kevin.data_flow.core.reader import Unified_Reader_Base, UReader
 
 SUPPORT_TO_GENERATE = {"scores", "labels", "samples"}
 
@@ -148,7 +148,7 @@ class Face_Verification_DataSet_Factory:
         # need_to_generate
         need_to_generate = kwargs.get("need_to_generate", None)
         if need_to_generate is not None:
-            assert isinstance(need_to_generate, (set,)) and need_to_generate.issubset(SUPPORT_TO_GENERATE),\
+            assert isinstance(need_to_generate, (set,)) and need_to_generate.issubset(SUPPORT_TO_GENERATE), \
                 ValueError(f"need_to_generate should be a subset of {SUPPORT_TO_GENERATE}")
         else:
             need_to_generate = SUPPORT_TO_GENERATE
@@ -177,42 +177,49 @@ class Face_Verification_DataSet_Factory:
                                         仅当 pick_triangle=True 时该参数起效
                 need_to_generate:   指定数据集中需要生成的字段
                                         目前支持的字段有： {"scores", "labels", "samples"}
+                                        
+            补充：
+                当参数中额外指定有 scores, labels 或者 samples 时，将以参数中指定的值为准，不对该项进行计算
         """
         i_len, j_len, pick_triangle, include_diagonal, need_to_generate = self.__check_paras_of_block(i_0, i_1,
                                                                                                       j_0, j_1,
                                                                                                       **kwargs)
         res = dict()
+        for key in need_to_generate:
+            if key in kwargs:
+                # 以参数指定的为准
+                # 不需要进行计算
+                res[key] = kwargs[key]
+                continue
 
-        # 计算 scores
-        if "scores" in need_to_generate:
-            # feature_outer [i_len, feature_dims]  and  [j_len, feature_dims]
-            feature_outer_i = torch.tensor(self.paras["features"].read(i_0, i_1), device=self.device,
+            # 计算 scores
+            if key == "scores":
+                # feature_outer [i_len, feature_dims]  and  [j_len, feature_dims]
+                feature_outer_i = torch.tensor(self.paras["features"].read(i_0, i_1), device=self.device,
+                                               dtype=torch.float32)
+                feature_outer_j = torch.tensor(self.paras["features"].read(j_0, j_1), device=self.device,
+                                               dtype=torch.float32)
+                # scores [i_len, j_len, 1]
+                res["scores"] = feature_outer_i.matmul(feature_outer_j.t()).unsqueeze(-1)
+            # 计算 labels
+            elif key == "labels":
+                # cluster_outer [i_len, 1]  and  [j_len, 1]
+                cluster_outer_i = torch.tensor(self.paras["clusters"].read(i_0, i_1), device=self.device,
+                                               dtype=torch.float32)
+                cluster_outer_j = torch.tensor(self.paras["clusters"].read(j_0, j_1), device=self.device,
+                                               dtype=torch.float32)
+                # labels [i_len, j_len, 1]
+                res["labels"] = (cluster_outer_i.reshape(-1, 1) == cluster_outer_j.reshape(1, -1)).unsqueeze(-1)
+            # 计算 samples
+            elif key == "samples":
+                # fid_outer [i_len, 1]  and  [j_len, 1]
+                fid_outer_i = torch.tensor(self.paras["feature_ids"].read(i_0, i_1), device=self.device,
                                            dtype=torch.float32)
-            feature_outer_j = torch.tensor(self.paras["features"].read(j_0, j_1), device=self.device,
+                fid_outer_j = torch.tensor(self.paras["feature_ids"].read(j_0, j_1), device=self.device,
                                            dtype=torch.float32)
-            # scores [i_len, j_len, 1]
-            res["scores"] = feature_outer_i.matmul(feature_outer_j.t()).unsqueeze(-1)
-
-        # 计算 labels
-        if "labels" in need_to_generate:
-            # cluster_outer [i_len, 1]  and  [j_len, 1]
-            cluster_outer_i = torch.tensor(self.paras["clusters"].read(i_0, i_1), device=self.device,
-                                           dtype=torch.float32)
-            cluster_outer_j = torch.tensor(self.paras["clusters"].read(j_0, j_1), device=self.device,
-                                           dtype=torch.float32)
-            # labels [i_len, j_len, 1]
-            res["labels"] = (cluster_outer_i.reshape(-1, 1) == cluster_outer_j.reshape(1, -1)).unsqueeze(-1)
-
-        # 计算 samples
-        if "samples" in need_to_generate:
-            # fid_outer [i_len, 1]  and  [j_len, 1]
-            fid_outer_i = torch.tensor(self.paras["feature_ids"].read(i_0, i_1), device=self.device,
-                                       dtype=torch.float32)
-            fid_outer_j = torch.tensor(self.paras["feature_ids"].read(j_0, j_1), device=self.device,
-                                       dtype=torch.float32)
-            # samples [i_len, j_len, 2]
-            res["samples"] = torch.stack(
-                (torch_tile(fid_outer_i, (1, j_len)), torch_tile(fid_outer_j.t(), (i_len, 1))), dim=2)
+                # samples [i_len, j_len, 2]
+                res["samples"] = torch.stack(
+                    (torch_tile(fid_outer_i, (1, j_len)), torch_tile(fid_outer_j.t(), (i_len, 1))), dim=2)
 
         # reshape 并转换为 np.array
         for key in need_to_generate:
@@ -281,6 +288,9 @@ class Face_Verification_DataSet_Factory:
                                         那么我们在找到 features 中各个元素的 index 与它的 feature_id 之间的偏移关系后，
                                         对于任意的 feature_id，就可以直接根据找到的关系式 index = feature_id + offset，
                                         检索到对应的 feature = features[index]，提高检索效率。
+                                        
+            补充：
+                当参数中额外指定有 scores, labels 或者 samples 时，将以参数中指定的值为准，不对该项进行计算
         """
         samples, need_to_generate, feature_id_is_sequential = self.__check_paras_of_samples(samples, **kwargs)
 
@@ -300,28 +310,36 @@ class Face_Verification_DataSet_Factory:
                 index_ls_j.append(map_[j])
 
         res = dict()
+        for key in need_to_generate:
+            if key in kwargs:
+                # 以参数指定的为准
+                # 不需要进行计算
+                res[key] = kwargs[key]
+                continue
 
-        # 计算 scores
-        if "scores" in need_to_generate:
-            # features [nums, feature_dims]
-            features_i = torch.tensor(self.paras["features"].read(index_ls_i), device=self.device, dtype=torch.float32)
-            features_j = torch.tensor(self.paras["features"].read(index_ls_j), device=self.device, dtype=torch.float32)
-            # scores [nums, 1]
-            scores = torch.sum(features_i * features_j, dim=1, keepdim=True)
-            res["scores"] = scores.cpu().numpy()
-
-        # 计算 labels
-        if "labels" in need_to_generate:
-            # clusters [nums, 1]
-            clusters_i = torch.tensor(self.paras["clusters"].read(index_ls_i), device=self.device, dtype=torch.float32)
-            clusters_j = torch.tensor(self.paras["clusters"].read(index_ls_j), device=self.device, dtype=torch.float32)
-            # labels [nums, 1]
-            labels = clusters_i == clusters_j
-            res["labels"] = labels.cpu().numpy()
-
-        # 计算 samples
-        if "samples" in need_to_generate:
-            # samples [nums, 2]
-            res["samples"] = samples
+            # 计算 scores
+            if key == "scores":
+                # features [nums, feature_dims]
+                features_i = torch.tensor(self.paras["features"].read(index_ls_i), device=self.device,
+                                          dtype=torch.float32)
+                features_j = torch.tensor(self.paras["features"].read(index_ls_j), device=self.device,
+                                          dtype=torch.float32)
+                # scores [nums, 1]
+                scores = torch.sum(features_i * features_j, dim=1, keepdim=True)
+                res["scores"] = scores.cpu().numpy()
+            # 计算 labels
+            elif key == "labels":
+                # clusters [nums, 1]
+                clusters_i = torch.tensor(self.paras["clusters"].read(index_ls_i), device=self.device,
+                                          dtype=torch.float32)
+                clusters_j = torch.tensor(self.paras["clusters"].read(index_ls_j), device=self.device,
+                                          dtype=torch.float32)
+                # labels [nums, 1]
+                labels = clusters_i == clusters_j
+                res["labels"] = labels.cpu().numpy()
+            # 计算 samples
+            elif key == "samples":
+                # samples [nums, 2]
+                res["samples"] = samples
 
         return res

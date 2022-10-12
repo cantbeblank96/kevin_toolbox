@@ -7,11 +7,11 @@ class Executor:
         用法：
             1.定义执行过程
                 get_executor_ls = Executor()
-                get_executor_ls.set_config(func = <function>,
-                                    args = <list/tuple>,
-                                    kwargs = <dict>,
-                                    f_args = <list of functions>,
-                                    f_kwargs = <dict of (key, function) pairs>)
+                get_executor_ls.set_config( func = <function>,
+                                            args = <list/tuple>,
+                                            kwargs = <dict>,
+                                            f_args = <list of functions>,
+                                            f_kwargs = <dict of (key, function) pairs>)
                 # 其中 func 是执行过程的主体函数
                 # args 和 kwargs 是运行该函数时，要输入的参数
                 # f_args 和 f_kwargs 的前缀 f_ 是 fixtures 固件的缩写
@@ -23,6 +23,14 @@ class Executor:
             2.调用执行过程
                 get_executor_ls.run()
                 # 等效于 get_executor_ls()
+            3.修改执行过程
+                当初始化的定义完成后，你还可以通过以下方式来修改执行过程：
+                get_executor_ls.set_config( args=xx, ... )
+                或者在使用过程中动态修改函数的输入参数：
+                get_executor_ls.run( input, reverse=True, xxx )  # 这里的参数 input, reverse 仅用作举例
+                # 等效于：
+                #       get_executor_ls.set_config( args=[input, ], kwargs=dict(reverse=True), ... )
+                #       get_executor_ls()
 
         注意！！
             对于 fixtures 中的函数，在定义函数时，函数体中如果涉及有外部的变量，
@@ -39,31 +47,33 @@ class Executor:
                 使用 Executor 来构造 fixtures 中的函数，同时使用 deepcopy 对参数进行隔离。
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, **kwargs):
         self.config = dict()
-        self.set_config(*args, **kwargs)
+        self.set_config(**kwargs)
 
-    def set_config(self, func, **paras):
+    def set_config(self, **paras):
         """
             定义执行过程
         """
         config = dict()
 
         # func
-        assert callable(func), \
-            TypeError(f"func should be callable, but get a {type(func)}")
-        config["func"] = func
+        func = paras.get("func", None)
+        if func is not None:
+            assert callable(func), \
+                TypeError(f"func should be callable, but get a {type(func)}")
+            config["func"] = func
 
         # args
-        args = paras.get("args", None)
-        if args is not None:
-            assert isinstance(args, (list, tuple,))
-            config["args"] = list(args)
+        args_ = paras.get("args", None)
+        if args_ is not None:
+            assert isinstance(args_, (list, tuple,))
+            config["args"] = list(args_)
         # kwargs
-        kwargs = paras.get("kwargs", None)
-        if kwargs is not None:
-            assert isinstance(kwargs, (dict,))
-            config["kwargs"] = kwargs
+        kwargs_ = paras.get("kwargs", None)
+        if kwargs_ is not None:
+            assert isinstance(kwargs_, (dict,))
+            config["kwargs"] = kwargs_
 
         # f_args
         f_args = paras.get("f_args", None)
@@ -83,7 +93,7 @@ class Executor:
         # update config
         self.config.update(config)
 
-    def run(self):
+    def run(self, *args, **kwargs):
         """
             调用执行过程
         """
@@ -94,25 +104,30 @@ class Executor:
         func = self.config["func"]
 
         # 获取参数
-        args, kwargs = [], dict()
+        args_, kwargs_ = [], dict()
         if "args" in self.config:
-            args.extend(self.config["args"])
+            args_.extend(self.config["args"])
         if "kwargs" in self.config:
-            kwargs.update(self.config["kwargs"])
+            kwargs_.update(self.config["kwargs"])
 
         # evaluate the fixtures
         if "f_args" in self.config:
             for f in self.config["f_args"]:
-                args.append(f())
+                args_.append(f())
         if "f_kwargs" in self.config:
             for k, v in self.config["f_kwargs"].items():
-                kwargs[k] = v()
+                kwargs_[k] = v()
+
+        # 根据当前输入动态更新参数
+        if len(args) > 0:
+            args_ = args
+        kwargs_.update(kwargs)
 
         # 执行
-        return func(*args, **kwargs)
+        return func(*args_, **kwargs_)
 
-    def __call__(self):
-        return self.run()
+    def __call__(self, *args, **kwargs):
+        return self.run(*args, **kwargs)
 
 
 if __name__ == '__main__':

@@ -1,6 +1,6 @@
 from kevin.developing.executor import Executor
-from kevin.data_flow.reader import Unified_Reader_Base
-from kevin.machine_learning.dataset.face.verification import Factory
+from kevin.data_flow.core.reader import Unified_Reader_Base
+from kevin.machine_learning.dataset.face.verification import Factory, SUPPORT_TO_GENERATE
 
 
 def get_executor_ls_by_samples(factory, samples, **kwargs):
@@ -58,15 +58,24 @@ def get_executor_ls_by_samples(factory, samples, **kwargs):
 
     "body"
     executor_ls, size_ls = [], []
+    # 填充参数（静态）
+    kwargs__ = dict()
+    for key in {"need_to_generate", "feature_ids_is_sequential"}:
+        if key in kwargs:
+            kwargs__[key] = kwargs[key]
     #
     count = 0
     while count < len(samples):
         # step
         step = min(chunk_step, len(samples) - count)
+        # 填充参数（动态生成）
+        f_kwargs = dict(samples=Executor(func=samples.read, args=[count, count + step]))
+        for key in SUPPORT_TO_GENERATE:
+            if key in kwargs and kwargs[key] is not None:
+                f_kwargs[key] = Executor(func=kwargs[key].read, args=[count, count + step])
         # 计算
         executor_ls.append(Executor(func=factory.generate_by_samples,
-                                    f_kwargs=dict(samples=Executor(func=samples.read, args=[count, count + step])),
-                                    kwargs=kwargs))
+                                    f_kwargs=f_kwargs, kwargs=kwargs__))
         size_ls.append(step)
         #
         count += step

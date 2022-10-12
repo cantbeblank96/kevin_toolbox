@@ -28,8 +28,8 @@ if __name__ == '__main__':
 
     mat_by_0 = tensor_0.t().matmul(tensor_0)
     mat_by_1 = tensor_1.t().matmul(tensor_1)
-    mat_by_2 = tensor_2.t().matmul(tensor_2)
-    mat_by_3 = tensor_3.t().matmul(tensor_3)
+    mat_by_2 = tensor_2.X().matmul(tensor_2)
+    mat_by_3 = tensor_3.X().matmul(tensor_3)
 
     for mat in [mat_by_0.cpu(), mat_by_1, mat_by_2.cpu(), mat_by_3]:
         print(np.sum(np.abs(mat_by_np - mat.numpy())))

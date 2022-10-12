@@ -1,6 +1,6 @@
 import numpy as np
 import torch
-from kevin.data_flow.reader import Unified_Reader_Base, UReader
+from kevin.data_flow.core.reader import Unified_Reader_Base, UReader
 
 normalize = lambda x: x / np.sum(x ** 2, axis=1, keepdims=True) ** 0.5  # 归一化
 

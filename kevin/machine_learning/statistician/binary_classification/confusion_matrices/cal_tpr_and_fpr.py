@@ -13,6 +13,6 @@ def cal_tpr_and_fpr(cfm):
             一般是对于给定 fpr 时，求出此时的 tpr和 threshold，
             记为 tpr=xxx@fpr=xxx 和 threshold=xxx@fpr=xxx
     """
-    cfm["tpr_ls"] = cfm["tp_ls"] / (cfm["tp_ls"] + cfm["fn_ls"])
-    cfm["fpr_ls"] = cfm["fp_ls"] / (cfm["fp_ls"] + cfm["tn_ls"])
+    cfm["tpr_ls"] = cfm["tp_ls"] / (cfm["tp_ls"] + cfm["fn_ls"] + 1e-14)
+    cfm["fpr_ls"] = cfm["fp_ls"] / (cfm["fp_ls"] + cfm["tn_ls"] + 1e-14)
     return cfm
