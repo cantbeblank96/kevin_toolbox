@@ -27,7 +27,7 @@ def check_consistency(*args, tolerance=1e-7, require_same_shape=True):
     assert len(args) >= 2
     assert isinstance(tolerance, (int, float,))
 
-    args = [v.cpu() if torch.is_tensor(v) else v for v in args]
+    args = [v.detach().cpu() if torch.is_tensor(v) else v for v in args]
     args = [np.asarray(v) for v in args]
 
     for v in args[1:]:

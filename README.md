@@ -94,7 +94,7 @@ pytorch>=1.10
     ```python
         with kevin_notation.Reader(file_path=file_path, chunk_size=chunk_size) as reader:
             # metadata
-            print(reader.metadata)
+            print(reader.p_metadata)
             # content
             content = next(reader)
             for chunk in reader:

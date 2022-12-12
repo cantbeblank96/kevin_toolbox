@@ -38,7 +38,8 @@ class Kevin_Notation_Reader:
         paras.update(kwargs)
 
         # 校验参数
-        assert isinstance(paras["file_path"], (str,)) and os.path.isfile(paras["file_path"])
+        assert isinstance(paras["file_path"], (str,)) and os.path.isfile(paras["file_path"]), \
+            f'file not exists :{paras["file_path"]}'
         #
         assert isinstance(paras["chunk_size"], (int,)) and paras["chunk_size"] > 0
         assert isinstance(paras["beg"], (int,)) and paras["beg"] >= 0

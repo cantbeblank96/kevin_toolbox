@@ -4,7 +4,8 @@ RAW_SETTINGS = dict(
         write=lambda x: f"{x}",
     ),
     int=dict(
-        read=lambda x: int(x)
+        read=lambda x: int(eval(x)),
+        write=lambda x: f"{int(x) if x is not None else None}",
     ),
     float=dict(
         read=lambda x: float(x.replace("None", "nan")),
