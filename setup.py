@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="kevin_toolbox",
-    version="0.2.1",
+    version="0.2.2",
     author="kevin hsu",
     author_email="xukaiming1996@163.com",
     description="一个常用的工具代码包集合",
@@ -35,7 +35,7 @@ setup(
 
     # 表明当前模块依赖哪些包，若环境中没有，则会从pypi中下载安装
     install_requires=[
-        'pytorch>=1.10.0',
+        'torch>=1.10.0',
         'numpy>=1.21.5',
     ],
 
