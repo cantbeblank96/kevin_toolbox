@@ -197,6 +197,7 @@ class Kevin_Notation_Writer:
             row = [self.paras["converter"][type_](r) for type_, r in zip(type_ls, row)]
             line = f"{self.metadata['sep'].join(row)}\n"
             self.file.write(line)
+            self.file.flush()
 
     def contents_end(self):
         self.state["stage"] = 0
