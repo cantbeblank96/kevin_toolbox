@@ -30,6 +30,23 @@ class Kevin_Notation_Writer:
                                             用于根据指定数据类型选取适当的函数来处理输入数据。
                 sep：                <string> 默认的分隔符
                                             默认使用 \t
+
+
+            工作流程：
+                                               __init__(mode="w") ──► stage=0 ──► metadata_begin()
+                                                                                         │
+                                                                                         ▼
+                  _write_metadata(key, value) or writer.metadata=dict(key=value) ◄───► stage=1
+                                                                                         │
+                                                                                         ▼
+                                                 contents_begin() ◄── stage=2 ◄── metadata_end()
+                                                        │
+                                                        ▼
+                              __init__(mode="a") ──► stage=3 ◄───► write_contents(value) or writer.contents=value
+                                                        │
+                                                        ▼
+                                                  contents_end() ───► stage=4
+
         """
 
         # 默认参数
@@ -81,7 +98,7 @@ class Kevin_Notation_Writer:
             # 获取文件对象
             self.file = open(self.paras["file_path"], **self.paras["paras_for_open"])
             # 初始状态码
-            beg_stage = 2
+            beg_stage = 3
         else:
             # 采用覆盖写模式
             self.metadata["sep"] = self.paras["sep"]
@@ -102,26 +119,23 @@ class Kevin_Notation_Writer:
     # ------------------------------------ metadata ------------------------------------ #
 
     def metadata_begin(self):
+        # 流程检查
         assert self.state["stage"] == 0, \
-            Exception(
-                f"Error: need to close the last {['metadata', 'contents'][self.state['stage'] - 1]} writing first!")
+            f'Error: need to invoke __init__(mode="w") first!'
         self.state["stage"] = 1
 
         self.file.write(f"# --metadata--\n")
-        self.write_metadata("sep", self.paras["sep"])
+        self._write_metadata("sep", self.paras["sep"])
+        self.file.flush()
 
-    def write_metadata(self, key, value):
+    def _write_metadata(self, key, value):
         """
-            支持两种方式指定 value
-                <list or tuple> 直接指定 value 的值，写入方式参考默认值
-                <dict> 一个包含 value 以及额外指定写入方式参数的字典
-                    {"value": <list or tuple>, "sep": ..., }
+            参数：
+                value:          支持两种方式指定:
+                                    <list or tuple> 直接指定 value 的值，写入方式参考默认值
+                                    <dict> 一个包含 value 以及额外指定写入方式参数的字典
+                                        {"value": <list or tuple>, "sep": ..., }
         """
-        # 参数
-        assert self.state["stage"] == 1, \
-            Exception(f"Error: please call metadata_begin() before write_metadata!")
-        assert isinstance(key, (str,))
-        #
         paras = dict()
         if isinstance(value, (dict,)):
             assert "value" in value
@@ -154,25 +168,63 @@ class Kevin_Notation_Writer:
         #
         if key in ["column_name", "column_type"]:
             self.metadata["column_num"] = len(value)
+        self.file.flush()
+
+    def write_metadata(self, **kwargs):
+        """
+            写入 metadata（供外部调用）
+
+            支持两种方式进行写入：
+                write_metadata(key, value)
+                write_metadata(metadata)    其中 metadata 是包含多组 key,value 的 dict。等效于多次调用第一种方式进行写入。
+
+            注意，由于对默认分隔符的设定和写入已经在一开始的初始化和 metadata_begin() 时完成了，因此本函数将直接跳过/忽略 key="sep" 的情况。
+        """
+        # 流程检查
+        if self.state["stage"] == 0:
+            self.metadata_begin()
+        assert self.state["stage"] == 1, \
+            Exception(f"Error: please call metadata_begin() before _write_metadata!")
+
+        paras = kwargs
+
+        if "metadata" in paras:
+            assert isinstance(paras["metadata"], (dict,))
+            for key, value in paras["metadata"].items():
+                if key == "sep":
+                    pass
+                else:
+                    self._write_metadata(key=key, value=value)
+        elif "key" in paras:
+            assert isinstance(paras["key"], (str,)) and "value" in paras
+            self._write_metadata(key=paras["key"], value=paras["value"])
 
     def metadata_end(self):
-        self.state["stage"] = 0
+        # 流程检查
+        assert self.state["stage"] == 1
+        self.state["stage"] = 2
+
         self.file.write(f"\n")
         self.file.flush()
 
     # ------------------------------------ contents ------------------------------------ #
 
     def contents_begin(self):
-        assert self.state["stage"] == 0, \
-            Exception(
-                f"Error: need to close the last {['metadata', 'contents'][self.state['stage'] - 1]} writing first!")
-        self.state["stage"] = 2
+        # 流程检查
+        assert self.state["stage"] == 2, \
+            f"Error: need to close the last metadata writing!"
+        self.state["stage"] = 3
 
         self.file.write(f"# --contents--\n")
+        self.file.flush()
 
-    def write_contents(self, value):
-        assert self.state["stage"] == 2, \
-            Exception(f"Error: please call contents_begin() before write_contents!")
+    def _write_contents(self, value):
+        """
+            参数：
+                value：          支持两种方式指定:
+                                    <list / list of list/tuple>  一行、或者多行的内容，将按照内部保存的 column_type 进行转换。
+                                    <dict of key:column_name value:list> 按照内部保存的 column_name 进行读取和写入
+        """
         if isinstance(value, (dict,)):
             value = list(zip(*[value[k] for k in self.metadata["column_name"]]))
 
@@ -197,10 +249,28 @@ class Kevin_Notation_Writer:
             row = [self.paras["converter"][type_](r) for type_, r in zip(type_ls, row)]
             line = f"{self.metadata['sep'].join(row)}\n"
             self.file.write(line)
-            self.file.flush()
+        self.file.flush()
+
+    def write_contents(self, **kwargs):
+        """
+            写入 contents（供外部调用）
+        """
+        # 流程检查
+        if self.state["stage"] == 1:
+            self.metadata_end()
+        if self.state["stage"] == 2:
+            self.contents_begin()
+        assert self.state["stage"] == 3, \
+            Exception(f"Error: please call contents_begin() before write_contents!")
+
+        paras = kwargs
+        self._write_contents(value=paras["value"])
 
     def contents_end(self):
-        self.state["stage"] = 0
+        # 流程检查
+        assert self.state["stage"] == 3
+        self.state["stage"] = 4
+
         self.file.flush()
 
     # ------------------------------------ magic func ------------------------------------ #
@@ -211,23 +281,18 @@ class Kevin_Notation_Writer:
             支持直接通过 self.key = value 的方式来写入 metadata 和 contents
         """
         if "state" not in self.__dict__:
-            # status 未被设置，未完成初始化
+            # state 未被设置，未完成初始化
             super().__setattr__(key, value)
         else:
-            assert self.state["stage"] > 0, \
-                Exception(f"Error: please call metadata_begin() or contents_begin() before write!")
             if self.state["stage"] == 1:
                 if key == "metadata":
-                    assert isinstance(value, (dict,))
-                    for key, value in value.items():
-                        if key == "sep":
-                            pass
-                        else:
-                            self.write_metadata(key, value)
+                    self.write_metadata(metadata=value)
                 else:
-                    self.write_metadata(key, value)
+                    self.write_metadata(key=key, value=value)
+            elif self.state["stage"] == 3:
+                self.write_contents(value=value)
             else:
-                self.write_contents(value)
+                raise ValueError(f"Error: please call metadata_begin() or contents_begin() before write!")
 
     # with 上下文管理器
     def __enter__(self):

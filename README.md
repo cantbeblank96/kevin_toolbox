@@ -144,7 +144,7 @@ pytorch>=1.10
                     # 尝试使用局部指定的 sep
                     writer.column_type = {"value": value, "sep": " "}
                 else:
-                    writer.write_metadata(key, value)
+                    writer._write_metadata(key, value)
             writer.metadata_end()
     
             writer.contents_begin()
