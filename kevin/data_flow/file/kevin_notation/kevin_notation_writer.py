@@ -1,6 +1,7 @@
 import os
 import copy
 import numpy as np
+import warnings
 from kevin.data_flow.file.kevin_notation.converter import Converter, CONVERTER_FOR_WRITER
 from kevin.data_flow.file import kevin_notation
 
@@ -130,11 +131,15 @@ class Kevin_Notation_Writer:
 
     def _write_metadata(self, key, value):
         """
+            通过键值对的形式写入一个 metadata
+
             参数：
-                value:          支持两种方式指定:
-                                    <list or tuple> 直接指定 value 的值，写入方式参考默认值
-                                    <dict> 一个包含 value 以及额外指定写入方式参数的字典
-                                        {"value": <list or tuple>, "sep": ..., }
+                key：            键
+                value：          值/值以及该键值对的其他信息。
+                                    支持两种方式指定:
+                                        <list or tuple> 直接指定 value 的值，写入方式参考默认值
+                                        <dict> 一个包含 value 以及额外指定写入方式参数的字典
+                                            {"value": <list or tuple>, "sep": ..., }
         """
         paras = dict()
         if isinstance(value, (dict,)):
@@ -191,13 +196,14 @@ class Kevin_Notation_Writer:
         if "metadata" in paras:
             assert isinstance(paras["metadata"], (dict,))
             for key, value in paras["metadata"].items():
-                if key == "sep":
-                    pass
-                else:
+                if key != "sep":
                     self._write_metadata(key=key, value=value)
         elif "key" in paras:
             assert isinstance(paras["key"], (str,)) and "value" in paras
-            self._write_metadata(key=paras["key"], value=paras["value"])
+            if paras["key"] != "sep":
+                self._write_metadata(key=paras["key"], value=paras["value"])
+        else:
+            raise ValueError("Requires parameter 'key, value' or 'metadata'")
 
     def metadata_end(self):
         # 流程检查
@@ -218,34 +224,31 @@ class Kevin_Notation_Writer:
         self.file.write(f"# --contents--\n")
         self.file.flush()
 
-    def _write_contents(self, value):
+    def _write_contents(self, row_ls):
         """
-            参数：
-                value：          支持两种方式指定:
-                                    <list / list of list/tuple>  一行、或者多行的内容，将按照内部保存的 column_type 进行转换。
-                                    <dict of key:column_name value:list> 按照内部保存的 column_name 进行读取和写入
-        """
-        if isinstance(value, (dict,)):
-            value = list(zip(*[value[k] for k in self.metadata["column_name"]]))
+            通过 row_ls 以行的形式写入 contents
 
-        if len(value) == 0:
+            参数：
+                row_ls：          <list / list of list/tuple>  一行、或者多行的内容，将按照内部保存的 column_type 进行转换。
+        """
+        if len(row_ls) == 0:
             return
 
-        value = np.array(value)
-        if value.ndim <= 1:
-            value = value.reshape((1, -1))
+        row_ls = np.array(row_ls)
+        if row_ls.ndim <= 1:
+            row_ls = row_ls.reshape((1, -1))
 
         if "column_num" in self.metadata:
-            assert value.shape[-1] == self.metadata["column_num"], \
-                f"{value.shape}"
+            assert row_ls.shape[-1] == self.metadata["column_num"], \
+                f"{row_ls.shape}"
 
         # 转换并写入
         if "column_type" in self.metadata:
             type_ls = self.metadata["column_type"]
         else:
-            type_ls = ["default"] * len(value.shape[-1])
+            type_ls = ["default"] * len(row_ls.shape[-1])
 
-        for row in value:
+        for row in row_ls:
             row = [self.paras["converter"][type_](r) for type_, r in zip(type_ls, row)]
             line = f"{self.metadata['sep'].join(row)}\n"
             self.file.write(line)
@@ -254,6 +257,10 @@ class Kevin_Notation_Writer:
     def write_contents(self, **kwargs):
         """
             写入 contents（供外部调用）
+
+            支持两种方式进行写入：
+                write_contents(row_ls)         <list / list of list/tuple>  一行、或者多行的内容，将按照内部保存的 column_type 进行转换。
+                write_contents(column_dict)    <dict of key:column_name value:list> 按照内部保存的 column_name 进行读取和写入。
         """
         # 流程检查
         if self.state["stage"] == 1:
@@ -264,7 +271,14 @@ class Kevin_Notation_Writer:
             Exception(f"Error: please call contents_begin() before write_contents!")
 
         paras = kwargs
-        self._write_contents(value=paras["value"])
+
+        if "row_ls" in paras:
+            self._write_contents(row_ls=paras["row_ls"])
+        elif "column_dict" in paras:
+            assert isinstance(paras["column_dict"], (dict,))
+            self._write_contents(row_ls=list(zip(*[paras["column_dict"][k] for k in self.metadata["column_name"]])))
+        else:
+            raise ValueError("Requires parameter 'row_ls' or 'column_dict'")
 
     def contents_end(self):
         # 流程检查
@@ -290,7 +304,18 @@ class Kevin_Notation_Writer:
                 else:
                     self.write_metadata(key=key, value=value)
             elif self.state["stage"] == 3:
-                self.write_contents(value=value)
+                if key == "row_ls":
+                    self.write_contents(row_ls=value)
+                elif key == "column_dict":
+                    self.write_contents(column_dict=value)
+                else:  # 兼容旧版本
+                    warnings.warn(
+                        f"Writing to contents with keys named other than row_ls and column_dict "
+                        f"will no longer be supported in a future release", DeprecationWarning)
+                    try:
+                        self.write_contents(row_ls=value)
+                    except:
+                        self.write_contents(column_dict=value)
             else:
                 raise ValueError(f"Error: please call metadata_begin() or contents_begin() before write!")
 

@@ -17,14 +17,14 @@ def test_reader(expected_metadata, expected_content, file_path):
     chunk_size = np.random.randint(1, 10)
     with kevin_notation.Reader(file_path=file_path, chunk_size=chunk_size) as reader:
         # metadata
-        print(reader.metadata)
+        # print(reader.metadata)
         check_consistency(expected_metadata, reader.metadata)
         # content
         content = next(reader)
         for chunk in reader:
             for key in content.keys():
                 content[key].extend(chunk[key])
-        print(content)
+        # print(content)
         check_consistency(expected_content, content)
 
 
@@ -62,14 +62,14 @@ def test_writer_0(expected_metadata, expected_content, file_path):
         writer.metadata_end()
 
         writer.contents_begin()
-        writer.contents = values  # 列表方式写入
+        writer.row_ls = values  # 列表方式写入
         writer.contents_end()
 
     # 续写
     # values = list(zip(*[expected_content[key][-part:] for key in expected_metadata["column_name"]]))
     values = {k: v[-part:] for k, v in expected_content.items()}
     with kevin_notation.Writer(file_path=file_path, mode="a") as writer:
-        writer.contents = values  # 字典方式写入
+        writer.column_dict = values  # 字典方式写入
         writer.contents_end()
 
     # 检验
@@ -104,12 +104,12 @@ def test_writer_1(expected_metadata, expected_content, file_path):
             # 整体写入
             writer.write_metadata(metadata=expected_metadata)
 
-        writer.write_contents(value=values)  # 列表方式写入
+        writer.write_contents(row_ls=values)  # 列表方式写入
 
     # 续写
     values = {k: v[-part:] for k, v in expected_content.items()}
     with kevin_notation.Writer(file_path=file_path, mode="a") as writer:
-        writer.write_contents(value=values)  # 字典方式写入
+        writer.write_contents(column_dict=values)  # 字典方式写入
 
     # 检验
     with kevin_notation.Reader(file_path=file_path, chunk_size=1000) as reader:
@@ -118,3 +118,35 @@ def test_writer_1(expected_metadata, expected_content, file_path):
         # content
         content = next(reader)
         check_consistency(expected_content, content)
+
+
+@pytest.mark.parametrize("expected_metadata, expected_content, file_path",
+                         zip(metadata_ls, content_ls, file_path_ls))
+def test_read(expected_metadata, expected_content, file_path):
+    print("test read()")
+    # 读取
+    metadata, content = kevin_notation.read(file_path=file_path)
+    # 检验
+    check_consistency(expected_metadata, metadata)
+    check_consistency(expected_content, content)
+
+
+@pytest.mark.parametrize("expected_metadata, expected_content, file_path",
+                         zip(metadata_ls, content_ls, file_path_ls))
+def test_write(expected_metadata, expected_content, file_path):
+    print("test write()")
+
+    # 新建
+    file_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "test_data/temp", os.path.basename(file_path))
+    # 写入
+    if np.random.randint(0, 2) == 0:
+        # 列表方式写入
+        expected_content = list(zip(*[expected_content[key] for key in expected_metadata["column_name"]]))
+    else:
+        # 字典方式写入
+        pass
+    kevin_notation.write(metadata=expected_metadata, content=expected_content, file_path=file_path)
+    # 检验
+    metadata, content = kevin_notation.read(file_path=file_path)
+    check_consistency(expected_metadata, metadata)
+    check_consistency(expected_content, content)

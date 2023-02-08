@@ -2,10 +2,11 @@ from setuptools import setup, find_packages
 
 setup(
     name="kevin_toolbox",
-    version="0.2.4",
+    version="0.2.6",
     author="kevin hsu",
     author_email="xukaiming1996@163.com",
     description="一个常用的工具代码包集合",
+    long_description="add kevin_notation.write()/read()",
     # 项目主页
     url="https://github.com/cantbeblank96/kevin_toolbox",
     #
@@ -36,7 +37,7 @@ setup(
     # 表明当前模块依赖哪些包，若环境中没有，则会从pypi中下载安装
     install_requires=[
         'torch>=1.10.0',
-        'numpy>=1.20.0',
+        'numpy>=1.19.0',
     ],
 
     # 仅在测试时需要使用的依赖，在正常发布的代码中是没有用的。
