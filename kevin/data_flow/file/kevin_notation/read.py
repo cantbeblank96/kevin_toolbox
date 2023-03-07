@@ -12,5 +12,5 @@ def read(file_path):
         try:
             content = next(reader)
         except:
-            content = None
+            content = {key: [] for key in metadata["column_name"]}
     return metadata, content

@@ -1,7 +1,7 @@
 import os
 import numpy as np
 from kevin.geometry import for_boxes
-from kevin.scientific_computing.dimension import coordinates
+from kevin.math.dimension import coordinates
 
 U_OPERATION_CHOICES = {None, "not"}
 BI_OPERATION_CHOICES = {'or', 'and', 'diff'}
