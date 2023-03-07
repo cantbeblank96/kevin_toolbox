@@ -15,7 +15,22 @@ numpy>=1.19
 pytorch>=1.10
 ```
 
+安装方法：
 
+```shell
+pip install kevin-toolbox
+```
+
+
+
+
+
+版本更新记录：
+
+- v 0.2.7（2023-03-04）
+  - 将 kevin.scientific_computing 模块更名为 kevin.math
+  - 增加了 kevin.computer_science 模块，该模块目前主要包含数据结构与算法的实现。
+  - 增加了 kevin.math.number_theory 模块。
 
 
 
@@ -105,6 +120,16 @@ pytorch>=1.10
 
 
 
+- read(file_path)
+
+```python
+"""
+    读取整个文件的快捷接口
+"""
+```
+
+
+
 - Writer
 
   ```python
@@ -157,6 +182,16 @@ pytorch>=1.10
             writer.contents = values
             writer.contents_end()
     ```
+
+
+
+- write(metadata, content, file_path)
+
+```python
+"""
+    写入整个文件的快捷接口
+"""
+```
 
 
 
@@ -248,11 +283,16 @@ TODO 单元测试未完成：
 
 
 
-## scientific_computing
+## math
 
-科学计算相关。
+数学计算、函数变换相关。
 
-包括数学、维度操作、离散余弦变换、基于椭圆曲线的随机生成（正在开发中）等。
+包括：
+
+- 维度操作 dimension
+- 离散余弦变换 transform.dct
+- 
+- 基于椭圆曲线的随机生成（正在开发中）等。
 
 
 
@@ -433,7 +473,7 @@ TODO 单元测试未完成：
 
 离散余弦变换
 
-（在本模块下的 example 文件夹中提供了一个示例展示如何使用本模块结合 kevin.scientific_computing 下的其他模块实现图像的低通or高通滤波。）
+（在本模块下的 example 文件夹中提供了一个示例展示如何使用本模块结合 kevin.math 下的其他模块实现图像的低通or高通滤波。）
 
 - generate_trans_matrix(**kwargs)
 
@@ -573,6 +613,37 @@ TODO 单元测试未完成：
 ```
 
 
+
+### number_theory
+
+数论相关
+
+【finished 单元测试已完成】
+
+- get_primes(n)
+
+```python
+"""
+    获取 小于等于 正整数n的所有素数
+"""
+```
+
+- prime_factorization(n)
+
+```python
+"""
+    对正整数n进行质因数分解
+        返回它的所有素数因子，包括1
+"""
+```
+
+- get_greatest_common_divisor(n, m)
+
+```python
+"""
+    找出正整数 n 和 m 之间的最大公约数
+"""
+```
 
 
 
@@ -934,6 +1005,112 @@ class Node:
 
 
 
+## computer_science
+
+计算机科学与技术学科相关
+
+包括：
+
+- 数据结构与算法 algorithm、data_structure
+
+【finished 单元测试已完成】
+
+
+
+### algorithm
+
+
+
+#### search
+
+解决查找与匹配问题
+
+- binary_search(ls, value, is_sorted=False)
+
+```python
+    """
+        二分法查找
+            返回给定的 value 在已经排序好的数组 ls 中，按照顺序应该插入到哪个 index 位置上
+            比如 ls=[0, 1, 2, 2, 3], value=2 则返回适合插入的第一个位置 index=2
+
+        参数:
+            ls:             <list/tuple>
+            value:
+            is_sorted:      <boolean> 数组是否已经按从小到大进行排序
+
+        返回：
+            index
+    """
+```
+
+
+
+#### combinatorial_optimization
+
+解决组合优化问题
+
+组合优化是数学优化的一个子领域 ，它包括从有限的对象集中寻找最优对象。典型的组合优化问题是旅行商问题（“TSP”）、最小生成树问题（“MST”）和背包问题。
+
+- zero_one_knapsack_problem(**kwargs)
+
+```python
+    """
+        使用动态规划求 01 背包
+            支持 weights 和 values 是负数的情况
+
+        参数:
+            weights:                <list> 可选 item 的“体积”
+            values:                 <list> 对应 item 的价值
+                                        注意：weights 和 values 中也可以包含负数
+            upper_bound:            <int/float> 背包的“容量”上限
+        返回:
+            v, idx_ls
+            背包可以容纳的最大价值，对应子集的下标序列
+    """
+```
+
+
+
+- get_subset_with_largest_product(ls, upper_bound)
+
+```python
+    """
+        找出乘积不大于 upper_bound 的 ls 的最大乘积子集
+            要求 ls 中的元素，以及 upper_bound 都为正数
+
+        参数：
+            ls:             <list>
+            upper_bound:    <int/float>
+
+        返回：
+            product, subset
+            最大子集的乘积 ， 最大子集
+                当解不存在时候，返回 None, None
+    """
+```
+
+主要通过 log 操作将求乘积转化为求和，然后再调用 zero_one_knapsack_problem() 来实现。
+
+
+
+#### utils
+
+- get_sub_sets(inputs)
+
+返回 inputs 集合的所有子集。
+
+
+
+
+
+### data_structure
+
+自定义or实现的一些数据结构
+
+
+
+
+
 ## env_info
 
 与环境的配置、版本有关
@@ -975,4 +1152,9 @@ https://juejin.cn/post/6882904677373968397
 
 https://github.com/sphinx-doc/sphinx/issues/2390
 
-[TODO] 将使用测试用例转为 pytest 测试单元
+
+
+[TODO] 
+
+- 将my_res中的 find_primes  find_factors  和 find_greatest_common_divisor转换为 kevin中的包
+

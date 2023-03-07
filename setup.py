@@ -2,11 +2,14 @@ from setuptools import setup, find_packages
 
 setup(
     name="kevin_toolbox",
-    version="0.2.6",
+    version="0.2.7",
     author="kevin hsu",
     author_email="xukaiming1996@163.com",
     description="一个常用的工具代码包集合",
-    long_description="add kevin_notation.write()/read()",
+    long_description=f'rename scientific_computing to math\n'
+                     f'add computer_science\n'
+                     f'add math.number_theory\n'
+                     f'modify kevin_notation.read()',
     # 项目主页
     url="https://github.com/cantbeblank96/kevin_toolbox",
     #
