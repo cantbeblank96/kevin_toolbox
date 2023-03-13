@@ -2,14 +2,17 @@ from setuptools import setup, find_packages
 
 setup(
     name="kevin_toolbox",
-    version="0.2.7",
+    version="0.2.9",
     author="kevin hsu",
     author_email="xukaiming1996@163.com",
     description="一个常用的工具代码包集合",
-    long_description=f'rename scientific_computing to math\n'
-                     f'add computer_science\n'
-                     f'add math.number_theory\n'
-                     f'modify kevin_notation.read()',
+    long_description=f'add norm() and svd() to patches.for_torch.compatible.linalg; \n'
+                     f'add test cases for patches.for_torch; \n'
+                     f'add normal_indices_generator() to math.dimension.coordinates; \n'
+                     f'update math.dimension.coordinates.generate() to support pattern: normal; \n'
+                     f'add Sequential to patches.for_torch.compatible.nn; \n'
+                     f'add patches.for_matplotlib; \n'
+                     f'add Exponential_Moving_Average to computer_science.algorithm.statistician; ',
     # 项目主页
     url="https://github.com/cantbeblank96/kevin_toolbox",
     #
@@ -41,6 +44,7 @@ setup(
     install_requires=[
         'torch>=1.10.0',
         'numpy>=1.19.0',
+        "matplotlib>=3.0"
     ],
 
     # 仅在测试时需要使用的依赖，在正常发布的代码中是没有用的。
