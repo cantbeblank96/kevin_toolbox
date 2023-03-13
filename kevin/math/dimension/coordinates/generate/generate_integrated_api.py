@@ -1,16 +1,24 @@
-from ._generate_shuffled_index_ls import generate_shuffled_index_ls
-from ._generate_z_pattern_indices_ls import generate_z_pattern_indices_ls
+import numpy as np
+from .generate_shuffled_index_ls import generate_shuffled_index_ls
+from .generate_z_pattern_indices_ls import generate_z_pattern_indices_ls
 from ... import coordinates
 
+SUPPORTED_PATTERNS = {"z_pattern", "shuffle_inside_block", "normal"}
+SUPPORTED_FORMATS = {"index_ls", "indices_ls", "zip_indices"}
 
-def generate_coordinates(**kwargs):
+
+def generate_integrated_api(**kwargs):
     """
-        按照不同模式 pattern 对 shape 进行遍历，并生成指定格式的 坐标列表
+        整合了已有生成方法的集成接口
+            按照不同模式 pattern 对 shape 进行遍历，并生成指定格式的 坐标列表
 
         参数：
             shape:              <list/tuple of integers> 坐标所属的多维变量的形状。
             pattern:            <str> 生成/遍历坐标的模式
                                     目前支持：
+                                        "normal":
+                                            生成 从原点出发按照行/列（在kwargs中通过order可以指定）优先遍历的下标列表
+                                            核心调用的是 normal_indices_generator()
                                         "z_pattern" :
                                             生成 从原点出发进行之字形（Z形）遍历 的下标列表。
                                             核心调用的是 generate_z_pattern_indices_ls()
@@ -40,24 +48,28 @@ def generate_coordinates(**kwargs):
     # 校验参数
     assert isinstance(paras["shape"], (list, tuple,)) and len(paras["shape"]) > 0
     #
-    assert paras["pattern"] in {"z_pattern", "shuffle_inside_block"}
+    assert paras["pattern"] in SUPPORTED_PATTERNS, \
+        f'Unknown pattern!\ncurrently supported patterns: {SUPPORTED_PATTERNS}'
     #
-    assert paras["output_format"] in {"index_ls", "indices_ls", "zip_indices"}
+    assert paras["output_format"] in SUPPORTED_FORMATS, \
+        f'Unknown format!\ncurrently supported formats: {SUPPORTED_FORMATS}'
     #
     assert isinstance(paras["kwargs"], (dict,))
 
-    # 转换
+    # 生成坐标
     if paras["pattern"] == "z_pattern":
-        indices_ls = generate_z_pattern_indices_ls(shape=paras["shape"], **paras["kwargs"])
-        res = coordinates.convert(var=indices_ls,
-                                  input_format="indices_ls", output_format=paras["output_format"],
-                                  shape=paras["shape"])
+        var = generate_z_pattern_indices_ls(shape=paras["shape"], **paras["kwargs"])
+        input_format = "indices_ls"
     elif paras["pattern"] == "shuffle_inside_block":
-        index_ls = generate_shuffled_index_ls(shape=paras["shape"], **paras["kwargs"])
-        res = coordinates.convert(var=index_ls,
-                                  input_format="index_ls", output_format=paras["output_format"],
-                                  shape=paras["shape"])
-    else:
-        raise Exception("unknown pattern!")
+        var = generate_shuffled_index_ls(shape=paras["shape"], **paras["kwargs"])
+        input_format = "index_ls"
+    else:  # "normal"
+        var = np.asarray(list(coordinates.normal_indices_generator(shape=paras["shape"], **paras["kwargs"])))
+        input_format = "indices_ls"
+
+    # 转换格式
+    res = coordinates.convert(var=var,
+                              input_format=input_format, output_format=paras["output_format"],
+                              shape=paras["shape"])
 
     return res

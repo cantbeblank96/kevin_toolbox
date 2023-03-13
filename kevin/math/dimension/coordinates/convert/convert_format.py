@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def convert_coordinates(**kwargs):
+def convert_format(**kwargs):
     """
         在各种格式的 坐标列表 之间进行转换
 

@@ -5,50 +5,6 @@ import numpy as np
 from kevin.math.dimension import coordinates, reshape
 
 
-@pytest.mark.parametrize("format_, var, shape",
-                         list(zip(["indices_ls", "index_ls", ],
-                                  [np.array([[1, 1], [2, 2], [2, 3]]),
-                                   np.array([0, 1, 10], dtype=np.int32), ],
-                                  [[4, 4], [3, 4, 6], ]))[:])
-def test_convert(format_, var, shape):
-    print("test convert")
-
-    zip_indices = coordinates.convert(var=var, shape=shape, input_format=format_, output_format="zip_indices")
-    indices_ls = coordinates.convert(var=var, shape=shape, input_format=format_, output_format="indices_ls")
-    index_ls = coordinates.convert(var=var, shape=shape, input_format=format_, output_format="index_ls")
-
-    print("convert indices_ls <==> zip_indices")
-
-    # indices_ls ==> zip_indices
-    zip_indices_1 = coordinates.convert(var=indices_ls, input_format="indices_ls", output_format="zip_indices")
-    # zip_indices ==> indices_ls
-    indices_ls_1 = coordinates.convert(var=zip_indices_1, input_format="zip_indices", output_format="indices_ls")
-    #
-    check_consistency(indices_ls, indices_ls_1)
-    check_consistency(np.array(zip_indices), np.array(zip_indices_1))
-
-    print("convert index_ls <==> indices_ls")
-
-    # index_ls ==> indices_ls
-    indices_ls_1 = coordinates.convert(var=index_ls, shape=shape, input_format="index_ls", output_format="indices_ls")
-    # indices_ls ==> index_ls
-    index_ls_1 = coordinates.convert(var=indices_ls_1, shape=shape, input_format="indices_ls", output_format="index_ls")
-    #
-    check_consistency(index_ls, index_ls_1)
-    check_consistency(indices_ls, indices_ls_1)
-
-    print("convert zip_indices <==> index_ls")
-
-    # zip_indices ==> index_ls
-    index_ls_1 = coordinates.convert(var=zip_indices, shape=shape, input_format="zip_indices", output_format="index_ls")
-    # index_ls ==> zip_indices
-    zip_indices_1 = coordinates.convert(var=index_ls_1, shape=shape, input_format="index_ls",
-                                        output_format="zip_indices")
-    #
-    check_consistency(index_ls, index_ls_1)
-    check_consistency(np.array(zip_indices), np.array(zip_indices_1))
-
-
 @pytest.mark.parametrize("shape, expected_outputs",
                          list(zip([[2, 3], [3, 4, 4], [100, 100, 5]],
                                   [dict(
@@ -57,7 +13,7 @@ def test_convert(format_, var, shape):
                                       zip_indices=([0, 1, 0, 1, 0, 1], [0, 0, 1, 1, 2, 2])
                                   ), dict(), dict()]))[:])
 def test_generate_z_pattern(shape, expected_outputs):
-    print("test generate z_pattern")
+    print("test coordinates.generate() for z_pattern")
 
     for output_format in ["index_ls", "indices_ls", "zip_indices"]:
         output = coordinates.generate(shape=shape, pattern="z_pattern", output_format=output_format)
@@ -81,7 +37,7 @@ def test_generate_z_pattern(shape, expected_outputs):
                                   [[1, 3], [2, 2], [5, 4]],
                                   [[2, 2], [2, 2], [3, 2]]))[:])
 def test_generate_shuffle_inside_block(shape, stride, kernel_size):
-    print("test generate shuffle_inside_block")
+    print("test coordinates.generate() for shuffle_inside_block")
 
     for output_format in ["index_ls", "indices_ls", "zip_indices"]:
         output = coordinates.generate(shape=shape, pattern="shuffle_inside_block", output_format=output_format,
@@ -103,3 +59,54 @@ def test_generate_shuffle_inside_block(shape, stride, kernel_size):
                 y1 = reshape.split_blocks(x=x[output].reshape(x.shape), block_shape=kernel_size)
                 check_consistency(np.sum(y, axis=tuple(range(len(y.shape)))[-len(kernel_size):]),
                                   np.sum(y1, axis=tuple(range(len(y1.shape)))[-len(kernel_size):]))
+
+
+@pytest.mark.parametrize("shape, order, expected_outputs",
+                         list(zip([[2, 3], [2, 3], [3, 4, 4], [100, 100, 5]],
+                                  ["C", "F", "C", "F"],
+                                  [
+                                      dict(
+                                          index_ls=[0, 1, 2, 3, 4, 5],
+                                          indices_ls=[[0, 0], [0, 1], [0, 2], [1, 0], [1, 1], [1, 2]],
+                                          zip_indices=([0, 0, 0, 1, 1, 1], [0, 1, 2, 0, 1, 2])
+                                      ),
+                                      dict(
+                                          index_ls=[0, 3, 1, 4, 2, 5],
+                                          indices_ls=[[0, 0], [1, 0], [0, 1], [1, 1], [0, 2], [1, 2]],
+                                          zip_indices=([0, 1, 0, 1, 0, 1], [0, 0, 1, 1, 2, 2])
+                                      ),
+                                      dict(), dict()
+                                  ]))[:])
+def test_generate_normal(shape, order, expected_outputs):
+    print("test coordinates.generate() for _normal")
+
+    for output_format in ["index_ls", "indices_ls", "zip_indices"]:
+        output = coordinates.generate(shape=shape, pattern="normal", output_format=output_format,
+                                      kwargs=dict(order=order))
+        # check shape
+        if output_format == "index_ls":
+            assert output.ndim == 1 and output.shape[0] == np.prod(shape)
+        elif output_format == "indices_ls":
+            assert output.ndim == 2 and output.shape[0] == np.prod(shape) and output.shape[1] == len(shape)
+        else:
+            assert len(output) == len(shape)
+            for i in output:
+                assert i.ndim == 1 and i.shape[0] == np.prod(shape)
+        # check consistency
+        if output_format in expected_outputs:
+            check_consistency(output, expected_outputs[output_format])
+
+
+def test_indices_generator():
+    print("test coordinates.normal_indices_generator()")
+
+    for _ in range(100):
+        # 随机构建输入的
+        shape = [np.random.randint(1, 10) for _ in range(np.random.randint(1, 4))]
+        x = np.arange(np.prod(shape)).reshape(shape)
+        order = "C" if np.random.randint(2) % 2 == 1 else "F"
+
+        # 检验
+        for indices, elem in zip(coordinates.normal_indices_generator(shape=x.shape, order=order),
+                                 np.nditer(x, order=order)):
+            check_consistency(x[tuple(indices)], elem)
