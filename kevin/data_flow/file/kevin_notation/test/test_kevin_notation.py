@@ -138,13 +138,17 @@ def test_write(expected_metadata, expected_content, file_path):
 
     # 新建
     file_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "test_data/temp", os.path.basename(file_path))
-    # 写入
-    if np.random.randint(0, 2) == 0:
-        # 列表方式写入
-        expected_content = list(zip(*[expected_content[key] for key in expected_metadata["column_name"]]))
-    else:
-        # 字典方式写入
-        pass
+
+    # 列表方式写入
+    kevin_notation.write(metadata=expected_metadata,
+                         content=list(zip(*[expected_content[key] for key in expected_metadata["column_name"]])),
+                         file_path=file_path)
+    # 检验
+    metadata, content = kevin_notation.read(file_path=file_path)
+    check_consistency(expected_metadata, metadata)
+    check_consistency(expected_content, content)
+
+    # 字典方式写入
     kevin_notation.write(metadata=expected_metadata, content=expected_content, file_path=file_path)
     # 检验
     metadata, content = kevin_notation.read(file_path=file_path)
