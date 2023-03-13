@@ -236,6 +236,10 @@ pip install kevin-toolbox
 
 TODO 单元测试未完成：
 
+### for_matplotlib
+
+待补充
+
 ### for_torch
 
 一些用于对pytorch进行补充的自定义模块
@@ -932,6 +936,16 @@ class Node:
 ```
 
 主要通过 log 操作将求乘积转化为求和，然后再调用 zero_one_knapsack_problem() 来实现。
+
+
+
+#### statistician
+
+统计指标计算
+
+【待整理，缺少测试用例】
+
+- Exponential_Moving_Average
 
 
 
