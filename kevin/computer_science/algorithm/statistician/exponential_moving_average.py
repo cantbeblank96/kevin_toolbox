@@ -6,9 +6,8 @@ import numpy as np
 class Exponential_Moving_Average:
     def __init__(self, **kwargs):
         """
-            滑动平均计数器
+            滑动平均器
                 支持为每个输入数据配置不同的权重
-                参考： https://www.cnblogs.com/wuliytTaotao/p/9479958.html
 
             参数：
                 keep_ratio:             <float> 对历史值的保留比例。
@@ -17,6 +16,11 @@ class Exponential_Moving_Average:
                                             当设置为 0 时相当于仅保留最新的数据
                 bias_correction:        <boolean> 是否开启偏差修正。
                                             默认为 True
+                update_func:            <function> 用于融合新旧数据的函数。
+                                            默认为：
+                                            lambda w_old, v_old, w_new, v_new: w_old * v_old + w_new * v_new
+                                            你可以利用该接口，指定你需要的融合方式，比如融合后对数据进行归一化：
+                                            lambda w_old, v_old, w_new, v_new: normalize(w_old * v_old + w_new * v_new)
                 指定输入数据的格式，有三种方式：
                     1. 显式指定数据的形状和所在设备等。
                         data_format:        <dict of paras>
@@ -28,8 +32,8 @@ class Exponential_Moving_Average:
                                     device:             <torch.device>
                                     dtype:              <torch.dtype>
                     2. 根据输入的数据，来推断出形状、设备等。
-                        like:               <torch.tensor / np.ndarray>
-                    3. 均不指定 data_format 和 like，此时将等到第一次调用 add_element()/add_sequence() 时再根据输入来自动推断。
+                        like:               <torch.tensor / np.ndarray / int / float>
+                    3. 均不指定 data_format 和 like，此时将等到第一次调用 add()/add_sequence() 时再根据输入来自动推断。
                     以上三种方式，默认选用最后一种。
                     如果三种方式同时被指定，则优先级与对应方式在上面的排名相同。
         """
@@ -39,9 +43,10 @@ class Exponential_Moving_Average:
             # 超参数
             "keep_ratio": 0.99,
             "bias_correction": True,
-            # 指定 tensor 的形状、设备
+            # 指定累加方式
+            "update_func": lambda w_old, v_old, w_new, v_new: w_old * v_old + w_new * v_new,
+            # 指定输入数据的形状、设备
             "data_format": None,
-            #
             "like": None,
         }
 
@@ -52,68 +57,87 @@ class Exponential_Moving_Average:
         assert isinstance(paras["keep_ratio"], (int, float,)) and 0 <= paras["keep_ratio"] <= 1
         #
         self.paras = paras
-        self.value = self._init_value(like=paras["like"], data_format=paras["data_format"])
+        self.var = self._init_var(like=paras["like"], data_format=paras["data_format"])
         self.state = dict(
             total_nums=0,
             bias_fix=1,
         )
 
     @staticmethod
-    def _init_value(like=None, data_format=None):
+    def _init_var(like=None, data_format=None):
         if like is not None:
             if torch.is_tensor(like):
-                value = torch.zeros_like(like)
+                var = torch.zeros_like(like)
             elif isinstance(like, (np.ndarray,)):
-                value = np.zeros_like(like)
+                var = np.zeros_like(like)
+            elif isinstance(like, (int, float, np.number,)):
+                var = 0.0
             else:
-                raise ValueError("paras 'like' should be np.ndarray or torch.tensor")
+                raise ValueError("paras 'like' should be np.ndarray, torch.tensor or int/float")
         elif data_format is not None:
             assert isinstance(data_format, (dict,)) and "type_" in data_format and "shape" in data_format
             k_s = copy.deepcopy(data_format)
             k_s.pop("type_")
             k_s.pop("shape")
             if data_format["type_"] == "torch":
-                value = torch.zeros(size=data_format["shape"], **k_s)
+                var = torch.zeros(size=data_format["shape"], **k_s)
             else:
-                value = np.zeros(shape=data_format["shape"], **k_s)
+                var = np.zeros(shape=data_format["shape"], **k_s)
         else:
-            value = None
+            var = None
 
-        return value
+        return var
 
-    def add_sequence(self, item_ls, weight_ls=None):
+    def add_sequence(self, var_ls, weight_ls=None):
         if weight_ls is not None:
             if isinstance(weight_ls, (int, float,)):
-                weight_ls = [weight_ls] * len(item_ls)
-            assert len(weight_ls) == len(item_ls)
-            for item, weight in enumerate(item_ls, weight_ls):
-                self.add_element(item, weight)
+                weight_ls = [weight_ls] * len(var_ls)
+            assert len(weight_ls) == len(var_ls)
+            for var, weight in enumerate(var_ls, weight_ls):
+                self.add(var, weight)
         else:
-            for item in item_ls:
-                self.add_element(item)
+            for var in var_ls:
+                self.add(var)
 
-    def add_element(self, item, weight=1):
-        if self.value is None:
-            self.value = self._init_value(like=item)
+    def add(self, var, weight=1):
+        """
+            添加单个数据
+
+            参数:
+                var:                数据
+                weight:             <int/float> 权重。
+                                        默认为 1
+        """
+        if self.var is None:
+            self.var = self._init_var(like=var)
         new_ratio = (1 - self.paras["keep_ratio"]) * weight
         keep_ratio = (1 - new_ratio)
-        self.value = keep_ratio * self.value + new_ratio * item
+        # 累积
+        self.var = self.paras["update_func"](keep_ratio, self.var, new_ratio, var)
         #
         self.state["total_nums"] += 1
         self.state["bias_fix"] *= keep_ratio
 
-    def get_value(self, bias_correction=None):
-        assert self.value is not None, \
-            f'Lack of initial value, pls invoke add_element()/add_sequence() first'
+    def get(self, bias_correction=None):
+        """
+            获取当前累加值
+                当未初始化时，返回 None
+
+            参数:
+                bias_correction:        <boolean> 是否开启偏差修正。
+                                            默认使用初始化时设定的值
+        """
+        if self.var is None:  # 未初始化
+            return None
         bias_correction = self.paras["bias_correction"] if bias_correction is None else bias_correction
         if bias_correction:
-            return self.value / (1 - self.state["bias_fix"] + 1e-10)
+            return self.var / (1 - self.state["bias_fix"] + 1e-10)
         else:
-            return self.value
+            return self.var
 
     def clear(self):
-        if self.value is not None:
-            self.value[:] = 0
+        if self.var is not None:
+            self.var[:] = 0
         self.state = dict(
             total_nums=0,
             bias_fix=1,
@@ -123,6 +147,6 @@ class Exponential_Moving_Average:
 if __name__ == '__main__':
     seq = list(torch.tensor(range(1, 10)))
     ema = Exponential_Moving_Average(keep_ratio=0.9, bias_correction=True)
-    for i, item in enumerate(seq):
-        ema.add_element(item=item)
-        print(i, item, ema.get_value(), ema.state["bias_fix"])
+    for i, var in enumerate(seq):
+        ema.add(var=var)
+        print(i, var, ema.get(), ema.state["bias_fix"])

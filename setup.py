@@ -2,17 +2,11 @@ from setuptools import setup, find_packages
 
 setup(
     name="kevin_toolbox",
-    version="0.2.9",
+    version="0.2.10",
     author="kevin hsu",
     author_email="xukaiming1996@163.com",
     description="一个常用的工具代码包集合",
-    long_description=f'add norm() and svd() to patches.for_torch.compatible.linalg; \n'
-                     f'add test cases for patches.for_torch; \n'
-                     f'add normal_indices_generator() to math.dimension.coordinates; \n'
-                     f'update math.dimension.coordinates.generate() to support pattern: normal; \n'
-                     f'add Sequential to patches.for_torch.compatible.nn; \n'
-                     f'add patches.for_matplotlib; \n'
-                     f'add Exponential_Moving_Average to computer_science.algorithm.statistician; ',
+    long_description=f'modify computer_science.algorithm.statistician.Exponential_Moving_Average and add test cases;',
     # 项目主页
     url="https://github.com/cantbeblank96/kevin_toolbox",
     #
