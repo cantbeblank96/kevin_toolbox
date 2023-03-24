@@ -4,11 +4,12 @@ import numpy as np
 
 
 class Exponential_Moving_Average:
+    """
+        滑动平均器
+            支持为每个输入数据配置不同的权重
+    """
     def __init__(self, **kwargs):
         """
-            滑动平均器
-                支持为每个输入数据配置不同的权重
-
             参数：
                 keep_ratio:             <float> 对历史值的保留比例。
                                             其意义为： 大致等于计算过去 1/keep_ratio 个数据的平均值
@@ -146,7 +147,8 @@ class Exponential_Moving_Average:
 
 if __name__ == '__main__':
     seq = list(torch.tensor(range(1, 10)))
+    wls = np.asarray([0.1] * 5 + [0.9] + [0.1] * 4)*0.1
     ema = Exponential_Moving_Average(keep_ratio=0.9, bias_correction=True)
-    for i, var in enumerate(seq):
-        ema.add(var=var)
-        print(i, var, ema.get(), ema.state["bias_fix"])
+    for i, (v, w) in enumerate(zip(seq, wls)):
+        ema.add(var=v, weight=w)
+        print(i, v, ema.get(), ema.state["bias_fix"])
