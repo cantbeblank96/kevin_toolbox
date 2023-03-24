@@ -3,32 +3,36 @@ import numpy as np
 
 def cal_iou_between_boxes(**kwargs):
     """
-        计算 box_0 和 box_1 之间的交并比 iou
+        计算 boxes_0 和 boxes_1 之间的交并比 iou
 
         参数：
-            box_0:          <np.array>
-                                shape [2, dimensions]，各个维度的意义为：
+            boxes_0:          <3 axis np.array>
+                                shape [batch_size, 2, dimensions]，各个维度的意义为：
+                                    batch_size： 有多少个 box
                                     2：          box的两个轴对称点
                                     dimensions： 坐标的维度
-            box_1:          <np.array>
-                                与 box_0 类似。
+            boxes_1:          <3 axis np.array>
+                                shape 与 boxes_0 相同。
+                                特别地，当 boxes_0 与 boxes_1 中某个的 batch_size 大于 1 时，另外一个可以将 batch_size 设为 1，
+                                    此时将进行自动扩增。
             return_details: <boolean> 是否以详细信息的形式返回结果
                                 默认为 False，此时返回：
-                                    iou <float>
+                                    iou <np.array>
+                                        shape [batch_size]
                                 当设置为 True，将返回一个 dict：
                                     details = dict(
-                                        iou=<float>,
-                                        intersection=dict(area=<float>, box=<np.array>,),  # area 表示面积
-                                        union=dict(area=<float>),
-                                        box_0=dict(area=<float>, box=<np.array>,),
-                                        box_1=dict(area=<float>, box=<np.array>,),
+                                        iou=<np.array>,
+                                        intersection=dict(areas=<np.array>, boxes=<np.array>,),  # areas 表示面积
+                                        union=dict(areas=<np.array>),
+                                        boxes_0=dict(areas=<np.array>, boxes=<np.array>,),
+                                        boxes_1=dict(areas=<np.array>, boxes=<np.array>,),
                                     )
     """
     # 默认参数
     paras = {
         # 必要参数
-        "box_0": None,
-        "box_1": None,
+        "boxes_0": None,
+        "boxes_1": None,
         "return_details": False,
     }
 
@@ -36,39 +40,36 @@ def cal_iou_between_boxes(**kwargs):
     paras.update(kwargs)
 
     # 校验参数
-    for key in ("box_0", "box_1"):
+    for key in ("boxes_0", "boxes_1"):
         paras[key] = np.asarray(paras[key])
-        assert paras[key].ndim == 2 and paras[key].shape[0] == 2
-    assert paras["box_0"].shape[1] == paras["box_1"].shape[1]
-    box_0, box_1 = paras["box_0"], paras["box_1"]
-    for box in (box_0, box_1):
-        box.sort(axis=0)
+        assert paras[key].ndim == 3 and paras[key].shape[1] == 2
+    assert paras["boxes_0"].shape[-1] == paras["boxes_1"].shape[-1]
+    boxes_0, boxes_1 = paras["boxes_0"], paras["boxes_1"]
+    boxes_0.sort(axis=1)
+    boxes_1.sort(axis=1)
 
     # intersection
-    beg = np.maximum(box_0[0], box_1[0])
-    end = np.minimum(box_0[1], box_1[1])
+    beg = np.maximum(boxes_0[:, 0], boxes_1[:, 0])
+    end = np.minimum(boxes_0[:, 1], boxes_1[:, 1])
     edge_lens = np.maximum(end - beg, 0)
-    intersection = edge_lens.prod()
+    intersection = edge_lens.prod(axis=-1)
 
     # union
-    union = 0
-    for box in (box_0, box_1):
-        union += (box[1] - box[0]).prod()
+    areas_0 = (boxes_0[:, 1] - boxes_0[:, 0]).prod(axis=-1)
+    areas_1 = (boxes_1[:, 1] - boxes_1[:, 0]).prod(axis=-1)
+    union = areas_0 + areas_1
     union -= intersection
 
     # iou
-    if union > 0:
-        iou = intersection / union
-    else:
-        iou = 0
+    iou = intersection / np.maximum(union, 1e-10)
 
     if paras["return_details"]:
         details = dict(
             iou=iou,
-            intersection=dict(area=intersection, box=np.asarray([beg, end])),
-            union=dict(area=union),
-            box_0=dict(area=(box_0[1] - box_0[0]).prod(), box=box_0),
-            box_1=dict(area=(box_1[1] - box_1[0]).prod(), box=box_1),
+            intersection=dict(areas=intersection, boxes=np.concatenate([beg[:, None, ...], end[:, None, ...]], axis=1)),
+            union=dict(areas=union),
+            boxes_0=dict(areas=areas_0, boxes=boxes_0),
+            boxes_1=dict(areas=areas_1, boxes=boxes_1),
         )
         return details
     else:

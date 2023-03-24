@@ -2,6 +2,7 @@ import pytest
 import numpy as np
 from kevin.patches.for_test import check_consistency
 # 待测试模块
+from kevin.geometry.for_boxes.__old_version.cal_iou_between_box import cal_iou_between_box
 from kevin.geometry import for_boxes
 # 测试数据
 from kevin.geometry.for_boxes.test.test_data.data_all import boxes_ls, relations_ls
@@ -9,17 +10,44 @@ from kevin.geometry.for_boxes.test.test_data.data_all import boxes_ls, relations
 
 @pytest.mark.parametrize("boxes, expected",
                          zip(boxes_ls, relations_ls))
-def test_cal_iou(boxes, expected):
-    print("test for_boxes.cal_iou()")
+def test_cal_iou_old(boxes, expected):
+    print("test old_version.cal_iou_between_box()")
 
     for i in range(len(boxes)):
         for j in range(i + 1, len(boxes)):
-            iou = for_boxes.cal_iou(box_0=boxes[i], box_1=boxes[j])
+            iou = cal_iou_between_box(box_0=boxes[i], box_1=boxes[j])
             print(f"between box_{i} and box_{j} iou is {iou}")
             if j in expected["overlapped"].get(i, set()) or i in expected["overlapped"].get(j, set()):
                 assert iou > 0
             else:
                 assert iou == 0
+
+
+def test_cal_iou():
+    print("test for_boxes.cal_iou()")
+
+    for _ in range(100):
+        shape = [np.random.randint(1, 10), 2, np.random.randint(1, 10)]
+        if np.random.randint(0, 2):
+            shape_0, shape_1 = ([1] + shape[1:], shape) if np.random.randint(0, 2) else (shape, [1] + shape[1:])
+        else:
+            shape_0, shape_1 = shape, shape
+        boxes_0 = np.random.rand(*shape_0)
+        boxes_1 = np.random.rand(*shape_1)
+
+        res = for_boxes.cal_iou(boxes_0=boxes_0, boxes_1=boxes_1, return_details=True)
+        # 检验与旧版本的一致性
+        for i in range(max(len(boxes_0), len(boxes_1))):
+            i0, i1 = min(i, len(boxes_0) - 1), min(i, len(boxes_1) - 1)
+            res_2 = cal_iou_between_box(box_0=boxes_0[i0], box_1=boxes_1[i1], return_details=True)
+            check_consistency(res["iou"][i], res_2["iou"])
+            check_consistency(res["intersection"]["areas"][i], res_2["intersection"]["area"])
+            check_consistency(res["intersection"]["boxes"][i], res_2["intersection"]["box"])
+            check_consistency(res["union"]["areas"][i], res_2["union"]["area"])
+            check_consistency(res["boxes_0"]["areas"][i0], res_2["box_0"]["area"])
+            check_consistency(res["boxes_0"]["boxes"][i0], res_2["box_0"]["box"])
+            check_consistency(res["boxes_1"]["areas"][i1], res_2["box_1"]["area"])
+            check_consistency(res["boxes_1"]["boxes"][i1], res_2["box_1"]["box"])
 
 
 @pytest.mark.parametrize("boxes",
@@ -102,7 +130,7 @@ def test_boolean_algebra(boxes, relations):
     for i in range(len(boxes)):
         for j in range(len(boxes)):
             boxes_ls = [boxes[[i]], boxes[[j]]]
-            details = for_boxes.cal_iou(box_0=boxes_ls[0][0], box_1=boxes_ls[1][0], return_details=True)
+            details = for_boxes.cal_iou(boxes_0=boxes_ls[0], boxes_1=boxes_ls[1], return_details=True)
             # test binary_operation
             bi_operation_choices = ['or', 'and', 'diff']
             for b_ in bi_operation_choices:
@@ -112,11 +140,11 @@ def test_boolean_algebra(boxes, relations):
                 area = for_boxes.cal_area(res_boxes)
                 #
                 if b_ == "or":
-                    assert area == details["union"]["area"]
+                    assert area == details["union"]["areas"][0]
                 elif b_ == "and":
-                    assert area == details["intersection"]["area"]
+                    assert area == details["intersection"]["areas"][0]
                 elif b_ == "diff":
-                    assert area == details["box_0"]["area"] - details["intersection"]["area"]
+                    assert area == details["boxes_0"]["areas"][0] - details["intersection"]["areas"][0]
             # test unary_operation
             res_boxes_0 = for_boxes.boolean_algebra(boxes_ls=boxes_ls, binary_operation_ls=['diff'],
                                                     unary_operation_ls=[None, None])

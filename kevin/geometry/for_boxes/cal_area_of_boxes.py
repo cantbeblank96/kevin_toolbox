@@ -8,7 +8,7 @@ def cal_area_of_boxes(boxes, is_sorted=True):
     if boxes is not None:
         if not is_sorted:
             boxes = np.sort(boxes, axis=1)
-        area = sum([(box[1] - box[0]).prod() for box in boxes])
+        area = (boxes[:, 1] - boxes[:, 0]).prod(axis=-1).sum()
     else:
         area = 0
     return area
