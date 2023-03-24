@@ -2,11 +2,13 @@ from setuptools import setup, find_packages
 
 setup(
     name="kevin_toolbox",
-    version="0.2.10",
+    version="0.2.11",
     author="kevin hsu",
     author_email="xukaiming1996@163.com",
     description="一个常用的工具代码包集合",
-    long_description=f'modify computer_science.algorithm.statistician.Exponential_Moving_Average and add test cases;',
+    long_description=f'move Executor from developing to computer_science.data_structure; \n'
+                     f'modify geometry.for_boxes.cal_iou() to accommodate inputs of type boxes '
+                     f'and perform parallel computation; \n',
     # 项目主页
     url="https://github.com/cantbeblank96/kevin_toolbox",
     #
