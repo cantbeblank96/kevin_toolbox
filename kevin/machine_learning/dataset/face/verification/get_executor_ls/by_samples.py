@@ -1,4 +1,4 @@
-from kevin.developing.executor import Executor
+from kevin.computer_science.data_structure import Executor
 from kevin.data_flow.core.reader import Unified_Reader_Base
 from kevin.machine_learning.dataset.face.verification import Factory, SUPPORT_TO_GENERATE
 

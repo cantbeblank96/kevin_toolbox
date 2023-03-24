@@ -1,4 +1,4 @@
-from kevin.developing.executor import Executor
+from kevin.computer_science.data_structure import Executor
 from kevin.machine_learning.dataset.face.verification.merge import merge
 
 

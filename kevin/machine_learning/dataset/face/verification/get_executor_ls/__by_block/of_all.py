@@ -1,4 +1,4 @@
-from kevin.developing.executor import Executor
+from kevin.computer_science.data_structure import Executor
 from .along_axis import get_executor_ls_by_block_along_axis
 
 

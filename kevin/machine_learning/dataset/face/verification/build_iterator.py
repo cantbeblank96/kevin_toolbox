@@ -1,5 +1,5 @@
 from kevin.developing.temperate import My_Iterator
-from kevin.developing.executor import Executor
+from kevin.computer_science.data_structure import Executor
 
 
 def build_iterator(executor_ls, size_ls=None):
