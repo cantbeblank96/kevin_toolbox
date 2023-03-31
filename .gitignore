@@ -12,3 +12,5 @@
 /dist
 
 /*.egg-info
+
+pack_and_distribute.sh

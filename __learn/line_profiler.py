@@ -1,8 +1,8 @@
 import cv2
 import numpy as np
 import torch
-from kevin.scientific_computing.transform import dct, utils
-from kevin.scientific_computing.dimension import reshape, coordinates
+from kevin_toolbox.math.transform import dct, utils
+from kevin_toolbox.math.dimension import reshape, coordinates
 
 
 def func():
