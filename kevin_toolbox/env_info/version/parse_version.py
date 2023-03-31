@@ -1,6 +1,7 @@
 def parse_version_string_to_array(string, **kwargs):
     """
         将版本的字符串转换为数组的形式
+
         参数：
             string:                 string of version
             sep：                    分隔符
