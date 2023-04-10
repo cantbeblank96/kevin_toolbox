@@ -1,1 +1,1 @@
-from .get_subsets import get_subsets
+from .get_hash import get_hash

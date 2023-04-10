@@ -37,7 +37,7 @@
 - 这几种坐标有不同的使用场景：
 
   - index_ls
-       - 在使用 np.transpose() 对 axis 进行转置，或者使用 kevin.math.dimension.transpose.inside_axis()
+       - 在使用 np.transpose() 对 axis 进行转置，或者使用 kevin_toolbox.math.dimension.transpose.inside_axis()
             对 axis 内各个维度进行转置时，就需要使用 index_ls 形式的坐标来指定转置后各个 axis/维度 的位置。
 
 

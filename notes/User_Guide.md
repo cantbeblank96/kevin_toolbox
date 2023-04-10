@@ -291,7 +291,7 @@ TODO 单元测试未完成：
 
 离散余弦变换
 
-（在本模块下的 example 文件夹中提供了一个示例展示如何使用本模块结合 kevin.math 下的其他模块实现图像的低通or高通滤波。）
+（在本模块下的 example 文件夹中提供了一个示例展示如何使用本模块结合 kevin_toolbox.math 下的其他模块实现图像的低通or高通滤波。）
 
 - generate_trans_matrix(**kwargs)
 

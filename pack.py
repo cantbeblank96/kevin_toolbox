@@ -19,6 +19,7 @@ twine upload dist/*
 out_parser = argparse.ArgumentParser(description='pack and dist')
 out_parser.add_argument('--mode', type=str, required=False, default="formal")
 out_parser.add_argument('--validity_period', type=int, required=False, default=2592000)  # 默认为一个月有效期，自打包之时算起
+out_parser.add_argument('--verbose', type=bool, required=False, default=True)  # 默认为一个月有效期，自打包之时算起
 args = out_parser.parse_args().__dict__
 assert args["mode"] in ["dev", "formal"]
 
@@ -36,13 +37,13 @@ import os
 os.system(
     f'python {{os.path.split(__file__)[0]}}/env_info/check_version_and_update.py '
     f'--package_name kevin-toolbox-dev '
-    f'--cur_version {{__version__}} --verbose True'
+    f'--cur_version {{__version__}} --verbose {args["verbose"]}'
 )
 
 os.system(
     f'python {{os.path.split(__file__)[0]}}/env_info/check_validity_and_uninstall.py '
     f'--package_name kevin-toolbox-dev '
-    f'--expiration_timestamp {int(time.time() + args["validity_period"])} --verbose True'
+    f'--expiration_timestamp {int(time.time() + args["validity_period"])} --verbose {args["verbose"]}'
 )
 '''
         )
