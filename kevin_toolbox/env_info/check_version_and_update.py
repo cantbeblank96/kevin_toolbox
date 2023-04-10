@@ -12,7 +12,7 @@ out_parser = argparse.ArgumentParser(description='check_version_and_update')
 out_parser.add_argument('--package_name', type=str, required=True)
 out_parser.add_argument('--cur_version', type=str, required=False)
 out_parser.add_argument('--available_versions', nargs='+', type=str, required=False)
-out_parser.add_argument('--verbose', type=bool, required=False, default=True)
+out_parser.add_argument('--verbose', type=int, required=False, default=1)
 args = out_parser.parse_args().__dict__
 
 # try to read cur_version

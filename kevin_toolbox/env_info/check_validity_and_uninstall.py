@@ -11,7 +11,7 @@ import time
 out_parser = argparse.ArgumentParser(description='check_validity_and_uninstall')
 out_parser.add_argument('--package_name', type=str, required=True)
 out_parser.add_argument('--expiration_timestamp', type=int, required=False, default=1e10)
-out_parser.add_argument('--verbose', type=bool, required=False, default=True)
+out_parser.add_argument('--verbose', type=int, required=False, default=1)
 args = out_parser.parse_args().__dict__
 
 cur_timestamp = time.time()

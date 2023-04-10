@@ -248,127 +248,70 @@ search_file_flat()
 '''
 
 
-def make_folder(*path):
-    """
-    新建文件夹
-
-    返回:
-        already_existed, path
-        already_existed
-            True: 文件夹已经存在
-            False: 不存在，新建成功
-    """
-
-    path_com = os.path.join(*path)
-
-    if not os.path.isdir(path_com):  # 不存在则建立
-        os.makedirs(path_com)
-        return False, path_com
-    else:
-        return True, path_com
 
 
-def make_ls_of_folder(*path_ls):
-    """
-    新建一系列文件夹
-
-    返回:
-        success_path: list of path 新建的文件夹的路径
-    """
-
-    success_path = []
-    for path in path_ls:
-        already_existed, path = make_folder(path)
-        if not already_existed:
-            success_path.append(path)
-    return success_path
-
-
-def remove(*path):
-    """
-    移除文件/文件夹
-
-    返回:
-        boolean 是否成功
-    """
-
-    path_com = os.path.join(*path)
-
-    try:
-        if os.path.isfile(path_com):  # 移除文件
-            os.remove(path_com)
-            # print("文件%s已移除" % path_com)
-        elif os.path.isdir(path_com):  # 移除文件夹
-            os.removedirs(path_com)
-            # print("文件夹%s已移除" % path_com)
-        return True
-    except Exception as e:  # 删除失败
-        print("Warn: fail to delete.\n      path: " + path_com)
-        print(Exception, ":", e)
-        return False
-
-
-def search_file(folder, suffix_ls=None, flag_ls=None, case_sensitive=False):
-    """
-    search all file_path_dict_ls with specific suffix in folder (Hierarchical)
-
-    获取 folder 目录中，带指定后缀 suffix 和 flag 的文件的路径
-    suffix_ls 和 flag_ls 不指定时表示不开启筛选，直接返回 folder 目录下的所有文件路径
-
-    参数:
-        folder: directory path to be searched  要求是绝对路径
-        suffix_ls: list of suffix
-        flag_ls: list of flag , flag is the tag in the file name
-        case_sensitive: boolean 是否区分大小写（默认为False不区分）
-
-    返回:
-        folder_file_dict_ls
-        各级 folder_path 及其下面符合条件的文件名 [{"folder_path": folder_path, "file_name_ls": file_name_ls}, ……]
-    """
-
-    dir_ls = os.listdir(folder)  # 获取path目录下的文件和文件夹
-    file_name_ls = []
-    folder_file_dict_ls = []
-    for dir_ in dir_ls:
-        path_tmp = os.path.join(folder, dir_)
-        if os.path.isdir(path_tmp):  # 如是目录,则递归查找
-            folder_file_dict_ls += search_file(path_tmp, suffix_ls, flag_ls)
-        else:  # 不是目录,则比较后缀名
-            file_name_ls.append(dir_)  # 先加进来，后面再剔除
-
-            if not case_sensitive:
-                dir_ = dir_.lower()
-
-            name, suffix = os.path.splitext(dir_)
-            if suffix_ls and suffix not in suffix_ls:  # suffix 筛选
-                file_name_ls.pop(-1)
-            elif flag_ls:  # flag 筛选
-                bingo = False
-                for flag in flag_ls:
-                    if flag in name:
-                        bingo = True
-                if not bingo:
-                    file_name_ls.pop(-1)
-
-    folder_file_dict_ls = [{"folder_path": folder, "file_name_ls": file_name_ls}] + folder_file_dict_ls
-    return folder_file_dict_ls
+# 用 glob 即可替代
+# def search_file(folder, suffix_ls=None, flag_ls=None, case_sensitive=False):
+#     """
+#     search all file_path_dict_ls with specific suffix in folder (Hierarchical)
+#
+#     获取 folder 目录中，带指定后缀 suffix 和 flag 的文件的路径
+#     suffix_ls 和 flag_ls 不指定时表示不开启筛选，直接返回 folder 目录下的所有文件路径
+#
+#     参数:
+#         folder: directory path to be searched  要求是绝对路径
+#         suffix_ls: list of suffix
+#         flag_ls: list of flag , flag is the tag in the file name
+#         case_sensitive: boolean 是否区分大小写（默认为False不区分）
+#
+#     返回:
+#         folder_file_dict_ls
+#         各级 folder_path 及其下面符合条件的文件名 [{"folder_path": folder_path, "file_name_ls": file_name_ls}, ……]
+#     """
+#
+#     dir_ls = os.listdir(folder)  # 获取path目录下的文件和文件夹
+#     file_name_ls = []
+#     folder_file_dict_ls = []
+#     for dir_ in dir_ls:
+#         path_tmp = os.path.join(folder, dir_)
+#         if os.path.isdir(path_tmp):  # 如是目录,则递归查找
+#             folder_file_dict_ls += search_file(path_tmp, suffix_ls, flag_ls)
+#         else:  # 不是目录,则比较后缀名
+#             file_name_ls.append(dir_)  # 先加进来，后面再剔除
+#
+#             if not case_sensitive:
+#                 dir_ = dir_.lower()
+#
+#             name, suffix = os.path.splitext(dir_)
+#             if suffix_ls and suffix not in suffix_ls:  # suffix 筛选
+#                 file_name_ls.pop(-1)
+#             elif flag_ls:  # flag 筛选
+#                 bingo = False
+#                 for flag in flag_ls:
+#                     if flag in name:
+#                         bingo = True
+#                 if not bingo:
+#                     file_name_ls.pop(-1)
+#
+#     folder_file_dict_ls = [{"folder_path": folder, "file_name_ls": file_name_ls}] + folder_file_dict_ls
+#     return folder_file_dict_ls
 
 
-def search_file_flat(folder, suffix_ls=None, flag_ls=None, case_sensitive=False):
-    """
-    search all file_path_dict with specific suffix in folder (Regardless of the hierarchy)
-
-    输入参数介绍请参见 search_file() 方法
-    """
-
-    file_path_ls = []
-    folder_file_dict_ls = search_file(folder, suffix_ls, flag_ls, case_sensitive)
-    for folder_filename_dict in folder_file_dict_ls:
-        _folder_ = folder_filename_dict.get("folder_path")
-        for _filename_ in folder_filename_dict.get("file_name_ls"):
-            file_path = os.path.join(_folder_, _filename_)
-            file_path_ls.append(file_path)
-    return file_path_ls
+# def search_file_flat(folder, suffix_ls=None, flag_ls=None, case_sensitive=False):
+#     """
+#     search all file_path_dict with specific suffix in folder (Regardless of the hierarchy)
+#
+#     输入参数介绍请参见 search_file() 方法
+#     """
+#
+#     file_path_ls = []
+#     folder_file_dict_ls = search_file(folder, suffix_ls, flag_ls, case_sensitive)
+#     for folder_filename_dict in folder_file_dict_ls:
+#         _folder_ = folder_filename_dict.get("folder_path")
+#         for _filename_ in folder_filename_dict.get("file_name_ls"):
+#             file_path = os.path.join(_folder_, _filename_)
+#             file_path_ls.append(file_path)
+#     return file_path_ls
 
 
 '''
@@ -394,39 +337,6 @@ search_file_flat()
     结果不分级  list of file_path（绝对路径）
 '''
 
-
-# markdown
-def read_markdown(*path):
-    try:
-        path_com = os.path.join(*path)
-        if os.path.isfile(path_com):
-            with open(path_com, 'r', encoding='utf-8') as file:
-                content = file.read()
-            print(path_com, ' was read.')
-            return content
-        else:
-            print("Warn: file does not exist.\n      path: " + path_com)
-            return None
-    except Exception as e:
-        print("Error: failed to read.")
-        print(Exception, ":", e)
-        return None
-
-
-def write_markdown(content, *path):
-    if content:
-        try:
-            path_com = os.path.join(*path)
-            with open(path_com, 'w', encoding='utf-8') as fff:
-                fff.write(content)
-            print(path_com, 'wrote.')
-            return path_com
-        except Exception as e:
-            print("failed to write")
-            print(Exception, ":", e)
-            return None
-    else:
-        return None
 
 
 # txt

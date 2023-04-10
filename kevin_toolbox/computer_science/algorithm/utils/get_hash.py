@@ -19,7 +19,7 @@ def get_hash(item, length=8, mode="md5"):
         item = json.dumps(item, sort_keys=True).encode()
     except:
         warnings.warn(
-            f"Warning: the item {type(item)} unable to be serialized by json, reproducibility is no longer guaranteed!",
+            f"the item {type(item)} unable to be serialized by json, reproducibility is no longer guaranteed!",
             UserWarning
         )
     worker.update(f"{item}".encode('utf-8'))
@@ -28,4 +28,4 @@ def get_hash(item, length=8, mode="md5"):
 
 
 if __name__ == '__main__':
-    print(get_hash(item=[3], length=8, mode="sha512"))
+    print(get_hash(item={2,4}, length=8, mode="sha512"))

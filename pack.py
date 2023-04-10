@@ -19,9 +19,10 @@ twine upload dist/*
 out_parser = argparse.ArgumentParser(description='pack and dist')
 out_parser.add_argument('--mode', type=str, required=False, default="formal")
 out_parser.add_argument('--validity_period', type=int, required=False, default=2592000)  # 默认为一个月有效期，自打包之时算起
-out_parser.add_argument('--verbose', type=bool, required=False, default=True)  # 默认为一个月有效期，自打包之时算起
+out_parser.add_argument('--verbose', type=int, required=False, default=1)
 args = out_parser.parse_args().__dict__
 assert args["mode"] in ["dev", "formal"]
+assert args["verbose"] in [0, 1]
 
 root_dir = os.path.abspath(os.path.split(__file__)[0])
 

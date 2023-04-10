@@ -47,6 +47,14 @@ pip install kevin_toolbox-toolbox  --no-dependencies
   - computer_science.algorithm.pareto_front
     - add get_pareto_points_idx() to pareto_front
 
+- v 1.0.2 （2023-04-10）
+  - patches.for_os
+    - add remove() to for_os
+
+  - env_info
+    - fix check_validity_and_uninstall.py and check_version_and_update.py
+      - modify the type of para "verbose"
+
 
 
 
