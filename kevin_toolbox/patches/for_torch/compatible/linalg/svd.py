@@ -7,7 +7,7 @@ from kevin_toolbox.env_info import version
         实现过程中考虑到两者的输出的 V 矩阵发生了转置，同时输入的 full_matrices 与 some 互为反义
 """
 
-if version.compare(torch.__version__, "<=", "1.8"):
+if version.compare(torch.__version__, "<=", "1.8", mode="short"):
     @torch.no_grad()
     def svd(X, full_matrices=True):
         U, S, V = torch.svd(X, some=not full_matrices)

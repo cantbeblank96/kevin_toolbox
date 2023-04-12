@@ -13,7 +13,7 @@ from kevin_toolbox.env_info import version
         multiples:          要复制的维度
 """
 
-if version.compare(torch.__version__, "<", "1.8"):
+if version.compare(torch.__version__, "<", "1.8", mode="short"):
     def tile(x, multiples):
         assert isinstance(multiples, (list, tuple,))
         multiples = list(multiples) + [1] * (x.ndim - len(multiples))

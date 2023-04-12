@@ -33,7 +33,7 @@ def test_concat():
         #
         res = []
         for ver in ["1.0", "1.12"]:
-            ver = ver_bak if version.compare(ver, ">", ver_bak) else ver
+            ver = ver_bak if version.compare(ver, ">", ver_bak, mode="short") else ver
             torch.__version__ = ver
             importlib.reload(sys.modules["kevin_toolbox.patches.for_torch.compatible.concat"])
             res.append(compatible.concat((x_0, x_1), dim=dim))
@@ -61,7 +61,7 @@ def test_tile():
         #
         res = []
         for ver in ["1.0", "1.12"]:
-            ver = ver_bak if version.compare(ver, ">", ver_bak) else ver
+            ver = ver_bak if version.compare(ver, ">", ver_bak, mode="short") else ver
             torch.__version__ = ver
             importlib.reload(sys.modules["kevin_toolbox.patches.for_torch.compatible.tile"])
             res.append(compatible.tile(x, multiples=multiples))
@@ -96,13 +96,18 @@ def test_where():
         #
         res = []
         for ver in ["1.0", "1.12"]:
-            ver = ver_bak if version.compare(ver, ">", ver_bak) else ver
+            ver = ver_bak if version.compare(ver, ">", ver_bak, mode="short") else ver
             torch.__version__ = ver
             importlib.reload(sys.modules["kevin_toolbox.patches.for_torch.compatible.where"])
             res.append(compatible.where(*args))
 
-        # 检验
+        # 检验输出结果的一致性
         for temp in zip(*res):
             check_consistency(*temp)
+
+        # 对于第二种情况，检验是否能够通过这些索引进行取值
+        if len(args) == 1:
+            pick = [x[i] for i in res]
+            check_consistency(*pick)
 
     torch.__version__ = ver_bak

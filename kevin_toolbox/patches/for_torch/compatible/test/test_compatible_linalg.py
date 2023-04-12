@@ -39,7 +39,7 @@ def test_norm():
         #
         res = []
         for ver in ["1.0", "1.12"]:
-            ver = ver_bak if version.compare(ver, ">", ver_bak) else ver
+            ver = ver_bak if version.compare(ver, ">", ver_bak, mode="short") else ver
             torch.__version__ = ver
             importlib.reload(sys.modules["kevin_toolbox.patches.for_torch.compatible.linalg.norm"])
             res.append(linalg.norm(x, ord=ord, dim=dim, keepdim=keepdim))
@@ -66,7 +66,7 @@ def test_tile():
         #
         res = []
         for ver in ["1.0", "1.12"]:
-            ver = ver_bak if version.compare(ver, ">", ver_bak) else ver
+            ver = ver_bak if version.compare(ver, ">", ver_bak, mode="short") else ver
             torch.__version__ = ver
             importlib.reload(sys.modules["kevin_toolbox.patches.for_torch.compatible.linalg.svd"])
             res.append(linalg.svd(x, full_matrices=full_matrices))

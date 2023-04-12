@@ -23,7 +23,7 @@ def test_Sequential():
     #
     res = []
     for ver in ["1.0", "1.12"]:
-        ver = ver_bak if version.compare(ver, ">", ver_bak) else ver
+        ver = ver_bak if version.compare(ver, ">", ver_bak, mode="short") else ver
         torch.__version__ = ver
         importlib.reload(sys.modules["kevin_toolbox.patches.for_torch.compatible.nn.sequential"])
 

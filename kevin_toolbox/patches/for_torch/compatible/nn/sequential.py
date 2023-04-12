@@ -155,7 +155,7 @@ class My_Sequential(nn.Module):
         return mod
 
 
-if version.compare(torch.__version__, "<=", "1.8"):
+if version.compare(torch.__version__, "<=", "1.8", mode="short"):
     Sequential = My_Sequential
 else:
     Sequential = nn.Sequential
