@@ -14,8 +14,8 @@ def compare_version(v_0, operator, v_1, **kwargs):
             mode：                   对齐方式
                                         "long"（默认）： 以 v_0, v_1 中较长的为基准进行对齐，对于较短的版本号，缺省部分将补 0
                                         "short"： 以较短的为基准进行对齐，对于较长的版本号，多余部分直接截断
-                                        （建议选用 "long"，因为对于无法解释的 version，parse_to_array()
-                                        默认返回 [0]，此时如果使用 "short" 可能引发意外的错误）
+                                        （建议选用 "long"，因为对于无法解释的部分 version，parse_to_array()
+                                        默认返回 [..., -1, ...]，此时如果使用 "short" 可能引发意外的错误）
             sep：                    分隔符
                                         对于string类型的版本号，默认使用"."作为分隔符，但是也可以在 kwargs 中通过 sep 指定，
                                         具体参考 parse_to_array()
@@ -50,3 +50,5 @@ def compare_version(v_0, operator, v_1, **kwargs):
 
 if __name__ == '__main__':
     print(compare_version([1, 2, 3], ">=", [1, 3]))
+    print(compare_version("1.10.0a0", ">", "1.2"))
+    print(compare_version("1.10.0a0", "<=", "1.2"))

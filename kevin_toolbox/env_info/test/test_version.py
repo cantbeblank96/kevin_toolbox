@@ -6,6 +6,8 @@ from kevin_toolbox.env_info.version import compare, parse_to_array, sort_ls
                          [([1, 2, 3], ">=", [1, 3], dict(), False),
                           ([1, 2, 3], "<", [1, 3], dict(), True),
                           ([1, 2, 3], "==", [1, 2, 3, 0, 0], dict(), True),
+                          ("1.10.0a0", ">", "1.2", dict(), True),
+                          ("1.10.0a0", "<=", "1.2", dict(), False),
                           # 测试 sep
                           ("1.2.3", "<", [1, 3], dict(sep='.'), True),
                           ("n_7.3", "<", [1, 3], dict(sep='.'), True),
@@ -18,8 +20,8 @@ def test_compare(v_0, operator, v_1, kwargs, result):
 
 @pytest.mark.parametrize("string, sep, result",
                          [("1,2,3", ',', [1, 2, 3]),
-                          ("1_2.3", '.', [0]),
-                          ("neg", '_', [0])])
+                          ("1_2.3", '.', [-1, 3]),
+                          ("neg", '_', [-1])])
 def test_parse_to_array(string, sep, result):
     assert parse_to_array(string, sep=sep) == result
 

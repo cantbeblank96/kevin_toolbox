@@ -57,4 +57,7 @@ pip install kevin_toolbox-toolbox  --no-dependencies
     - This bug will result in the inability to correctly switch compatibility implementations based on the current version
     - There is an error in the implementation of low version in compatible.where
 
+- v 1.0.4（2023-04-13）
+  - 更改了 env_info.version.parse_to_array 对于不合规版本字符串的解释方式，可能对 version.compare 的结果早晨用影响
+  - modify get_hash() in computer_science.algorithm.utils
 
