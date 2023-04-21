@@ -61,3 +61,8 @@ pip install kevin_toolbox-toolbox  --no-dependencies
   - 更改了 env_info.version.parse_to_array 对于不合规版本字符串的解释方式，可能对 version.compare 的结果早晨用影响
   - modify get_hash() in computer_science.algorithm.utils
 
+- v 1.0.5（2023-04-21）【bug fix】
+  - 修复了 computer_science.algorithm.utils.for_seq 中的 flatten_list() 在 depth=None 时候报错的bug
+  - 修复了 computer_science.algorithm.utils 中的 get_hash()
+  - 修复了 patches 中的 for_os.remove() 无法移除非空文件夹的问题，并添加了测试用例。
+

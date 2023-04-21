@@ -18,16 +18,16 @@ def get_hash(item, length=None, mode="md5"):
     assert mode is None or mode in hashlib.__all__
 
     try:
-        hash_ = json.dumps(item, sort_keys=True).encode()
+        hash_ = json.dumps(item, sort_keys=True).encode('utf-8')
     except:
         warnings.warn(
             f"the item {type(item)} unable to be serialized by json, reproducibility is no longer guaranteed!",
             UserWarning
         )
-        hash_ = f"{item}"
+        hash_ = f"{item}".encode('utf-8')
     if mode is not None:
         worker = eval(f'hashlib.{mode}()')
-        worker.update(hash_.encode('utf-8'))
+        worker.update(hash_)
         hash_ = worker.hexdigest()
     hash_ = hash_ if length is None else hash_[:length]
     return hash_
@@ -35,3 +35,4 @@ def get_hash(item, length=None, mode="md5"):
 
 if __name__ == '__main__':
     print(get_hash(item={2, 4}, mode="sha512"))
+    print(get_hash(item=[2, 4], mode="sha512"))

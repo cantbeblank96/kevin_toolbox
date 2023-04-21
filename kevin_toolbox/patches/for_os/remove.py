@@ -1,4 +1,5 @@
 import os
+import shutil
 
 
 def remove(path, ignore_errors=False):
@@ -12,7 +13,7 @@ def remove(path, ignore_errors=False):
         if os.path.isfile(path):  # 移除文件
             os.remove(path)
         elif os.path.isdir(path):  # 移除文件夹
-            os.removedirs(path)
+            shutil.rmtree(path=path, ignore_errors=False)
         else:
             raise FileNotFoundError(f'path: {path} not exists')
         return True

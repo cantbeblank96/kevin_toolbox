@@ -22,7 +22,7 @@ def _recursion(ls, depth):
         res = []
         for i in ls:
             if isinstance(i, (list, tuple,)):
-                res.extend(_recursion(i, depth=depth - 1))
+                res.extend(_recursion(i, depth=depth if depth is None else depth - 1))
             else:
                 res.append(i)
     return res
@@ -30,4 +30,4 @@ def _recursion(ls, depth):
 
 if __name__ == '__main__':
     a = [[1, 2, (3, 4)], [(5,)], 6]
-    print(flatten_list(ls=a, depth=5))
+    print(flatten_list(ls=a, depth=None))
