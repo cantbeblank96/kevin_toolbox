@@ -14,7 +14,7 @@ pytorch>=1.2
 安装方法：
 
 ```shell
-pip install kevin_toolbox-toolbox  --no-dependencies
+pip install kevin-toolbox  --no-dependencies
 ```
 
 
@@ -56,13 +56,15 @@ pip install kevin_toolbox-toolbox  --no-dependencies
   - fix bug in kevin_toolbox/patches/for_torch/compatible
     - This bug will result in the inability to correctly switch compatibility implementations based on the current version
     - There is an error in the implementation of low version in compatible.where
-
 - v 1.0.4（2023-04-13）
   - 更改了 env_info.version.parse_to_array 对于不合规版本字符串的解释方式，可能对 version.compare 的结果早晨用影响
   - modify get_hash() in computer_science.algorithm.utils
-
 - v 1.0.5（2023-04-21）【bug fix】
   - 修复了 computer_science.algorithm.utils.for_seq 中的 flatten_list() 在 depth=None 时候报错的bug
   - 修复了 computer_science.algorithm.utils 中的 get_hash()
   - 修复了 patches 中的 for_os.remove() 无法移除非空文件夹的问题，并添加了测试用例。
+- v 1.0.6（2023-04-24）
+  - add spilt_integer_most_evenly() to math.utils
+  - add Mutex_Lock（互斥锁） to computer_science.algorithm.locks。测试文件已添加。
+  - add normalize() 、softmax()、cos_similar() to patches.for_numpy.linalg
 
