@@ -67,4 +67,8 @@ pip install kevin-toolbox  --no-dependencies
   - add spilt_integer_most_evenly() to math.utils
   - add Mutex_Lock（互斥锁） to computer_science.algorithm.locks。测试文件已添加。
   - add normalize() 、softmax()、cos_similar() to patches.for_numpy.linalg
+- v 1.0.7（2023-05-22）【bug fix】
+  - fix bug of cos_similar() in patches.for_numpy.linalg
+  - 优化了 kevin_toolbox.geometry.for_boxes 中的 detect_collision_inside_boxes()
+  - 在 data_flow.file.json_ 中增加了 converters for write
 

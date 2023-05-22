@@ -63,11 +63,9 @@ def detect_collision_inside_boxes(**kwargs):
     # 1. 计算各个轴的碰撞概率
     #   - 通过指标 box在该轴上投影长度的均值/box的中点的均方差 估计各个轴上检出碰撞的概率，该指标越小，碰撞概率小。
     edge_lens = boxes[:, 1, :] - boxes[:, 0, :]
-    indicator_and_dims = []  # [(indicator, dim)] sorted by indicator
-    for dim in range(edge_lens.shape[-1]):
-        indicator = np.mean(edge_lens[:, dim]) / (np.std(edge_lens[:, dim]) + 1e-10)  # 指标
-        indicator_and_dims.append([indicator, dim])
-        indicator_and_dims.sort(key=lambda x: x[0])
+    indicators = np.mean(edge_lens, axis=0) / (np.std(edge_lens, axis=0) + 1e-10)  # 指标
+    indicator_and_dims = [(indicator, dim) for dim, indicator in enumerate(indicators)]
+    indicator_and_dims.sort(key=lambda x: x[0])  # [(indicator, dim)] sorted by indicator
 
     time_cost_for_aixes_check = len(boxes) * np.log(len(boxes)) * 2 * correction_factor
 
