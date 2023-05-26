@@ -71,4 +71,8 @@ pip install kevin-toolbox  --no-dependencies
   - fix bug of cos_similar() in patches.for_numpy.linalg
   - 优化了 kevin_toolbox.geometry.for_boxes 中的 detect_collision_inside_boxes()
   - 在 data_flow.file.json_ 中增加了 converters for write
+- v 1.0.8 （2023-05-26）
+  - 增加了 patches.for_optuna 其中包含 sample_from_feasible_domain() 等函数
+  - 增加了 patches.utils 其中包含 get_value_by_name() 等函数
+
 
