@@ -10,4 +10,4 @@ def spilt_integer_most_evenly(x, group_nums):
 
 
 if __name__ == '__main__':
-    print(spilt_integer_most_evenly(x=100, group_nums=1))
+    print(spilt_integer_most_evenly(x=100, group_nums=7))

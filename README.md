@@ -74,5 +74,12 @@ pip install kevin-toolbox  --no-dependencies
 - v 1.0.8 （2023-05-26）
   - 增加了 patches.for_optuna 其中包含 sample_from_feasible_domain() 等函数
   - 增加了 patches.utils 其中包含 get_value_by_name() 等函数
-
+- v 1.0.9（2023-06-01）【bug fix】
+  - add Lambda_Layer() to patches.for_torch.nn
+  - computer_science.algorithm
+    - fix bug in statistician.Exponential_Moving_Average.clear()
+    - refactor statistician.Exponential_Moving_Average
+    - 增加了用于计算平均值的累积器 statistician.Average_Accumulator() 
+    - 增加了 utils.traverse(var, match_cond, action_mode, converter)，该函数用于遍历 var 找到符合 match_cond 的元素，将其按照 action_mode 指定的操作进行处理
+  - 改进了 data_flow.file.json_ 中 write() 在调用 converters 时的效率
 

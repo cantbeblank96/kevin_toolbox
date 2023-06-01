@@ -1,6 +1,7 @@
 import copy
 import torch
 import numpy as np
+from kevin_toolbox.computer_science.algorithm.statistician._init_var import _init_var
 
 
 class Exponential_Moving_Average:
@@ -8,6 +9,7 @@ class Exponential_Moving_Average:
         滑动平均器
             支持为每个输入数据配置不同的权重
     """
+
     def __init__(self, **kwargs):
         """
             参数：
@@ -58,36 +60,11 @@ class Exponential_Moving_Average:
         assert isinstance(paras["keep_ratio"], (int, float,)) and 0 <= paras["keep_ratio"] <= 1
         #
         self.paras = paras
-        self.var = self._init_var(like=paras["like"], data_format=paras["data_format"])
+        self.var = _init_var(like=paras["like"], data_format=paras["data_format"])
         self.state = dict(
             total_nums=0,
             bias_fix=1,
         )
-
-    @staticmethod
-    def _init_var(like=None, data_format=None):
-        if like is not None:
-            if torch.is_tensor(like):
-                var = torch.zeros_like(like)
-            elif isinstance(like, (np.ndarray,)):
-                var = np.zeros_like(like)
-            elif isinstance(like, (int, float, np.number,)):
-                var = 0.0
-            else:
-                raise ValueError("paras 'like' should be np.ndarray, torch.tensor or int/float")
-        elif data_format is not None:
-            assert isinstance(data_format, (dict,)) and "type_" in data_format and "shape" in data_format
-            k_s = copy.deepcopy(data_format)
-            k_s.pop("type_")
-            k_s.pop("shape")
-            if data_format["type_"] == "torch":
-                var = torch.zeros(size=data_format["shape"], **k_s)
-            else:
-                var = np.zeros(shape=data_format["shape"], **k_s)
-        else:
-            var = None
-
-        return var
 
     def add_sequence(self, var_ls, weight_ls=None):
         if weight_ls is not None:
@@ -110,7 +87,7 @@ class Exponential_Moving_Average:
                                         默认为 1
         """
         if self.var is None:
-            self.var = self._init_var(like=var)
+            self.var = _init_var(like=var)
         new_ratio = (1 - self.paras["keep_ratio"]) * weight
         keep_ratio = (1 - new_ratio)
         # 累积
@@ -137,17 +114,19 @@ class Exponential_Moving_Average:
             return self.var
 
     def clear(self):
-        if self.var is not None:
-            self.var[:] = 0
+        self.var = _init_var(like=self.var)
         self.state = dict(
             total_nums=0,
             bias_fix=1,
         )
 
+    def __len__(self):
+        return self.state["total_nums"]
+
 
 if __name__ == '__main__':
     seq = list(torch.tensor(range(1, 10)))
-    wls = np.asarray([0.1] * 5 + [0.9] + [0.1] * 4)*0.1
+    wls = np.asarray([0.1] * 5 + [0.9] + [0.1] * 4) * 0.1
     ema = Exponential_Moving_Average(keep_ratio=0.9, bias_correction=True)
     for i, (v, w) in enumerate(zip(seq, wls)):
         ema.add(var=v, weight=w)
