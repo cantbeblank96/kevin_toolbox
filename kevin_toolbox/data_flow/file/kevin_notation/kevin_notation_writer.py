@@ -37,7 +37,7 @@ class Kevin_Notation_Writer:
                                                __init__(mode="w") ──► stage=0 ──► metadata_begin()
                                                                                          │
                                                                                          ▼
-                  _write_metadata(key, value) or writer.metadata=dict(key=value) ◄───► stage=1
+                   write_metadata(key, value) or writer.metadata=dict(key=value) ◄───► stage=1
                                                                                          │
                                                                                          ▼
                                                  contents_begin() ◄── stage=2 ◄── metadata_end()
@@ -93,7 +93,8 @@ class Kevin_Notation_Writer:
                 # 要求 metadata 已被写入
                 reader = kevin_notation.Reader(file_path=self.paras["file_path"])
             except Exception as e:
-                raise Exception(f'file {self.paras["file_path"]} existed, but is not a standard kevin_toolbox document!')
+                raise Exception(
+                    f'file {self.paras["file_path"]} existed, but is not a standard kevin_toolbox document!')
             self.metadata = copy.deepcopy(reader.metadata)
             del reader
             # 获取文件对象
@@ -276,7 +277,13 @@ class Kevin_Notation_Writer:
             self._write_contents(row_ls=paras["row_ls"])
         elif "column_dict" in paras:
             assert isinstance(paras["column_dict"], (dict,))
-            self._write_contents(row_ls=list(zip(*[paras["column_dict"][k] for k in self.metadata["column_name"]])))
+            try:
+                # 解释为多行
+                row_ls = list(zip(*[paras["column_dict"][k] for k in self.metadata["column_name"]]))
+            except:
+                # 解释为单行
+                row_ls = [[paras["column_dict"][k] for k in self.metadata["column_name"]], ]
+            self._write_contents(row_ls=row_ls)
         else:
             raise ValueError("Requires parameter 'row_ls' or 'column_dict'")
 

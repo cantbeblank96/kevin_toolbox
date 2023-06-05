@@ -29,14 +29,15 @@ pip install kevin-toolbox  --no-dependencies
 
 - v 1.0.10（2023-06-02）
   - move get_value_by_name() from patches.utils to computer_science.algorithm.utils
-
   - add set_value_by_name() to computer_science.algorithm.utils
-
   - 增加了 computer_science.algorithm.scheduler ，其中包含
-
     - Trigger 触发器
     - Strategy_Manager 策略管理器
     - 利用这两个类，就可以根据状态来调用对应策略，进而去调整变量中对应的部分。
+- v 1.0.10b（2023-06-04）
+  - kevin_toolbox.data_flow.file
+    - 让 kevin_notation 中的 column_dict 方式支持单行写入
 
-    
+
+
 
