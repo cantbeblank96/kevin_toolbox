@@ -2,7 +2,7 @@ import os
 import json
 import copy
 from kevin_toolbox.data_flow.file.json_.converter import integrate
-from kevin_toolbox.computer_science.algorithm.utils import traverse
+from kevin_toolbox.computer_science.algorithm.utils.for_nested_dict_list import traverse
 
 
 def write_json(content, file_path, sort_keys=False, converters=None):

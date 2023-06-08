@@ -1,12 +1,12 @@
-from kevin_toolbox.computer_science.algorithm.utils import get_value_by_name
+from kevin_toolbox.computer_science.algorithm.utils.for_nested_dict_list import get_value_by_name, for_dict
 
 
-def set_value_by_name(var, name, value):
+def set_value_by_name(var, name, value, b_force=False):
     """
         通过解释名字得到取值方式，然后到 var 中将对应部分的值修改为 value。
 
         参数：
-            var:            任意支持索引取值的变量
+            var:            任意支持索引赋值的变量
             name:           <string> 取值方式
                                 由多组 "<解释方式><键>" 组成。
                                 解释方式支持以下几种:
@@ -22,6 +22,9 @@ def set_value_by_name(var, name, value):
                                 注意，在 name 的开头也可以添加任意非解释方式的字符，本函数将直接忽略它们，比如下面的:
                                     "var:acc@1" 和 "xxxx|acc|1" 也能正常写入。
             value:          待赋给的值
+            b_force:        <boolean> 当无法设置时，是否尝试创建或者修改节点
+                                默认为 False，
+                                当设置为 True，可能会对 var 的结构产生不可逆的改变，请谨慎使用。新创建或者修改的节点的类型是 dict。
     """
     assert isinstance(name, (str,))
     key = name
@@ -29,21 +32,31 @@ def set_value_by_name(var, name, value):
         key = key.rsplit(char, 1)[-1]
     assert len(key) < len(name), f'invalid name: {name}'
 
-    item = get_value_by_name(var=var, name=name[:-1 - len(key)])
+    try:
+        item = get_value_by_name(var=var, name=name[:-1 - len(key)])
 
-    flag = name[-1 - len(key)]
-    if flag == "@":
-        key = eval(key)
-    elif flag == "|":
-        try:
-            _ = item[key]
-        except:
-            key = eval(key)
+        flag = name[-1 - len(key)]
+        key_t = key
+        if flag == "@":
+            key_t = eval(key)
+        elif flag == "|":
+            try:
+                _ = item[key]
+            except:
+                key_t = eval(key)
 
-    item[key] = value
+        item[key_t] = value
+    except:
+        if not b_force:
+            raise ValueError(f'The location pointed to by name {name} does not exist in var')
+        else:
+            var = set_value_by_name(var=var, name=name[:-1 - len(key)], value={key: value}, b_force=b_force)
+
     return var
 
 
 if __name__ == '__main__':
     print(set_value_by_name(var=dict(acc=[0.66, 0.78, 0.99]), name="|acc|0", value=1))
     print(set_value_by_name(var=dict(acc=[0.66, 0.78, 0.99]), name="www|acc|0", value=1))
+
+    print(set_value_by_name(var=dict(acc=[0.66, 0.78, 0.99]), name="www|acc|0|1", value=1, b_force=True))

@@ -1,4 +1,4 @@
-def traverse(var, match_cond, action_mode="remove", converter=None):
+def traverse(var, match_cond, action_mode="remove", converter=None, b_use_name_as_idx=False):
     """
         遍历 var 找到符合 match_cond 的元素，将其按照 action_mode 指定的操作进行处理
 
@@ -9,35 +9,48 @@ def traverse(var, match_cond, action_mode="remove", converter=None):
                                     函数类型为 def(parent_type, idx, value): xxxx
                                     其中：
                                         parent_type     该元素源自哪种结构体，有两个可能传入的值： list，dict
-                                        idx             该元素在结构体中的位置，对于列表是 index，对于字典是 key
+                                        idx             该元素在结构体中的位置
+                                                            当 b_use_name_as_idx=False 时，
+                                                                对于列表是 index，对于字典是 key
+                                                            当为 True 时，传入的是元素在整体结构中的 name 位置，name的格式和含义参考
+                                                                get_value_by_name() 中的介绍
                                         value           元素的值
             action_mode:        <str> 如何对匹配上的元素进行处理
                                     目前支持：
                                         "remove"        将该元素移除
                                         "replace"       将该元素替换为 converter() 处理后的结果
+                                        "skip":          不进行任何操作
             converter:          <func> 参见 action_mode 中的 "replace" 模式
                                     函数类型为 def(idx, value): xxxx
                                     其中 idx 和 value 的含义参见参数 match_cond 介绍
+            b_use_name_as_idx     <boolean> 对于 match_cond 中的 idx 参数，是传入整体的 name 还是父节点的 index 或 key。
+                                    默认为 False
     """
     assert callable(match_cond)
-    assert action_mode in {"replace", "remove"}
+    assert action_mode in {"replace", "remove", "skip"}
     if action_mode == "replace":
         assert callable(converter)
 
-    return recursive_(var, match_cond, action_mode, converter)
+    return recursive_(var, match_cond, action_mode, converter, b_use_name_as_idx, "")
 
 
-def recursive_(var, match_cond, action_mode, converter):
+def recursive_(var, match_cond, action_mode, converter, b_use_name_as_idx, pre_name):
     if isinstance(var, (list, dict)):
         items = reversed(list(enumerate(var))) if isinstance(var, list) else list(var.items())
         for k, v in items:
-            if match_cond(type(var), k, v):
+            if b_use_name_as_idx:
+                idx = f'{pre_name}@{k}' if isinstance(var, list) else f'{pre_name}:{k}'
+            else:
+                idx = k
+            if match_cond(type(var), idx, v):
                 if action_mode == "remove":
                     var.pop(k)
+                elif action_mode == "replace":
+                    var[k] = converter(idx, v)
                 else:
-                    var[k] = converter(k, v)
+                    pass
             else:
-                var[k] = recursive_(v, match_cond, action_mode, converter)
+                var[k] = recursive_(v, match_cond, action_mode, converter, b_use_name_as_idx, idx)
     else:
         pass
     return var
@@ -57,3 +70,24 @@ if __name__ == '__main__':
 
     y2 = traverse(var=y1, match_cond=lambda _, k, v: v == 3, action_mode="remove")
     print(y2)
+
+    y3 = []
+
+
+    def func(_, idx, v):
+        global y3
+        if not isinstance(v, (list, dict,)):
+            y3.append(idx)
+
+            return True
+        else:
+            return False
+
+
+    print(y1)
+    traverse(var=y1, match_cond=func, action_mode="skip", b_use_name_as_idx=True)
+    print(y3)
+    from kevin_toolbox.computer_science.algorithm.utils import get_value_by_name
+
+    for i in y3:
+        print(i, get_value_by_name(var=y1, name=i))
