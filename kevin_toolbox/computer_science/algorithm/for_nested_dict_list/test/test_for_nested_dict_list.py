@@ -93,4 +93,4 @@ def test_get_leaf_nodes():
         check_consistency(value, fndl.get_value_by_name(var=x, name=name))
 
     x = np.array([[1, 2, 3]])
-    check_consistency([], fndl.get_value_by_name(var=x))
+    check_consistency([], fndl.get_leaf_nodes(var=x))
