@@ -2,7 +2,7 @@ import random
 import torch
 import numpy as np
 import copy
-from kevin_toolbox.computer_science.algorithm.utils.for_nested_dict_list import set_value_by_name, get_value_by_name
+from kevin_toolbox.computer_science.algorithm.for_nested_dict_list import set_value_by_name, get_value_by_name
 
 
 class Strategy_Manager:

@@ -42,8 +42,3 @@ def get_value_by_name(var, name):
             var = var[key]
 
     return var
-
-
-if __name__ == '__main__':
-    print(get_value_by_name(var=dict(acc=[0.66, 0.78, 0.99]), name="|acc|0"))
-    print(get_value_by_name(var=dict(acc=[0.66, 0.78, 0.99]), name="www|acc|0"))

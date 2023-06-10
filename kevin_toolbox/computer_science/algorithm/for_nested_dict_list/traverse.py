@@ -23,7 +23,7 @@ def traverse(var, match_cond, action_mode="remove", converter=None, b_use_name_a
             converter:          <func> 参见 action_mode 中的 "replace" 模式
                                     函数类型为 def(idx, value): xxxx
                                     其中 idx 和 value 的含义参见参数 match_cond 介绍
-            b_use_name_as_idx     <boolean> 对于 match_cond 中的 idx 参数，是传入整体的 name 还是父节点的 index 或 key。
+            b_use_name_as_idx     <boolean> 对于 match_cond/converter 中的 idx 参数，是传入整体的 name 还是父节点的 index 或 key。
                                     默认为 False
     """
     assert callable(match_cond)
@@ -54,40 +54,3 @@ def recursive_(var, match_cond, action_mode, converter, b_use_name_as_idx, pre_n
     else:
         pass
     return var
-
-
-if __name__ == '__main__':
-    import numpy as np
-
-    x = [
-        dict(d=3, c=4),
-        np.array([[1, 2, 3]])
-    ]
-
-    y1 = traverse(var=x, match_cond=lambda _, k, v: type(v) is np.ndarray, action_mode="replace",
-                  converter=lambda k, v: v.tolist())
-    print(y1)
-
-    y2 = traverse(var=y1, match_cond=lambda _, k, v: v == 3, action_mode="remove")
-    print(y2)
-
-    y3 = []
-
-
-    def func(_, idx, v):
-        global y3
-        if not isinstance(v, (list, dict,)):
-            y3.append(idx)
-
-            return True
-        else:
-            return False
-
-
-    print(y1)
-    traverse(var=y1, match_cond=func, action_mode="skip", b_use_name_as_idx=True)
-    print(y3)
-    from kevin_toolbox.computer_science.algorithm.utils import get_value_by_name
-
-    for i in y3:
-        print(i, get_value_by_name(var=y1, name=i))

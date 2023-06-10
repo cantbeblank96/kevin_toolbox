@@ -1,4 +1,4 @@
-from kevin_toolbox.computer_science.algorithm.utils.for_nested_dict_list import get_value_by_name, for_dict
+from kevin_toolbox.computer_science.algorithm.for_nested_dict_list import get_value_by_name
 
 
 def set_value_by_name(var, name, value, b_force=False):
@@ -53,10 +53,3 @@ def set_value_by_name(var, name, value, b_force=False):
             var = set_value_by_name(var=var, name=name[:-1 - len(key)], value={key: value}, b_force=b_force)
 
     return var
-
-
-if __name__ == '__main__':
-    print(set_value_by_name(var=dict(acc=[0.66, 0.78, 0.99]), name="|acc|0", value=1))
-    print(set_value_by_name(var=dict(acc=[0.66, 0.78, 0.99]), name="www|acc|0", value=1))
-
-    print(set_value_by_name(var=dict(acc=[0.66, 0.78, 0.99]), name="www|acc|0|1", value=1, b_force=True))

@@ -2,7 +2,7 @@ import pytest
 import numpy as np
 from kevin_toolbox.patches.for_test import check_consistency
 from kevin_toolbox.computer_science.algorithm.combinatorial_optimization import get_subset_with_largest_product
-from kevin_toolbox.computer_science.algorithm.utils.for_seq import get_subsets
+from kevin_toolbox.computer_science.algorithm.for_seq import get_subsets
 
 
 def test_get_subset_with_largest_product():

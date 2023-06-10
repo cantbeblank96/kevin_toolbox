@@ -4,7 +4,7 @@ import optuna
 from kevin_toolbox.patches import for_optuna
 from kevin_toolbox.data_flow.file import json_
 from kevin_toolbox.patches.for_test import check_consistency
-from kevin_toolbox.computer_science.algorithm.utils.for_nested_dict_list import get_value_by_name
+from kevin_toolbox.computer_science.algorithm.for_nested_dict_list import get_value_by_name
 
 
 def test_sample_from_feasible_domain():
