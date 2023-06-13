@@ -11,7 +11,7 @@ class Singleton_for_uid:
     def __new__(cls, *args, **kwargs):
         """
             __new__函数返回的实例，将作为self参数被传入到__init__函数。
-                如果__new__函数返回一个已经存在的实例（不论是哪个类的），__init__不会被调用。
+                如果__new__函数返回一个已经存在的实例（不论是哪个类的），__init__还是会被调用的，所以要特别注意__init__中对变量的赋值。
         """
         uid = kwargs.get("uid", None)
         exist_ok = kwargs.get("exist_ok", True)
@@ -29,6 +29,12 @@ class Singleton_for_uid:
             return super().__new__(cls)
 
     def __init__(self, *args, **kwargs):
+        try:
+            getattr(self, "uid")
+        except :
+            pass
+        else:
+            return
         uid = kwargs.get("uid", None)
         assert isinstance(uid, (str, type(None),)), \
             TypeError(f"uid should be string or None, but get a {type(uid)}!")
