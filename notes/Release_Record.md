@@ -111,3 +111,8 @@
       - 当设置为 True，将会强制覆盖
 
       该改动的目的是避免对已有的成员进行重复的注册更新。
+
+- v 1.0.14（2023-06-14） 【bug fix】
+
+  - computer_science.algorithm.registration
+    - 将 Registry.collect_from() 修改为 Registry.collect_from_paths() 并增加了 b_execute_now 参数，用于控制延时导入。通过延时导入、以及调用文件函数的文件位置检查，避免了 TypeError: super(type, obj): obj must be an instance or subtype of type 的错误。

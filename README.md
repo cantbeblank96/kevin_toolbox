@@ -27,24 +27,7 @@ pip install kevin-toolbox  --no-dependencies
 
 [版本更新记录](./notes/Release_Record.md)：
 
-- v 1.0.13（2023-06-14）
-  - computer_science.algorithm.for_nested_dict_list
-    - 添加 copy_() 方法用于复制嵌套字典列表，支持深拷贝（复制结构和叶节点）和浅拷贝（仅复制结构，不新建叶节点）
-    - 将 get_leaf_nodes() 修改成 get_nodes()，新增了 level 参数用于支持获取某一层的参数，原来的 get_leaf_nodes(var) 等效于 get_nodes(var,level=-1)
-    - 修改 traverse()，增加了 b_traverse_matched_element 参数用于控制，对于匹配上的元素，经过处理后，是否继续遍历该元素的内容。
-    
-  - patches.for_test
-
-    - modify check_consistency()
-
+- v 1.0.14（2023-06-14） 【bug fix】
   - computer_science.algorithm.registration
-
-    - 修改了 Registry.add() 中对于参数 b_force 的行为，对于 b_force：
-
-      - 默认为 False，此时当 name 指向的位置上已经有成员或者需要强制修改database结构时，将不进行覆盖而直接跳过，注册失败
-      - 当设置为 True，将会强制覆盖
-
-      该改动的目的是避免对已有的成员进行重复的注册更新。
-
-
+    - 将 Registry.collect_from() 修改为 Registry.collect_from_paths() 并增加了 b_execute_now 参数，用于控制延时导入。通过延时导入、以及调用文件函数的文件位置检查，避免了 TypeError: super(type, obj): obj must be an instance or subtype of type 的错误。
 

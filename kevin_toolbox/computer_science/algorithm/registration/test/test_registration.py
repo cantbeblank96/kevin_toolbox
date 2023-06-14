@@ -42,15 +42,17 @@ def test_Registry():
     check_consistency(id(registry), id(registry_2))
     check_consistency(registry.database, registry_2.database)
 
-    # collect_from() of UNIFIED_REGISTRY
+    # collect_from_paths() of UNIFIED_REGISTRY
     UNIFIED_REGISTRY.clear()
-    UNIFIED_REGISTRY.collect_from(path_ls=[os.path.join(os.path.dirname(__file__), "test_data/data_0")])
+    UNIFIED_REGISTRY.collect_from_paths(path_ls=[os.path.join(os.path.dirname(__file__), "test_data/data_0")],
+                                        b_execute_now=True)
     db = copy.deepcopy(UNIFIED_REGISTRY.database)
     check_consistency({"B": {"class": db["B"]["class"]}, "var": {"c": 233}}, db)
     check_consistency("B", db["B"]["class"].__name__)
 
     #
-    UNIFIED_REGISTRY.collect_from(path_ls=[os.path.join(os.path.dirname(__file__), "test_data/data_1")])
+    UNIFIED_REGISTRY.collect_from_paths(path_ls=[os.path.join(os.path.dirname(__file__), "test_data/data_1")],
+                                        b_execute_now=True)
     db = copy.deepcopy(UNIFIED_REGISTRY.database)
     check_consistency({"A": {"1.0": db["A"]["1.0"]}, "B": db["B"], "var": {"c": 233}}, db)
     check_consistency("A", db["A"]["1.0"].__name__)

@@ -1,4 +1,5 @@
 import re
+import os
 import inspect
 import pkgutil
 import weakref
@@ -11,7 +12,7 @@ class Registry:
             具有以下功能
             - 管理成员，包括添加 add()、获取 get() pop() 成员等
             - 支持通过装饰器 register() 来添加成员
-            - 支持通过 collect_from() 搜索指定的路径，当该路径下的模块被 register() 装饰器包裹或者通过 add() 添加成员时，将自动导入
+            - 支持通过 collect_from_paths() 搜索指定的路径，当该路径下的模块被 register() 装饰器包裹或者通过 add() 添加成员时，将自动导入
             （用于解决python中的模块是惰性的问题）
 
         使用方法：
@@ -27,7 +28,7 @@ class Registry:
                     # 创建注册器实例
                     DB = Registry(uid="DB")
                     # 设置搜索路径
-                    DB.collect_from(path_ls=["xx/modules_dir"])
+                    DB.collect_from_paths(path_ls=["xx/modules_dir"])
 
                 2. 在 modules_dir 下需要加载的成员中，以 a.py 为例：
                     # 导入注册器实例
@@ -83,6 +84,7 @@ class Registry:
         self.database = dict()
         #
         self.uid = kwargs.get("uid", Registry.__counter)
+        self._path_ls = []
         # 记录到 __instances 中
         Registry.__instances[self.uid] = self
         Registry.__counter += 1
@@ -126,7 +128,8 @@ class Registry:
         assert isinstance(name, (str,))
 
         # 尝试注册
-        temp = fndl.set_value_by_name(var=fndl.copy_(var=self.database, b_deepcopy=False), name=name, value=obj, b_force=True)
+        temp = fndl.set_value_by_name(var=fndl.copy_(var=self.database, b_deepcopy=False), name=name, value=obj,
+                                      b_force=True)
         # check
         if not b_force:
             inc_node_nums = fndl.count_leaf_node_nums(var=obj) if isinstance(obj, (list, dict)) else 1  # 增加的节点数量
@@ -147,6 +150,10 @@ class Registry:
                 default:          默认值
                                     找不到时，若无默认值则报错，否则将返回默认值
         """
+        if len(self._path_ls) > 0:
+            # 若需要，则导入路径下的成员
+            self.collect_from_paths(b_execute_now=True)
+
         try:
             return fndl.get_value_by_name(var=self.database, name=name)
         except:
@@ -215,22 +222,50 @@ class Registry:
 
     # -------------------- 其他 --------------------- #
 
-    def collect_from(self, path_ls):
+    def collect_from_paths(self, path_ls=None, b_execute_now=False):
         """
-            遍历 path_ls 下的所有模块，并自动导入其中主要被注册的部分，比如被 register() 装饰器包裹或者通过 add() 添加
-                注意，自动导入时使用的 add() 方法中的 b_force 将强制设置为 True
-                这意味着不再检查可能冲突的添加项
+            遍历 path_ls 下的所有模块，并自动导入其中主要被注册的部分
+                比如被 register() 装饰器包裹或者通过 add() 添加的部分
+
+            参数：
+                path_ls:            <list of paths> 需要搜索的目录
+                b_execute_now:      <boolean> 现在就执行导入
+                                        默认为 False，将等到第一次执行 get() 函数时才会真正尝试导入
+
+                        注意，在某个文件中使用 Registry 实例时，应尽量避免下面的情况：
+                            1. 在当前脚本中显式导入该实例前，调用了其他脚本执行了该实例的 collect_from_paths() 函数，且设置 b_execute_now=True，
+                                此时若导入的成员中有类，且该类继承自某个父类，且在初始化时使用了 super(xx,self).__init__ 继承初始化函数，将出现
+                                TypeError: super(type, obj): obj must be an instance or subtype of type 的错误
+                            2. 在模块的 __init__.py 文件中使用 collect_from_paths()
+                        为了避免情况 1，应该尽量避免设置 b_execute_now=True。
+                            或者省略 super(xx,self).__init__ 中的参数改为 super().__init__
         """
+        # 检查调用位置
+        caller_frame = inspect.stack()[1]
+        assert os.path.basename(caller_frame.filename) != "__init__.py", \
+            f'calling Registry.collect_from_paths() in __init__.py is forbidden, file: {caller_frame.filename}'
+        #
+        if path_ls is not None:
+            # 从深到前导入，避免 TypeError: super(type, obj) 类型错误
+            for path in filter(lambda x: os.path.isdir(x), path_ls):
+                self._path_ls.append(path)
+                for root, dirs, _ in os.walk(path, topdown=False):
+                    self._path_ls.extend([os.path.join(root, i) for i in dirs])
+            self._path_ls.sort(reverse=True)
+        if not b_execute_now:
+            return
+
         temp = None
-        for loader, module_name, is_pkg in pkgutil.walk_packages(path_ls):
+        for loader, module_name, is_pkg in pkgutil.walk_packages(self._path_ls):
             module = loader.find_module(module_name).load_module(module_name)
             if temp is None:
                 for name, obj in inspect.getmembers(module):
-                    if getattr(obj, "name", None) == Registry.name and getattr(obj, "uid") == self.uid:
+                    if getattr(obj, "name", None) == Registry.name and getattr(obj, "uid", None) == self.uid:
                         temp = obj
                         break
         if temp is not None:
             self.database = temp.database
+        self._path_ls.clear()
 
 
 UNIFIED_REGISTRY = Registry(uid="UNIFIED_REGISTRY")
