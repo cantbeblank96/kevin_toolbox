@@ -2,8 +2,7 @@ import re
 import inspect
 import pkgutil
 import weakref
-from kevin_toolbox.computer_science.algorithm.for_nested_dict_list import get_value_by_name, set_value_by_name, \
-    traverse, count_leaf_node_nums
+from kevin_toolbox.computer_science.algorithm import for_nested_dict_list as fndl
 
 
 class Registry:
@@ -12,7 +11,8 @@ class Registry:
             具有以下功能
             - 管理成员，包括添加 add()、获取 get() pop() 成员等
             - 支持通过装饰器 register() 来添加成员
-            - 支持通过 collect_from() 搜索指定的路径，当该路径下的模块被 register() 装饰器包裹时，将自动导入（用于解决python中的模块是惰性的问题）
+            - 支持通过 collect_from() 搜索指定的路径，当该路径下的模块被 register() 装饰器包裹或者通过 add() 添加成员时，将自动导入
+            （用于解决python中的模块是惰性的问题）
 
         使用方法：
             以目录结构：
@@ -83,7 +83,6 @@ class Registry:
         self.database = dict()
         #
         self.uid = kwargs.get("uid", Registry.__counter)
-        self.inactivate_b_force_of_add = False
         # 记录到 __instances 中
         Registry.__instances[self.uid] = self
         Registry.__counter += 1
@@ -110,8 +109,11 @@ class Registry:
                         需要注意的是，成员的名称确定了其在注册器内部 database 中的位置，名称的解释方式参考 get_value_by_name() 中的介绍。
                         因此不同的名称可能指向了同一个位置。
                 b_force：          <boolean> 是否强制注册
-                                    默认为 False，此时当 name 指向的位置上已经有成员时，将不进行覆盖而直接报错
+                                    默认为 False，此时当 name 指向的位置上已经有成员或者需要强制修改database结构时，将不进行覆盖而直接跳过，注册失败
                                     当设置为 True，将会强制覆盖
+
+            返回：
+                <boolean>   是否注册成功
         """
         # 检验参数
         if name is None:
@@ -124,14 +126,17 @@ class Registry:
         assert isinstance(name, (str,))
 
         # 尝试注册
-        temp = self.database.copy()
-        set_value_by_name(var=temp, name=name, value=obj, b_force=True)
+        temp = fndl.set_value_by_name(var=fndl.copy_(var=self.database, b_deepcopy=False), name=name, value=obj, b_force=True)
         # check
-        if not self.inactivate_b_force_of_add and not b_force:
-            inc_node_nums = count_leaf_node_nums(var=obj) if isinstance(obj, (list, dict)) else 1  # 增加的节点数量
-            assert count_leaf_node_nums(var=temp) == count_leaf_node_nums(var=self.database) + inc_node_nums, \
-                f'registration failed, it may be a conflict with an existing member'
+        if not b_force:
+            inc_node_nums = fndl.count_leaf_node_nums(var=obj) if isinstance(obj, (list, dict)) else 1  # 增加的节点数量
+            if fndl.count_leaf_node_nums(var=temp) != fndl.count_leaf_node_nums(var=self.database) + inc_node_nums:
+                # print(f'registration failed, name {name} may be a conflict with an '
+                #       f'existing member in {[i for i, j in fndl.get_nodes(var=self.database)]}')
+                return False
+
         self.database = temp
+        return True
 
     def get(self, name, **kwargs):
         """
@@ -143,7 +148,7 @@ class Registry:
                                     找不到时，若无默认值则报错，否则将返回默认值
         """
         try:
-            return get_value_by_name(var=self.database, name=name)
+            return fndl.get_value_by_name(var=self.database, name=name)
         except:
             if "default" in kwargs:
                 return kwargs["default"]
@@ -174,7 +179,7 @@ class Registry:
             else:
                 return False
 
-        traverse(var=self.database, match_cond=func, action_mode="remove", b_use_name_as_idx=True)
+        fndl.traverse(var=self.database, match_cond=func, action_mode="remove", b_use_name_as_idx=True)
         if b_found:
             return res
         else:
@@ -212,7 +217,7 @@ class Registry:
 
     def collect_from(self, path_ls):
         """
-            遍历 path_ls 下的所有模块，并自动导入其中被 register() 装饰器包裹的部分
+            遍历 path_ls 下的所有模块，并自动导入其中主要被注册的部分，比如被 register() 装饰器包裹或者通过 add() 添加
                 注意，自动导入时使用的 add() 方法中的 b_force 将强制设置为 True
                 这意味着不再检查可能冲突的添加项
         """
@@ -223,7 +228,6 @@ class Registry:
                 for name, obj in inspect.getmembers(module):
                     if getattr(obj, "name", None) == Registry.name and getattr(obj, "uid") == self.uid:
                         temp = obj
-                        temp.inactivate_b_force_of_add = True
                         break
         if temp is not None:
             self.database = temp.database

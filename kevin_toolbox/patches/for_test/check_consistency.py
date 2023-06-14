@@ -1,6 +1,7 @@
 import numpy as np
 import torch
-import warnings
+
+np.warnings.filterwarnings('ignore', category=np.VisibleDeprecationWarning)
 
 
 def check_consistency(*args, tolerance=1e-7, require_same_shape=True):
@@ -43,6 +44,18 @@ def check_consistency(*args, tolerance=1e-7, require_same_shape=True):
         elif issubclass(args[0].dtype.type, (np.flexible, object,)):
             # 可变长度类型
             assert issubclass(v.dtype.type, (np.flexible, object,))
-            assert (args[0] == v).all()
+            for i, j in zip(args[0].reshape(-1), v.reshape(-1)):
+                temp = i == j
+                if isinstance(temp, (bool,)):
+                    assert temp
+                else:
+                    assert temp.all()
         else:
             raise ValueError
+
+
+if __name__ == '__main__':
+    a = np.array([[1, 2, 3]])
+    b = np.array([[1, 2, 3]])
+    c = {'d': 3, 'c': 4}
+    check_consistency([c, a], [c, b])

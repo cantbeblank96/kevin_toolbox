@@ -1,4 +1,5 @@
 import os
+import copy
 import pytest
 from kevin_toolbox.patches.for_test import check_consistency
 from kevin_toolbox.computer_science.algorithm.registration import Registry, UNIFIED_REGISTRY
@@ -44,10 +45,13 @@ def test_Registry():
     # collect_from() of UNIFIED_REGISTRY
     UNIFIED_REGISTRY.clear()
     UNIFIED_REGISTRY.collect_from(path_ls=[os.path.join(os.path.dirname(__file__), "test_data/data_0")])
-    from kevin_toolbox.computer_science.algorithm.registration.test.test_data import data_0
-    check_consistency({"B": {"class": data_0.B}, "var": {"c": 233}}, UNIFIED_REGISTRY.database)
+    db = copy.deepcopy(UNIFIED_REGISTRY.database)
+    check_consistency({"B": {"class": db["B"]["class"]}, "var": {"c": 233}}, db)
+    check_consistency("B", db["B"]["class"].__name__)
+
     #
     UNIFIED_REGISTRY.collect_from(path_ls=[os.path.join(os.path.dirname(__file__), "test_data/data_1")])
-    from kevin_toolbox.computer_science.algorithm.registration.test.test_data.data_1 import aaa, bbb
-    check_consistency({"A": {"1.0": aaa.A}, "B": bbb.b_func, "var": {"c": 233}},
-                      UNIFIED_REGISTRY.database)
+    db = copy.deepcopy(UNIFIED_REGISTRY.database)
+    check_consistency({"A": {"1.0": db["A"]["1.0"]}, "B": db["B"], "var": {"c": 233}}, db)
+    check_consistency("A", db["A"]["1.0"].__name__)
+    check_consistency("b_func", db["B"].__name__)
