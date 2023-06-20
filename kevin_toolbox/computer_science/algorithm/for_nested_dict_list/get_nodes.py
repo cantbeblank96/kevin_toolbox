@@ -1,11 +1,11 @@
-import re
 from kevin_toolbox.computer_science.algorithm.for_nested_dict_list import traverse, get_value_by_name
+from kevin_toolbox.computer_science.algorithm.for_nested_dict_list.name_handler import parse_name
 
 
 def get_nodes(var, level=-1, b_strict=True):
     """
         获取嵌套字典列表 var 中所有叶节点
-            以列表 [(name,value), ...] 形式返回，其中名字 name 的解释方式参考 get_value_by_name() 介绍
+            以列表 [(name,value), ...] 形式返回，其中名字 name 的解释方式参考 name_handler.parse_name() 介绍
 
         参数：
             var:                待处理数据
@@ -16,10 +16,9 @@ def get_nodes(var, level=-1, b_strict=True):
                                     路径首部的根节点（当level为负数）添加到输出中。
                                     例如，对于 {'d': {'c': 4}, 'c': 4}，
                                         当 b_strict=True 时，
-                                            对于 level=-10 返回的是 []
-                                            对于 level=10 返回的是 []
+                                            对于 level=-10 和 level=10 返回的都是 []
                                         当 b_strict=False 时，
-                                            对于 level=-10 返回的是 [('', {'d': {'c': 4}, 'c': 4})]
+                                            对于 level=-10 返回的是 [('', {'d': {'c': 4}, 'c': 4}), ]
                                             对于 level=10 返回的是 [(':c', 4), (':d:c', 4)]
                                     默认为 True，不添加。
     """
@@ -41,7 +40,9 @@ def get_nodes(var, level=-1, b_strict=True):
         names = set()
         if level < -1:
             for name, _ in res:
-                temp = [len(i) for i in re.split('[:@]', name)[level + 1:]]
+                root_node, _, node_ls = parse_name(name=name, b_de_escape_node=False)
+                node_ls.insert(0, root_node)
+                temp = [len(i) for i in node_ls[level + 1:]]
                 temp = len(name) - sum(temp) - len(temp)
                 if b_strict and temp < 0:
                     continue
@@ -50,7 +51,9 @@ def get_nodes(var, level=-1, b_strict=True):
                 names.add(name[:temp])
         elif level > 0:
             for name, _ in res:
-                temp = [len(i) for i in re.split('[:@]', name)[:level + 1]]
+                root_node, _, node_ls = parse_name(name=name, b_de_escape_node=False)
+                node_ls.insert(0, root_node)
+                temp = [len(i) for i in node_ls[:level + 1]]
                 temp = sum(temp) + level
                 if b_strict and temp > len(name):
                     continue

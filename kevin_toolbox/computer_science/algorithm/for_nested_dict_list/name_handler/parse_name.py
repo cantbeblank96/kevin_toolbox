@@ -21,7 +21,7 @@ def parse_name(name, b_de_escape_node=True):
                                             ":epoch"    表示读取 var["epoch"]
                                             "|1+1"    表示首先尝试读取 var["1+1"]，若不成功则尝试读取 var[eval("1+1")]
                                     <键>
-                                        对于含有特殊字符 :|@ 的 key，应该先对 key 中的这些特殊字符使用 \ 进行转义
+                                        对于含有特殊字符 :|@ 的 node，应该先对 node 中的这些特殊字符使用 \ 进行转义
                                             比如，对于：
                                                 var={"acc@epoch=1": 0.05, "acc@epoch=2": 0.06}
                                             在 var["acc@epoch=1"] 位置上的元素的名字可以是

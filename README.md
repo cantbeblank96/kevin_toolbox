@@ -41,5 +41,7 @@ pip install kevin-toolbox  --no-dependencies
       - escape_node() 对键进行转义/反转义
       - 添加了单元测试
       - 添加了说明文档
-  - 
+      - 支持了转义字符。对于含有特殊字符 :|@ 的 node，可以对 node 中的这些特殊字符使用 \ 进行转义，避免将这些字符解释为取值方式。
+    - 结合 name_handler 修改了 get_value_by_name()、get_nodes()、traverse()、set_value_by_name()
+    - 改进了 set_value_by_name()，支持强制创建列表
 

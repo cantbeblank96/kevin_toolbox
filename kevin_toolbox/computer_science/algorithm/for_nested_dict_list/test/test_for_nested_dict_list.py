@@ -25,6 +25,15 @@ def test_get_value_by_name():
         x, fndl.get_value_by_name(var=x, name="var")
     )
 
+    # 测试转义
+    x = {
+        'strategy': {
+            ':settings:for_all:lr': [1, 2, 3]
+        }
+    }
+    check_consistency(x["strategy"][":settings:for_all:lr"][1],
+                      fndl.get_value_by_name(var=x, name=r":strategy:\:settings\:for_all\:lr@1"))
+
 
 def test_set_value_by_name():
     print("test for_nested_dict_list.set_value_by_name()")
@@ -37,25 +46,33 @@ def test_set_value_by_name():
     fndl.set_value_by_name(var=x, name="var:acc@0", value=2)
     check_consistency(dict(acc=[2, 0.78, 0.99]), x)
 
-    # 强制设置
+    # 强制设置（创建字典）
     fndl.set_value_by_name(var=x, name="www|acc|1|1", value=666, b_force=True)
     check_consistency(dict(acc=[2, {"1": 666}, 0.99]), x)
     check_consistency(fndl.get_value_by_name(var=x, name="www|acc|1|1"), 666)
+
+    # 强制设置（创建列表）
+    fndl.set_value_by_name(var=x, name="www|acc@4", value=0.1, b_force=True)
+    check_consistency(dict(acc=[2, {"1": 666}, 0.99, None, 0.1]), x)
+
+    # 特殊情况
+    res = fndl.set_value_by_name(var=x, name="www", value=0.1, b_force=True)
+    check_consistency(0.1, res)
 
 
 def test_traverse():
     print("test for_nested_dict_list.traverse()")
 
-    x = [dict(d=3, c=4), np.array([[1, 2, 3]])]
+    x = [{"d": 3, "c@t": 4}, np.array([[1, 2, 3]])]
 
     # replace 模式
     x = fndl.traverse(var=x, match_cond=lambda _, k, v: type(v) is np.ndarray, action_mode="replace",
                       converter=lambda k, v: v.tolist())
-    check_consistency([dict(d=3, c=4), [[1, 2, 3]]], x)
+    check_consistency([{"d": 3, "c@t": 4}, [[1, 2, 3]]], x)
 
     # remove 模式
     x = fndl.traverse(var=x, match_cond=lambda _, k, v: v == 3, action_mode="remove")
-    check_consistency([dict(c=4), [[1, 2]]], x)
+    check_consistency([{"c@t": 4}, [[1, 2]]], x)
 
     # skip 模式（b_use_name_as_idx=True）
     names, values = [], []
@@ -70,7 +87,7 @@ def test_traverse():
             return False
 
     fndl.traverse(var=x, match_cond=func, action_mode="skip", b_use_name_as_idx=True)
-    check_consistency(sorted(["@0:c", "@1@0@0", "@1@0@1"]), sorted(names))
+    check_consistency(sorted([r"@0:c\@t", "@1@0@0", "@1@0@1"]), sorted(names))
 
     for n, v in zip(names, values):
         check_consistency(v, fndl.get_value_by_name(var=x, name=n))
@@ -88,15 +105,14 @@ def test_count_leaf_node_nums():
 
 def test_get_nodes():
     print("test for_nested_dict_list.get_nodes()")
-    check_consistency([{'d': 3, 'c': 4}, np.array([[1, 2, 3]])], [{'d': 3, 'c': 4}, np.array([[1, 2, 3]])])
 
-    x = [dict(d=3, c=4), np.array([[1, 2, 3]])]
+    x = [{"d": 3, "c@t": 4}, np.array([[1, 2, 3]])]
     for level in range(-5, 5):
         for b_strict in [True, False]:
             for name, value in fndl.get_nodes(var=x, level=level, b_strict=b_strict):
                 check_consistency(value, fndl.get_value_by_name(var=x, name=name))
     #
-    check_consistency(sorted([('@1', x[1]), ('@0:d', x[0]["d"]), ('@0:c', x[0]["c"])]),
+    check_consistency(sorted([('@1', x[1]), ('@0:d', x[0]["d"]), (r'@0:c\@t', x[0]["c@t"])]),
                       sorted(fndl.get_nodes(var=x, level=-1, b_strict=True)),
                       sorted(fndl.get_nodes(var=x, level=-1, b_strict=False)))
     check_consistency(sorted([('', x), ('@0', x[0])]),
@@ -116,10 +132,10 @@ def test_get_nodes():
     check_consistency(sorted([('@1', x[1]), ('@0', x[0])]),
                       sorted(fndl.get_nodes(var=x, level=1, b_strict=True)),
                       sorted(fndl.get_nodes(var=x, level=1, b_strict=False)))
-    check_consistency(sorted([('@0:d', x[0]["d"]), ('@0:c', x[0]["c"])]),
+    check_consistency(sorted([('@0:d', x[0]["d"]), (r'@0:c\@t', x[0]["c@t"])]),
                       sorted(fndl.get_nodes(var=x, level=2, b_strict=True)))
     for level in [2, 3, 4]:
-        check_consistency(sorted([('@1', x[1]), ('@0:d', x[0]["d"]), ('@0:c', x[0]["c"])]),
+        check_consistency(sorted([('@1', x[1]), ('@0:d', x[0]["d"]), (r'@0:c\@t', x[0]["c@t"])]),
                           sorted(fndl.get_nodes(var=x, level=level, b_strict=False)))
     for level in [3, 4]:
         check_consistency(sorted([]),
