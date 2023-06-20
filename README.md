@@ -34,6 +34,12 @@ pip install kevin-toolbox  --no-dependencies
   - computer_science.algorithm.for_dict
     - fix bug in deep_update()，修复了无法更新stem中值为None的部分的问题。
     - 添加了单元测试
-
+  - computer_science.algorithm.for_nested_dict_list
+    - 新增模块 name_handler 用于处理名字的解释、构造等
+      - parse_name() 解释名字 name 得到：root_node、取值方式 method_ls 、取值时使用的键 node_ls
+      - build_name()  根据root_node、取值方式 method_ls 、取值时使用的键 node_ls，来构造名字 name
+      - escape_node() 对键进行转义/反转义
+      - 添加了单元测试
+      - 添加了说明文档
   - 
 

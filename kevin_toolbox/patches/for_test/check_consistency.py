@@ -1,7 +1,9 @@
 import numpy as np
 import torch
+import warnings
 
 np.warnings.filterwarnings('ignore', category=np.VisibleDeprecationWarning)
+warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 
 def check_consistency(*args, tolerance=1e-7, require_same_shape=True):
