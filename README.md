@@ -30,4 +30,10 @@ pip install kevin-toolbox  --no-dependencies
 - v 1.0.14（2023-06-14） 【bug fix】
   - computer_science.algorithm.registration
     - 将 Registry.collect_from() 修改为 Registry.collect_from_paths() 并增加了 b_execute_now 参数，用于控制延时导入。通过延时导入、以及调用文件函数的文件位置检查，避免了 TypeError: super(type, obj): obj must be an instance or subtype of type 的错误。
+- v 1.0.15（） 【bug fix】
+  - computer_science.algorithm.for_dict
+    - fix bug in deep_update()，修复了无法更新stem中值为None的部分的问题。
+    - 添加了单元测试
+
+  - 
 

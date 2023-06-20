@@ -12,14 +12,8 @@ def deep_update(stem, patch):
 
 def _recursion(stem, patch):
     for k, v in patch.items():
-        if k in stem and isinstance(v, (dict,)):
+        if k in stem and isinstance(v, (dict,)) and isinstance(stem[k], (dict,)):
             stem[k] = _recursion(stem=stem[k], patch=v)
         else:
             stem[k] = v
     return stem
-
-
-if __name__ == '__main__':
-    stem = {"a": {"b": [233], "g": 3}}
-    patch = {"a": {"b": 444}}
-    print(deep_update(stem, patch))
