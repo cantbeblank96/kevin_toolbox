@@ -84,12 +84,13 @@ class Registry:
         self.database = dict()
         #
         self.uid = kwargs.get("uid", Registry.__counter)
-        self._path_ls = []
+        self._path_to_collect = []
+        self._item_to_add = []
         # 记录到 __instances 中
         Registry.__instances[self.uid] = self
         Registry.__counter += 1
 
-    def add(self, obj, name=None, b_force=False):
+    def add(self, obj, name=None, b_force=False, b_execute_now=True):
         """
             注册
 
@@ -113,6 +114,8 @@ class Registry:
                 b_force：          <boolean> 是否强制注册
                                     默认为 False，此时当 name 指向的位置上已经有成员或者需要强制修改database结构时，将不进行覆盖而直接跳过，注册失败
                                     当设置为 True，将会强制覆盖
+                b_execute_now:      <boolean> 现在就执行注册
+                                        默认为 True，否则将等到第一次执行 get() 函数时才会真正尝试注册
 
             返回：
                 <boolean>   是否注册成功
@@ -126,6 +129,11 @@ class Registry:
                 if version is not None:
                     name += f':{version}'
         assert isinstance(name, (str,))
+
+        #
+        if not b_execute_now:
+            self._item_to_add.append(dict(obj=obj, name=name, b_force=b_force, b_execute_now=True))
+            return True
 
         # 尝试注册
         temp = fndl.set_value_by_name(var=fndl.copy_(var=self.database, b_deepcopy=False), name=name, value=obj,
@@ -150,9 +158,15 @@ class Registry:
                 default:          默认值
                                     找不到时，若无默认值则报错，否则将返回默认值
         """
-        if len(self._path_ls) > 0:
-            # 若需要，则导入路径下的成员
-            self.collect_from_paths(b_execute_now=True)
+        # 加载待注册成员
+        if len(self._item_to_add) > 0:
+            for i in self._item_to_add:
+                self.add(**i)
+            self._item_to_add.clear()
+        if len(self._path_to_collect) > 0:
+            for i in self._path_to_collect:
+                self.collect_from_paths(**i)
+            self._path_to_collect.clear()
 
         try:
             return fndl.get_value_by_name(var=self.database, name=name)
@@ -200,7 +214,7 @@ class Registry:
 
     # -------------------- 装饰器 --------------------- #
 
-    def register(self, name=None, b_force=False):
+    def register(self, name=None, b_force=False, b_execute_now=True):
         """
             用于注册成员的装饰器
                 成员可以是函数、类或者callable的实例
@@ -210,25 +224,28 @@ class Registry:
                                     默认为 None
                 b_force：        <boolean> 是否强制注册
                                     默认为 False
+                b_execute_now:  <boolean> 现在就执行注册
+                                    默认为 True
                                 （以上参数具体参考 add() 函数介绍）
         """
 
         def wrapper(obj):
-            nonlocal self, name, b_force
-            self.add(obj, name=name, b_force=b_force)
+            nonlocal self, name, b_force, b_execute_now
+            self.add(obj, name=name, b_force=b_force, b_execute_now=b_execute_now)
             return obj
 
         return wrapper
 
     # -------------------- 其他 --------------------- #
 
-    def collect_from_paths(self, path_ls=None, b_execute_now=False):
+    def collect_from_paths(self, path_ls=None, path_ls_to_exclude=None, b_execute_now=False):
         """
             遍历 path_ls 下的所有模块，并自动导入其中主要被注册的部分
                 比如被 register() 装饰器包裹或者通过 add() 添加的部分
 
             参数：
                 path_ls:            <list of paths> 需要搜索的目录
+                path_ls_to_exclude: <list of paths> 需要排除的目录
                 b_execute_now:      <boolean> 现在就执行导入
                                         默认为 False，将等到第一次执行 get() 函数时才会真正尝试导入
 
@@ -243,20 +260,35 @@ class Registry:
         # 检查调用位置
         caller_frame = inspect.stack()[1]
         assert os.path.basename(caller_frame.filename) != "__init__.py", \
-            f'calling Registry.collect_from_paths() in __init__.py is forbidden, file: {caller_frame.filename}'
+            f'calling Registry.collect_from_paths() in __init__.py is forbidden, file: {caller_frame.filename}.\n' \
+            f'you can call it in other files, and then import the result of the call in __init__.py'
+
         #
-        if path_ls is not None:
-            # 从深到前导入，避免 TypeError: super(type, obj) 类型错误
-            for path in filter(lambda x: os.path.isdir(x), path_ls):
-                self._path_ls.append(path)
-                for root, dirs, _ in os.walk(path, topdown=False):
-                    self._path_ls.extend([os.path.join(root, i) for i in dirs])
-            self._path_ls.sort(reverse=True)
         if not b_execute_now:
+            self._path_to_collect.append(
+                dict(path_ls=path_ls, path_ls_to_exclude=path_ls_to_exclude, b_execute_now=True))
             return
 
+        #
+        if path_ls is not None:
+            temp = []
+            for path in filter(lambda x: os.path.isdir(x), path_ls):
+                temp.append(path)
+                for root, dirs, _ in os.walk(path, topdown=False):
+                    temp.extend([os.path.join(root, i) for i in dirs])
+            if path_ls_to_exclude is not None:
+                for path_ex in path_ls_to_exclude:
+                    if not os.path.exists(path_ex):
+                        continue
+                    for i in reversed(range(len(temp))):
+                        if os.path.samefile(os.path.commonpath([path_ex, temp[i]]), path_ex):
+                            temp.pop(i)
+            # 从深到浅导入，可以避免继承引起的 TypeError: super(type, obj) 类型错误
+            path_ls = list(set(temp))
+            path_ls.sort(reverse=True)
+
         temp = None
-        for loader, module_name, is_pkg in pkgutil.walk_packages(self._path_ls):
+        for loader, module_name, is_pkg in pkgutil.walk_packages(path_ls):
             module = loader.find_module(module_name).load_module(module_name)
             if temp is None:
                 for name, obj in inspect.getmembers(module):
@@ -265,7 +297,6 @@ class Registry:
                         break
         if temp is not None:
             self.database = temp.database
-        self._path_ls.clear()
 
 
 UNIFIED_REGISTRY = Registry(uid="UNIFIED_REGISTRY")
