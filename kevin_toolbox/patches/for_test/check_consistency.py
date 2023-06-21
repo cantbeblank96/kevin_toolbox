@@ -41,7 +41,7 @@ def check_consistency(*args, tolerance=1e-7, require_same_shape=True):
             # 数字类型
             assert issubclass(v.dtype.type, (np.number, np.bool_,))
             if args[0].size > 0:
-                assert np.max(np.abs(args[0] - v)) < tolerance, \
+                assert np.max(np.abs(args[0] - v.astype(dtype=float))) < tolerance, \
                     f"{args[0]}, {v}, deviation: {np.max(np.abs(args[0] - v))}"
         elif issubclass(args[0].dtype.type, (np.flexible, object,)):
             # 可变长度类型
@@ -61,3 +61,5 @@ if __name__ == '__main__':
     b = np.array([[1, 2, 3]])
     c = {'d': 3, 'c': 4}
     check_consistency([c, a], [c, b])
+
+    check_consistency(True, True)
