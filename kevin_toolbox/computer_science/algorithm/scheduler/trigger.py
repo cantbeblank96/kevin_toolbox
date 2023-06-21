@@ -1,14 +1,32 @@
 class Trigger:
-    def __init__(self):
-        """
-            触发器
-                通过 self.update_by_state() 来接收并监视 state_dict，
-                当 state_dict 全部或部分发生变化时，将会把【发生变化的部分】
-                传入 self.bind() 绑定的函数中，并执行一次该函数。
-        """
+    """
+        触发器
+            通过 self.update_by_state() 来接收并监视 state_dict，
+            当 state_dict 全部或部分发生变化时，将会把【发生变化的部分】
+            传入 self.bind() 绑定的函数中，并执行一次该函数。
+    """
 
-        self.last_state = dict()
+    def __init__(self, **kwargs):
+        """
+            参数：
+                target:             <func or obj/list of func or obj> 待绑定目标
+                                        默认为空
+                init_state          <dict> 初始状态
+                                        默认不设置，此时将在第一次调用 self.update_by_state() 时设置
+        """
+        # 默认参数
+        paras = {
+            #
+            "target": [],
+            "init_state": dict()
+        }
+
+        # 获取参数
+        paras.update(kwargs)
+
+        self.last_state = paras["init_state"]
         self.func_ls = []
+        self.bind_func(target=paras["target"])
 
     def bind_func(self, target):
         """
