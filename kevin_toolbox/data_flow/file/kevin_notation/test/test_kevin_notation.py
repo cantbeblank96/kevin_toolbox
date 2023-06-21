@@ -93,7 +93,7 @@ def test_writer_1(expected_metadata, expected_content, file_path):
     # 新建
     file_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "test_data/temp",
                              os.path.basename(file_path))
-    part = np.random.randint(1, 5)
+    part = np.random.randint(1, 4)
     values = list(zip(*[expected_content[key][:-part] for key in expected_metadata["column_name"]]))
     with kevin_notation.Writer(file_path=file_path, mode="w", sep=expected_metadata["sep"]) as writer:
         if part % 2 == 0:
@@ -104,12 +104,22 @@ def test_writer_1(expected_metadata, expected_content, file_path):
             # 整体写入
             writer.write_metadata(metadata=expected_metadata)
 
-        writer.write_contents(row_ls=values)  # 列表方式写入
+        # 列表方式写入
+        #   多行写入
+        writer.write_contents(row_ls=values[:-1], b_single_line=False)
+        #   单行写入
+        writer.write_contents(row_ls=values[-1], b_single_line=True)
 
     # 续写
-    values = {k: v[-part:] for k, v in expected_content.items()}
+    # 字典方式写入
+    #   多行写入
+    values = {k: v[-part:-1] for k, v in expected_content.items()}
     with kevin_notation.Writer(file_path=file_path, mode="a") as writer:
-        writer.write_contents(column_dict=values)  # 字典方式写入
+        writer.write_contents(column_dict=values, b_single_line=False)
+    #   单行写入
+    values = {k: v[-1] for k, v in expected_content.items()}
+    with kevin_notation.Writer(file_path=file_path, mode="a") as writer:
+        writer.write_contents(column_dict=values, b_single_line=True)
 
     # 检验
     with kevin_notation.Reader(file_path=file_path, chunk_size=1000) as reader:

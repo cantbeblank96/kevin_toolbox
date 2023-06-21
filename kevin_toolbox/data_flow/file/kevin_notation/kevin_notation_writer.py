@@ -259,9 +259,35 @@ class Kevin_Notation_Writer:
         """
             写入 contents（供外部调用）
 
-            支持两种方式进行写入：
-                write_contents(row_ls)         <list / list of list/tuple>  一行、或者多行的内容，将按照内部保存的 column_type 进行转换。
-                write_contents(column_dict)    <dict of key:column_name value:list> 按照内部保存的 column_name 进行读取和写入。
+            参数：
+                row_ls:                     <list / list of list/tuple>  按 行 组织的待写入内容
+                                                例如：
+                                                    多行：
+                                                        [[0, 0.96, "variational"],
+                                                         [1, 0.56, "formal"],
+                                                         ...]
+                                                    单行：
+                                                        [0, 0.96, "variational"]
+                                                将按照在列表中顺序进行解释，
+                                                使用内部保存的 column_type=["int","float","str"] 进行转换。
+                column_dict:                <dict of key:column_name value:list> 按 列 组织的待写入内容
+                                                例如：
+                                                    多行：
+                                                        {
+                                                            "epoch": [0, 1, ...],
+                                                            "acc": [0.96, 0.56, ...],
+                                                            "conv_type": ["variational", "formal", ...],
+                                                        }
+                                                    单行：
+                                                        { "epoch": 0, "acc": 0.96, "conv_type": "variational" }
+                                                按照内部保存的 column_name=["epoch","acc","conv_type"] 进行解释，
+                                                使用内部保存的 column_type=["int","float","str"] 进行转换。
+                            以上两种参数分别对应着两种方式，二选一即可：
+                                write_contents(row_ls)
+                                write_contents(column_dict)
+                b_single_line:              <boolean> 强制使用单行来解释。
+                                                默认不指定，此时将依次尝试多行和单行模式进行写入。
+                            建议指定。
         """
         # 流程检查
         if self.state["stage"] == 1:
@@ -274,14 +300,23 @@ class Kevin_Notation_Writer:
         paras = kwargs
 
         if "row_ls" in paras:
-            self._write_contents(row_ls=paras["row_ls"])
+            try:
+                # 解释为多行
+                assert paras.get("b_single_line", None) in (None, False)
+                self._write_contents(row_ls=paras["row_ls"])
+            except:
+                # 解释为单行
+                assert paras.get("b_single_line", None) in (None, True)
+                self._write_contents(row_ls=[paras["row_ls"]])
         elif "column_dict" in paras:
             assert isinstance(paras["column_dict"], (dict,))
             try:
                 # 解释为多行
+                assert paras.get("b_single_line", None) in (None, False)
                 row_ls = list(zip(*[paras["column_dict"][k] for k in self.metadata["column_name"]]))
             except:
                 # 解释为单行
+                assert paras.get("b_single_line", None) in (None, True)
                 row_ls = [[paras["column_dict"][k] for k in self.metadata["column_name"]], ]
             self._write_contents(row_ls=row_ls)
         else:
@@ -300,6 +335,7 @@ class Kevin_Notation_Writer:
     def __setattr__(self, key, value):
         """
             支持直接通过 self.key = value 的方式来写入 metadata 和 contents
+                （不建议使用该方式）
         """
         if "state" not in self.__dict__:
             # state 未被设置，未完成初始化
@@ -311,18 +347,25 @@ class Kevin_Notation_Writer:
                 else:
                     self.write_metadata(key=key, value=value)
             elif self.state["stage"] == 3:
-                if key == "row_ls":
-                    self.write_contents(row_ls=value)
-                elif key == "column_dict":
-                    self.write_contents(column_dict=value)
+                if key.endswith("single_line"):
+                    b_single_line = True
+                elif key.endswith("multi_line"):
+                    b_single_line = False
+                else:
+                    b_single_line = None
+                #
+                if key.startswith("row_ls"):
+                    self.write_contents(row_ls=value, b_single_line=b_single_line)
+                elif key.startswith("column_dict"):
+                    self.write_contents(column_dict=value, b_single_line=b_single_line)
                 else:  # 兼容旧版本
                     warnings.warn(
                         f"Writing to contents with keys named other than row_ls and column_dict "
                         f"will no longer be supported in a future release", DeprecationWarning)
                     try:
-                        self.write_contents(row_ls=value)
+                        self.write_contents(row_ls=value, b_single_line=b_single_line)
                     except:
-                        self.write_contents(column_dict=value)
+                        self.write_contents(column_dict=value, b_single_line=b_single_line)
             else:
                 raise ValueError(f"Error: please call metadata_begin() or contents_begin() before write!")
 

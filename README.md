@@ -44,4 +44,9 @@ pip install kevin-toolbox  --no-dependencies
       - 支持了转义字符。对于含有特殊字符 :|@ 的 node，可以对 node 中的这些特殊字符使用 \ 进行转义，避免将这些字符解释为取值方式。
     - 结合 name_handler 修改了 get_value_by_name()、get_nodes()、traverse()、set_value_by_name()
     - 改进了 set_value_by_name()，支持强制创建列表
+  - data_flow.file.kevin_notation
+    - 修改 write_contents() 支持通过 b_single_line 参数来明确指定是使用单行or多行模式进行写入
+    - 修改 `__setattr__()` 支持通过前缀 "row_ls" or "column_dict" 来指定写入内容的组织形式，支持通过添加后缀 "single_line" or "multi_line" 来明确指定按照单行or多行模式进行写入
+      - 例如 self.row_ls_single_line = value 等效于 self.write_contents(row_ls=value, b_single_line=True)
+  - 
 

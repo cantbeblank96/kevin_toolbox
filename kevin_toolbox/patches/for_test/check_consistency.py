@@ -2,9 +2,6 @@ import numpy as np
 import torch
 import warnings
 
-np.warnings.filterwarnings('ignore', category=np.VisibleDeprecationWarning)
-warnings.filterwarnings("ignore", category=DeprecationWarning)
-
 
 def check_consistency(*args, tolerance=1e-7, require_same_shape=True):
     """
@@ -28,6 +25,9 @@ def check_consistency(*args, tolerance=1e-7, require_same_shape=True):
                                     默认为 True，
                                     当设置为 False 时，不同形状的变量可能因为 numpy 的 broadcast 机制而在比较前自动 reshape 为相同维度，进而可能通过比较。
     """
+    np.warnings.filterwarnings('ignore', category=np.VisibleDeprecationWarning)
+    warnings.filterwarnings("ignore", category=DeprecationWarning)
+
     assert len(args) >= 2
     assert isinstance(tolerance, (int, float,))
 
