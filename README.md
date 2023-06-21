@@ -53,4 +53,6 @@ pip install kevin-toolbox  --no-dependencies
       - 在 add() 中也增加了b_execute_now 来控制延时导入
       - 在 collect_from_paths() 中新增了 path_ls_to_exclude 参数用于指定需要排除的目录
       - 改进了 collect_from_paths() 中路径的搜索方式，改为从深到浅导入，可以避免继承引起的 TypeError: super(type, obj) 类型错误
+  - computer_science.algorithm.scheduler
+    - 修改 Trigger 类中的 bind() 方法，支持直接读取实例的 update_by_state() 函数进行绑定。同时也新增了 bind_func() 和 bind_obj() 用于在明确待绑定对象类型时使用。
 

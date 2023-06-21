@@ -9,20 +9,29 @@ def test_Trigger():
     res_ls = []
 
     def func_(x):
+        nonlocal res_ls
         res_ls.append(x)
 
+    class cls_:
+        @staticmethod
+        def update_by_state(x):
+            nonlocal res_ls
+            res_ls.append(x)
+
     tg = Trigger()
-    tg.bind(target=func_)  # 绑定单个函数
-    tg.update(cur_state=dict(epoch=1))
+    # 绑定单个函数
+    tg.bind_func(target=func_)
+    tg.update_by_state(cur_state=dict(epoch=1))
     check_consistency(res_ls, [{'epoch': 1}])
-    tg.update(cur_state=dict(epoch=1))
+    tg.update_by_state(cur_state=dict(epoch=1))
     check_consistency(res_ls, [{'epoch': 1}])  # 状态没有更新，不调用绑定的函数
 
     res_ls.clear()
-    tg.bind(target=[func_, func_])  # 绑定多个函数
-    tg.update(cur_state=dict(epoch=2))
+    # 绑定多个函数/对象
+    tg.bind(target=[func_, cls_()])
+    tg.update_by_state(cur_state=dict(epoch=2))
     check_consistency(res_ls, [{'epoch': 2}] * 3)  # 状态没有更新，不调用绑定的函数
-    tg.update(cur_state=dict(epoch=2))
+    tg.update_by_state(cur_state=dict(epoch=2))
     check_consistency(res_ls, [{'epoch': 2}] * 3)
 
 
