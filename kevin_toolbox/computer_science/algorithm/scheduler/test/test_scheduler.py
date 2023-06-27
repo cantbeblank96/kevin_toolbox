@@ -12,27 +12,52 @@ def test_Trigger():
         nonlocal res_ls
         res_ls.append(x)
 
+    def func_2(x):
+        nonlocal res_ls
+        res_ls.append("invoke func_2")
+
     class cls_:
         @staticmethod
         def update_by_state(x):
             nonlocal res_ls
-            res_ls.append(x)
+            res_ls.append("invoke cls_")
 
-    tg = Trigger()
-    # 绑定单个函数
-    tg.bind_func(target=func_)
+    # 绑定
+    #   在初始化时绑定
+    tg = Trigger(target_s={":func@0": func_}, init_state=dict(epoch=0))
     tg.update_by_state(cur_state=dict(epoch=1))
     check_consistency(res_ls, [{'epoch': 1}])
     tg.update_by_state(cur_state=dict(epoch=1))
     check_consistency(res_ls, [{'epoch': 1}])  # 状态没有更新，不调用绑定的函数
-
+    #   使用 bind() 绑定
+    tg.bind(name=":func@1", target=func_2)
+    tg.bind(name=":inst@0", target=cls_())
+    tg.update_by_state(cur_state=dict(epoch=2), target_names=[":func@1", ":inst@0"])
+    check_consistency(res_ls, [{'epoch': 1}, "invoke func_2", "invoke cls_"])
+    #   使用 unbind() 解除绑定
+    try:
+        tg.unbind(name=":func@2", b_not_exist_ok=False)
+    except:
+        assert True
+    else:
+        assert False
+    tg.unbind(name=":func@1", b_not_exist_ok=False)
+    tg.update_by_state(cur_state=dict(epoch=3), target_names=[":func", ":inst"])
+    check_consistency(res_ls, [{'epoch': 1}, "invoke func_2", "invoke cls_", {'epoch': 3}, "invoke cls_"])
     res_ls.clear()
-    # 绑定多个函数/对象
-    tg.bind(target=[func_, cls_()])
-    tg.update_by_state(cur_state=dict(epoch=2))
-    check_consistency(res_ls, [{'epoch': 2}] * 3)  # 状态没有更新，不调用绑定的函数
-    tg.update_by_state(cur_state=dict(epoch=2))
-    check_consistency(res_ls, [{'epoch': 2}] * 3)
+
+    # 保存和加载触发器的状态
+    tg_state = tg.state_dict()
+    #
+    tg.clear_state_dict()
+    tg.update_by_state(cur_state=dict(epoch=3), target_names=[":inst", ":func"])
+    check_consistency(res_ls, ["invoke cls_", {'epoch': 3}])  # 状态有更新
+    res_ls.clear()
+    #
+    tg.clear_state_dict()
+    tg.load_state_dict(tg_state)
+    tg.update_by_state(cur_state=dict(epoch=3), target_names=[":inst", ":func"])
+    check_consistency(res_ls, [])  # 状态没有更新，不调用绑定的函数
 
 
 def test_Strategy_Manager():
