@@ -1,7 +1,7 @@
 from kevin_toolbox.computer_science.algorithm.for_nested_dict_list.name_handler import parse_name
 
 
-def get_value_by_name(var, name):
+def get_value_by_name(var, name, b_pop=False, **kwargs):
     """
         通过解释名字得到取值方式，然后到 var 中获取对应部分的值。
 
@@ -13,18 +13,36 @@ def get_value_by_name(var, name):
                                     ":acc@1" 或者 "|acc|1" 等。
                                 注意，在 name 的开头也可以添加任意非解释方式的字符，本函数将直接忽略它们，比如下面的:
                                     "var:acc@1" 和 "xxxx|acc|1" 也能正常读取。
+            b_pop:          <boolean> 是否将值从 var 中移除
+                                默认为 False
+            default:        默认值
+                                - 不设置（默认）。当取值失败时将报错。
+                                - 设置为任意值。取值失败时将返回该值。
     """
     _, method_ls, node_ls = parse_name(name=name, b_de_escape_node=True)
 
-    for method, node in zip(method_ls, node_ls):
-        if method == "@":
-            var = var[eval(node)]
-        elif method == "|":
-            try:
-                var = var[node]
-            except:
-                var = var[eval(node)]
-        else:  # ":"
-            var = var[node]
+    try:
+        pre, cur = None, var
+        node = None
+        for method, node in zip(method_ls, node_ls):
+            pre, cur = cur, None
+            if method == "@":
+                node = eval(node)
+            elif method == "|":
+                try:
+                    _ = pre[node]
+                except:
+                    node = eval(node)
+            cur = pre[node]
 
-    return var
+        if b_pop and len(node_ls) > 0:
+            assert isinstance(pre, (dict, list,)), \
+                f'pop is only supported when the parent node type is list or dict, but got a {type(pre)}'
+            pre.pop(node)
+    except:
+        if "default" in kwargs:
+            cur = kwargs["default"]
+        else:
+            raise IndexError(f'invalid name {name}')
+
+    return cur

@@ -16,7 +16,7 @@ def set_value_by_name(var, name, value, b_force=False):
                                     "var:acc@1" 和 "xxxx|acc|1" 也能正常写入。
             value:          待赋给的值
             b_force:        <boolean> 当无法设置时，是否尝试创建或者修改节点
-                                默认为 False，
+                                默认为 False，此时若无法设置，则报错
                                 当设置为 True，可能会对 var 的结构产生不可逆的改变，请谨慎使用。
                                     - 根据取值方式的不同，新创建或者修改的节点的类型可能是 dict 或者 list，
                                         对于 list，其中缺省值填充 None。

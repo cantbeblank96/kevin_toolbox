@@ -10,7 +10,7 @@ def test_get_value_by_name():
 
     x = dict(acc=[0.66, 0.78, 0.99], model_paras=dict(name="fuck", layers=(1, 2, 3)))
 
-    # 测试多种名字
+    # 多种名字
     check_consistency(
         x["acc"][0], fndl.get_value_by_name(var=x, name="|acc|0"),
         fndl.get_value_by_name(var=x, name=":acc@0"), fndl.get_value_by_name(var=x, name="xxx:acc@0")
@@ -25,7 +25,29 @@ def test_get_value_by_name():
         x, fndl.get_value_by_name(var=x, name="var")
     )
 
-    # 测试转义
+    # pop
+    check_consistency(
+        x["acc"][0], fndl.get_value_by_name(var=x, name=":acc@0", b_pop=True)
+    )
+    check_consistency(
+        x["model_paras"]["layers"], fndl.get_value_by_name(var=x, name=":model_paras|layers", b_pop=True)
+    )
+    check_consistency(
+        dict(acc=[0.78, 0.99], model_paras=dict(name="fuck")), x
+    )
+
+    # 取值失败时返回默认值
+    try:
+        fndl.get_value_by_name(var=x, name=":acc@2")
+    except:
+        assert True
+    else:
+        assert False
+    check_consistency(
+        None, fndl.get_value_by_name(var=x, name=":acc@2", default=None)
+    )
+
+    # 转义
     x = {
         'strategy': {
             ':settings:for_all:lr': [1, 2, 3]
