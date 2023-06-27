@@ -27,7 +27,7 @@ pip install kevin-toolbox  --no-dependencies
 
 [版本更新记录](./notes/Release_Record.md)：
 
-- v 1.1.2（）【bug fix】
+- v 1.1.2（2023-06-27）【bug fix】
 
   - computer_science.algorithm.for_nested_dict_list
     - 改进 get_value_by_name()
