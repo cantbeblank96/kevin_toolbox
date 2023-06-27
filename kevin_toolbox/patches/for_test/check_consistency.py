@@ -49,9 +49,11 @@ def check_consistency(*args, tolerance=1e-7, require_same_shape=True):
             for i, j in zip(args[0].reshape(-1), v.reshape(-1)):
                 temp = i == j
                 if isinstance(temp, (bool,)):
-                    assert temp
+                    assert temp, \
+                        f"{args[0]}, {v}, diff: {temp}"
                 else:
-                    assert temp.all()
+                    assert temp.all(), \
+                        f"{args[0]}, {v}, diff: {temp}"
         else:
             raise ValueError
 

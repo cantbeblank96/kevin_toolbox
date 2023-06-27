@@ -57,7 +57,12 @@ class Registry:
             __new__函数返回的实例，将作为self参数被传入到__init__函数。
                 如果__new__函数返回一个已经存在的实例（不论是哪个类的），__init__还是会被调用的，所以要特别注意__init__中对变量的赋值。
         """
-        uid = kwargs.get("uid", cls.__counter)
+        if "uid" in kwargs:
+            uid = kwargs["uid"]
+        else:
+            while cls.__counter in cls.__instances:
+                cls.__counter += 1
+            uid = cls.__counter
 
         # 获取实例
         if uid in cls.__instances:
@@ -72,8 +77,13 @@ class Registry:
         """
             参数：
                 uid:                <hashable> 实例的唯一标识符
-                                        默认置空，此时将新建一个实例，并将此时已有实例的数量作为 uid
-                                        当为非空，则根据 uid 到已有实例中寻找相同的实例，并返回（使用该特性可以构造单例模式）
+                                        - 不设置。新建一个实例，并自动分配一个整数作为 uid（一般是此时已有实例的数量-1），
+                                            并将该实例记录到类变量 instances_of_Registry 中。
+                                        - 设置为 None。新建一个实例，但不记录到类变量 instances_of_Registry 中。
+                                        - 设置为其他值。根据 uid 到类变量 instances_of_Registry 的已有实例中寻找相同的实例，
+                                            若命中则返回已有实例，若无则以该 uid 新建一个实例并添加到 instances_of_Registry 中。
+                                            （使用该特性可以构造单例模式）
+                                        默认为不设置。
         """
         try:
             getattr(self, "uid")
@@ -87,8 +97,8 @@ class Registry:
         self._path_to_collect = []
         self._item_to_add = []
         # 记录到 __instances 中
-        Registry.__instances[self.uid] = self
-        Registry.__counter += 1
+        if self.uid is not None:
+            Registry.__instances[self.uid] = self
 
     def add(self, obj, name=None, b_force=False, b_execute_now=True):
         """
@@ -140,7 +150,7 @@ class Registry:
                                       b_force=True)
         # check
         if not b_force:
-            inc_node_nums = fndl.count_leaf_node_nums(var=obj) if isinstance(obj, (list, dict)) else 1  # 增加的节点数量
+            inc_node_nums = fndl.count_leaf_node_nums(var=obj) if isinstance(obj, (list, dict)) else 1  # 应该增加的节点数量
             if fndl.count_leaf_node_nums(var=temp) != fndl.count_leaf_node_nums(var=self.database) + inc_node_nums:
                 # print(f'registration failed, name {name} may be a conflict with an '
                 #       f'existing member in {[i for i, j in fndl.get_nodes(var=self.database)]}')
@@ -149,13 +159,15 @@ class Registry:
         self.database = temp
         return True
 
-    def get(self, name, **kwargs):
+    def get(self, name, b_pop=False, **kwargs):
         """
             获取
 
             参数：
-                name：           <str> 成员名称
-                default:          默认值
+                name:           <str> 成员名称
+                b_pop:          <boolean> 取值的同时移除该成员
+                                    默认为 False
+                default:        默认值
                                     找不到时，若无默认值则报错，否则将返回默认值
         """
         # 加载待注册成员
@@ -168,46 +180,7 @@ class Registry:
                 self.collect_from_paths(**i)
             self._path_to_collect.clear()
 
-        try:
-            return fndl.get_value_by_name(var=self.database, name=name)
-        except:
-            if "default" in kwargs:
-                return kwargs["default"]
-            else:
-                raise AssertionError(f'element {name} not exists')
-
-    def pop(self, name, **kwargs):
-        """
-            弹出
-
-            参数：
-                name：           <str> 成员名称
-                                    名称一定要准确，不能含有模糊的 | 字符
-                default:          默认值
-                                    找不到时，若无默认值则报错，否则将返回默认值
-        """
-        assert "|" not in name, \
-            f'to pop up a specific member needs to give the exact name, ' \
-            f'does not support the "|" character with automatic deduction, invalid name: {name}, ' \
-            f'what you probably want to pop is {name.replace("|", ":")}'
-        res, b_found = None, False
-
-        def func(_, idx, value):
-            nonlocal res, b_found
-            if res is None and idx == name:
-                res, b_found = value, True
-                return True
-            else:
-                return False
-
-        fndl.traverse(var=self.database, match_cond=func, action_mode="remove", b_use_name_as_idx=True)
-        if b_found:
-            return res
-        else:
-            if "default" in kwargs:
-                return kwargs["default"]
-            else:
-                raise AssertionError(f'element {name} not exists')
+        return fndl.get_value_by_name(var=self.database, name=name, b_pop=b_pop, **kwargs)
 
     def clear(self):
         self.database.clear()
@@ -236,7 +209,7 @@ class Registry:
 
         return wrapper
 
-    # -------------------- 其他 --------------------- #
+    # -------------------- 通过路径添加 --------------------- #
 
     def collect_from_paths(self, path_ls=None, path_ls_to_exclude=None, b_execute_now=False):
         """
@@ -297,6 +270,12 @@ class Registry:
                         break
         if temp is not None:
             self.database = temp.database
+
+    # -------------------- 其他 --------------------- #
+
+    @property
+    def instances_of_Registry(self):
+        return dict(Registry.__instances)
 
 
 UNIFIED_REGISTRY = Registry(uid="UNIFIED_REGISTRY")

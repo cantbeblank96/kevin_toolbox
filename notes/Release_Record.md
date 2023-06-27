@@ -198,3 +198,8 @@
   - computer_science.algorithm.scheduler
 
     - 修改 Trigger 类中的 bind() 方法，支持直接读取实例的 update_by_state() 函数进行绑定。同时也新增了 bind_func() 和 bind_obj() 用于在明确待绑定对象类型时使用。
+
+- v 1.1.1（2023-06-21）
+
+  - computer_science.algorithm.for_nested_dict_list.value_parser
+    - 在 eval_references() 中新增了参数 converter_for_ref 和 converter_for_res 用于指定对 引用值 和 计算结果 施加何种处理
