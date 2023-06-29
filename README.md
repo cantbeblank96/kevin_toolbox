@@ -48,5 +48,8 @@ pip install kevin-toolbox  --no-dependencies
         - self.state_dict(): 获取
         - load_state_dict 和 state_dict 的接口名称是为了和 pytorch 中模型、优化器的状态加载、获取保持一致。
 
-  
+- v 1.1.3（）
+  - computer_science.algorithm.for_nested_dict_list
+    - 在 traverse() 中新增了traversal_mode 参数用于控制遍历的顺序，目前支持三种模式： "dfs_pre_order" 深度优先-先序遍历、"dfs_post_order" 深度优先-后序遍历、以及 "bfs" 宽度优先。
+    - 在单元测试中新增了对 traverse() 中 traversal_mode 参数的测试项目。
 

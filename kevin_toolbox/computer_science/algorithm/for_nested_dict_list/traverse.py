@@ -1,8 +1,21 @@
+from enum import Enum
 from kevin_toolbox.computer_science.algorithm.for_nested_dict_list.name_handler import escape_node
 
 
+class ACTION_MODE(Enum):
+    remove = 1
+    replace = 2
+    skip = 3
+
+
+class TRAVERSAL_MODE(Enum):
+    dfs_pre_order = 1
+    dfs_post_order = 2
+    bfs = 3
+
+
 def traverse(var, match_cond, action_mode="remove", converter=None,
-             b_use_name_as_idx=False, b_traverse_matched_element=False):
+             b_use_name_as_idx=False, traversal_mode="dfs_pre_order", b_traverse_matched_element=False):
     """
         遍历 var 找到符合 match_cond 的元素，将其按照 action_mode 指定的操作进行处理
 
@@ -27,43 +40,110 @@ def traverse(var, match_cond, action_mode="remove", converter=None,
             converter:          <func> 参见 action_mode 中的 "replace" 模式
                                     函数类型为 def(idx, value): ...
                                     其中 idx 和 value 的含义参见参数 match_cond 介绍
+            traversal_mode:     <str> 遍历的模式、顺序
+                                    目前支持：
+                                        "dfs_pre_order"         深度优先、先序遍历
+                                        "dfs_post_order"        深度优先、后序遍历
+                                        "bfs"                   宽度优先
+                                    默认为 "dfs_pre_order"
             b_use_name_as_idx:  <boolean> 对于 match_cond/converter 中的 idx 参数，是传入整体的 name 还是父节点的 index 或 key。
                                     默认为 False
             b_traverse_matched_element  <boolean> 对于匹配上的元素，经过处理后，是否继续遍历该元素的内容
                                     默认为 False
     """
     assert callable(match_cond)
-    assert action_mode in {"replace", "remove", "skip"}
-    if action_mode == "replace":
+    assert action_mode in ACTION_MODE.__members__.keys()
+    action_mode = ACTION_MODE.__members__[action_mode]
+    if action_mode is ACTION_MODE.replace:
         assert callable(converter)
+    #
+    assert traversal_mode in TRAVERSAL_MODE.__members__.keys()
+    traversal_mode = TRAVERSAL_MODE.__members__[traversal_mode]
 
-    return recursive_(var, match_cond, action_mode, converter, b_use_name_as_idx, b_traverse_matched_element, "")
+    if traversal_mode is TRAVERSAL_MODE.bfs:
+        return _bfs(var, match_cond, action_mode, converter, b_use_name_as_idx, b_traverse_matched_element)
+    else:
+        return _recursive(var, match_cond, action_mode, converter, b_use_name_as_idx, traversal_mode,
+                          b_traverse_matched_element, "")
 
 
-def recursive_(var, match_cond, action_mode, converter, b_use_name_as_idx, b_traverse_matched_element, pre_name):
+def _bfs(var, match_cond, action_mode, converter, b_use_name_as_idx, b_traverse_matched_element):
+    temp = [("", var)]
+
+    while len(temp):
+        pre_name, i = temp.pop(0)
+        if isinstance(i, (list, dict)):
+            # 添加 idx
+            items = []
+            for k, v in (enumerate(i) if isinstance(i, list) else i.items()):
+                if b_use_name_as_idx:
+                    method = "@" if isinstance(i, list) else ":"
+                    idx = f'{pre_name}{method}{escape_node(node=k, b_reversed=False, times=1)}'
+                else:
+                    idx = k
+                items.append((k, v, idx))
+            items.reverse()  # 反过来便于 列表 弹出元素
+            # 匹配&处理
+            for k, v, idx in items:
+                b_matched = _deal(i, k, v, idx, match_cond, converter, action_mode)
+                if b_matched and not b_traverse_matched_element:
+                    continue
+                # 添加到队尾
+                temp.append((idx, v))
+
+    return var
+
+
+def _recursive(var, match_cond, action_mode, converter,
+               b_use_name_as_idx, traversal_mode, b_traverse_matched_element, pre_name):
     if isinstance(var, (list, dict)):
-        items = reversed(list(enumerate(var))) if isinstance(var, list) else list(var.items())
-        for k, v in items:
+        # 添加 idx
+        items = []
+        for k, v in (enumerate(var) if isinstance(var, list) else var.items()):
             if b_use_name_as_idx:
                 method = "@" if isinstance(var, list) else ":"
                 idx = f'{pre_name}{method}{escape_node(node=k, b_reversed=False, times=1)}'
             else:
                 idx = k
-            # 匹配
-            b_matched = match_cond(type(var), idx, v)
-            # 处理
-            if b_matched:
-                if action_mode == "remove":
-                    var.pop(k)
-                elif action_mode == "replace":
-                    var[k] = converter(idx, v)
-                else:
-                    pass
+            items.append((k, v, idx))
+        items.reverse()  # 反过来便于 列表 弹出元素
+
+        if traversal_mode is TRAVERSAL_MODE.dfs_pre_order:
+            # 先序
+            # 匹配&处理
+            b_matched_ls = []
+            for k, v, idx in items:
+                b_matched_ls.append(_deal(var, k, v, idx, match_cond, converter, action_mode))
             # 递归遍历
-            if b_matched and not b_traverse_matched_element:
-                continue
-            var[k] = recursive_(var[k], match_cond, action_mode, converter, b_use_name_as_idx,
-                                b_traverse_matched_element, idx)
+            for b_matched, (k, v, idx) in zip(b_matched_ls, items):
+                if b_matched and not b_traverse_matched_element:
+                    continue
+                var[k] = _recursive(v, match_cond, action_mode, converter, b_use_name_as_idx, traversal_mode,
+                                    b_traverse_matched_element, idx)
+        else:
+            # 后序
+            # 递归遍历
+            for k, v, idx in items:
+                var[k] = _recursive(v, match_cond, action_mode, converter, b_use_name_as_idx, traversal_mode,
+                                    b_traverse_matched_element, idx)
+            # 匹配&处理
+            for k, v, idx in items:
+                _deal(var, k, v, idx, match_cond, converter, action_mode)
     else:
         pass
     return var
+
+
+def _deal(var, k, v, idx, match_cond, converter, action_mode):
+    """处理节点"""
+    # 匹配
+    b_matched = match_cond(type(var), idx, v)
+    # 处理
+    if b_matched:
+        if action_mode is ACTION_MODE.remove:
+            var.pop(k)
+        elif action_mode is ACTION_MODE.replace:
+            var[k] = converter(idx, v)
+        else:
+            pass
+    return b_matched

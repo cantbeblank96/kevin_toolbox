@@ -85,34 +85,43 @@ def test_set_value_by_name():
 def test_traverse():
     print("test for_nested_dict_list.traverse()")
 
-    x = [{"d": 3, "c@t": 4}, np.array([[1, 2, 3]])]
+    for traversal_mode in ["dfs_pre_order", "dfs_post_order", "bfs"]:
+        x = [{"d": 3, "c@t": 4}, np.array([[1, 2, 3]])]
 
-    # replace 模式
-    x = fndl.traverse(var=x, match_cond=lambda _, k, v: type(v) is np.ndarray, action_mode="replace",
-                      converter=lambda k, v: v.tolist())
-    check_consistency([{"d": 3, "c@t": 4}, [[1, 2, 3]]], x)
+        # replace 模式
+        x = fndl.traverse(var=x, match_cond=lambda _, k, v: type(v) is np.ndarray, action_mode="replace",
+                          converter=lambda k, v: v.tolist(), traversal_mode=traversal_mode)
+        check_consistency([{"d": 3, "c@t": 4}, [[1, 2, 3]]], x)
 
-    # remove 模式
-    x = fndl.traverse(var=x, match_cond=lambda _, k, v: v == 3, action_mode="remove")
-    check_consistency([{"c@t": 4}, [[1, 2]]], x)
+        # remove 模式
+        x = fndl.traverse(var=x, match_cond=lambda _, k, v: v == 3, action_mode="remove", traversal_mode=traversal_mode)
+        check_consistency([{"c@t": 4}, [[1, 2]]], x)
 
-    # skip 模式（b_use_name_as_idx=True）
-    names, values = [], []
+        # skip 模式（b_use_name_as_idx=True）
+        leaf_nodes, values, names = [], [], []
 
-    def func(_, idx, v):
-        nonlocal names, values
-        if not isinstance(v, (list, dict,)):
+        def func(_, idx, v):
+            nonlocal leaf_nodes, values, names
             names.append(idx)
-            values.append(v)
-            return True
+            if not isinstance(v, (list, dict,)):
+                leaf_nodes.append(idx)
+                values.append(v)
+                return True
+            else:
+                return False
+
+        fndl.traverse(var=x, match_cond=func, action_mode="skip", b_use_name_as_idx=True, traversal_mode=traversal_mode)
+        check_consistency(sorted([r"@0:c\@t", "@1@0@0", "@1@0@1"]), sorted(leaf_nodes))
+        for n, v in zip(leaf_nodes, values):
+            check_consistency(v, fndl.get_value_by_name(var=x, name=n))
+
+        # 遍历顺序
+        if traversal_mode == "dfs_post_order":
+            check_consistency(['@1@0@1', '@1@0@0', '@1@0', r'@0:c\@t', '@1', '@0'], names)
+        elif traversal_mode == "dfs_pre_order":
+            check_consistency(['@1', '@0', '@1@0', '@1@0@1', '@1@0@0', r'@0:c\@t'], names)
         else:
-            return False
-
-    fndl.traverse(var=x, match_cond=func, action_mode="skip", b_use_name_as_idx=True)
-    check_consistency(sorted([r"@0:c\@t", "@1@0@0", "@1@0@1"]), sorted(names))
-
-    for n, v in zip(names, values):
-        check_consistency(v, fndl.get_value_by_name(var=x, name=n))
+            check_consistency(['@1', '@0', '@1@0', r'@0:c\@t', '@1@0@1', '@1@0@0'], names)
 
 
 def test_count_leaf_node_nums():
