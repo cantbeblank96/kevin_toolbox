@@ -27,29 +27,13 @@ pip install kevin-toolbox  --no-dependencies
 
 [版本更新记录](./notes/Release_Record.md)：
 
-- v 1.1.2（2023-06-27）【bug fix】
-
-  - computer_science.algorithm.for_nested_dict_list
-    - 改进 get_value_by_name()
-      - 新增了参数 b_pop 用于支持取值的同时将该值从 var 中移除
-      - 新增了参数 default 用于设置取值失败时是报错还是返回默认值
-  - computer_science.algorithm.registration
-    - Registry
-      - 【bug fix】修复了问题：当已有实例的 uid 为正整数 n，同时 cls.__counter 为 n 时，不指定 uid 再创建实例将错误地返回 uid=n 的已有实例而不是新建一个。
-      - 将 self.pop() 函数的功能合并到 self.get(... ,b_pop=...) 中
-  - computer_science.algorithm.scheduler
-    - 改进 Trigger
-      - 使用 Registry 来管理触发目标
-      - 新增 self.unbind() 函数来解除绑定
-      - 在 update_by_state() 中新增了 target_names 参数来决定调用哪些目标
-      - 新增 Trigger 的状态管理相关函数
-        - self.clear_state_dict(): 清除 Trigger 中保存的状态
-        - self.load_state_dict(): 加载
-        - self.state_dict(): 获取
-        - load_state_dict 和 state_dict 的接口名称是为了和 pytorch 中模型、优化器的状态加载、获取保持一致。
-
 - v 1.1.3（）
   - computer_science.algorithm.for_nested_dict_list
     - 在 traverse() 中新增了traversal_mode 参数用于控制遍历的顺序，目前支持三种模式： "dfs_pre_order" 深度优先-先序遍历、"dfs_post_order" 深度优先-后序遍历、以及 "bfs" 宽度优先。
-    - 在单元测试中新增了对 traverse() 中 traversal_mode 参数的测试项目。
+      - 在单元测试中新增了对 traverse() 中 traversal_mode 参数的测试项目。
 
+  - computer_science.algorithm.scheduler
+    - 改进 Strategy_Manager
+      - 使用 `<eval>` 来标记需要使用 eval() 函数读取的字符串。相对于旧版通过 `<eval>` 来标记需要被读取为函数的字符串，使用 `<eval>` 不仅可以读取函数，也可以读取更多的数据结构。
+      - 在通过 add() 添加策略时即对 strategy 中被 `<eval>` 标记的键值进行解释，而非等到后续每次 cal() 时再进行解释，提高了效率。
+      - 修改了对应的单元测试。

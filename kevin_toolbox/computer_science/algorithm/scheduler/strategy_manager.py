@@ -2,7 +2,7 @@ import random
 import torch
 import numpy as np
 import copy
-from kevin_toolbox.computer_science.algorithm.for_nested_dict_list import set_value_by_name, get_value_by_name
+from kevin_toolbox.computer_science.algorithm.for_nested_dict_list import set_value_by_name, get_value_by_name, traverse
 
 
 class Strategy_Manager:
@@ -20,9 +20,9 @@ class Strategy_Manager:
                         ":lr": {
                             # 当 key 满足 trigger_value 时，将 ":lr" 指向的部分替换为 value
                             0: 0.1,
-                            # 如果是以 <f> 为开头的字符串，则视为函数并将 value 解释为函数执行后的结果
+                            # 如果是以 <eval> 为开头的字符串，则视为函数并将 value 解释为函数执行后的结果
                             #       函数中 t, p 参数将被分别传入 trigger_value 和 para_value
-                            "<f>lambda t: t%100==0": "<f>lambda p, t: p*0.1",
+                            "<eval>lambda t: t%100==0": "<eval>lambda p, t: p*0.1",
                         },
                     },
                     override=False,
@@ -93,10 +93,11 @@ class Strategy_Manager:
                                                 300: {
                                                     ":ratio_ls@1": 1e-5,
                                                 },  # 在 epoch=300 时，将 ratio_ls[1] 设置为 1e-5
-                                                "<f>lambda t: t%100==0": {
-                                                    ":lr": "<f>lambda p, t: p*0.1",
-                                                },  # 当键为 string 且 开头带有 <f> 标记时候，将以函数的方式读取该字符串，
-                                                    # 并在匹配过程中向该函数输入触发值 t 和当前元素的值 p，当函数返回True视为匹配成功。
+                                                "<eval>lambda t: t%100==0": {
+                                                    ":lr": "<eval>lambda p, t: p*0.1",
+                                                },  # 当键为 string 且 开头带有 <eval> 标记时候，将使用 eval() 函数读取该字符串，
+                                                    # 当键为 callable 的函数时，在匹配过程中向该函数输入触发值 t 和当前元素的值 p，
+                                                    # 当函数返回True视为匹配成功。
                                                     # 比如上式表示的是：每经过 100 epoch，也就是当 epoch%100==0 时，lr 在原来的基础上乘上0.1。
                                                     # 函数匹配的的优先级低于直接的值匹配。
                                                 ...
@@ -109,7 +110,7 @@ class Strategy_Manager:
                                                 "__trigger_name": "epoch",
                                                 ":lr": {
                                                     0: 0.1,
-                                                    "<f>lambda t: t%100==0": "<f>lambda p, t: p*0.1",
+                                                    "<eval>lambda t: t%100==0": "<eval>lambda p, t: p*0.1",
                                                 },
                                                 ":ratio_ls": {
                                                     0: [1e-3, 1e-2],
@@ -145,6 +146,21 @@ class Strategy_Manager:
                         temp[t_key] = dict()
                     temp[t_key][p_key] = strategy[p_key][t_key]
             strategy = temp
+
+        def deal_eval_str(x):
+            return eval(x[6:]) if isinstance(x, (str,)) and x.startswith("<eval>") else x
+
+        # 使用 eval() 读取带 "<eval>" 标签的键or值
+        def converter(_, value):
+            if isinstance(value, (dict,)):
+                res = {deal_eval_str(k): deal_eval_str(v) for k, v in value.items()}
+            else:
+                res = deal_eval_str(value)
+            return res
+
+        strategy = traverse(var=[strategy], match_cond=lambda _, __, value: isinstance(value, (dict, str,)),
+                            action_mode="replace", converter=converter, traversal_mode="dfs_post_order",
+                            b_use_name_as_idx=False, b_traverse_matched_element=True)[0]
 
         # 将策略添加到 database
         old_strategy = self.database.get(_trigger_name, dict())
@@ -187,7 +203,7 @@ class Strategy_Manager:
             action_s = dict()  # {p_name: p_value, ...}
             # 使用匹配函数
             for key, p_s in strategy.items():
-                if isinstance(key, (str,)) and key.startswith("<f>") and eval(key[3:])(t_value):
+                if callable(key) and key(t_value):
                     action_s.update({i: j for i, j in p_s.items() if i not in action_s})
             # 直接匹配
             if t_value in strategy:
@@ -200,9 +216,9 @@ class Strategy_Manager:
         for t_name, action_s in sorted(action_s_all.items(), key=lambda x: x[0]):
             t_value = trigger_state[t_name]
             for name, p_value in copy.deepcopy(action_s):
-                if isinstance(p_value, (str,)) and p_value.startswith("<f>"):
+                if callable(p_value):
                     raw_value = get_value_by_name(var=var, name=name)
-                    p_value = eval(p_value[3:])(raw_value, t_value)
+                    p_value = p_value(raw_value, t_value)
                 set_value_by_name(var=var, name=name, value=p_value)
 
         return var, action_s_all
@@ -217,7 +233,7 @@ if __name__ == '__main__':
         "__trigger_name": "epoch",
         ":lr": {
             # 0: 0.1,
-            "<f>lambda t: t%100==0": "<f>lambda p, t: p*0.1",
+            "<eval>lambda t: t%100==0": "<eval>lambda p, t: p*0.1",
         },
     })
     sm.add(strategy={
@@ -230,8 +246,8 @@ if __name__ == '__main__':
         300: {
             ":ratio_ls@1": 1e-5,
         },
-        # "<f>lambda t: t%100==0": {
-        #     ":lr": "<f>lambda p, t: p*0.1",
+        # "<eval>lambda t: t%100==0": {
+        #     ":lr": "<eval>lambda p, t: p*0.1",
         # },
     }, override=False)
 

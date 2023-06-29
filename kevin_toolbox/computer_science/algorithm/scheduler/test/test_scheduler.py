@@ -67,10 +67,10 @@ def test_Strategy_Manager():
         "__dict_form": "para_name:trigger_value",
         "__trigger_name": "epoch",
         ":lr": {
-            "<f>lambda t: t%100==0": "<f>lambda p, t: round(p*0.1,4)",
+            "<eval>lambda t: t%100==0": "<eval>lambda p, t: round(p*0.1,4)",
         },
         ":weight_decay:beta": {
-            "<f>lambda t: t%300==0": "<f>lambda p, t: t",
+            "<eval>lambda t: t%300==0": "<eval>lambda p, t: t",
         },
     })
     sm.add(strategy={
@@ -87,8 +87,8 @@ def test_Strategy_Manager():
         200: {
             ":weight_decay:alpha": 1,
         },
-        "<f>lambda t: t%100==0": {
-            ":weight_decay:alpha": "<f>lambda p, t: p+1",
+        "<eval>lambda t: t%100==0": {
+            ":weight_decay:alpha": "<eval>lambda p, t: p+1",
         },
     }, override=False)
 
@@ -98,27 +98,30 @@ def test_Strategy_Manager():
         "ratio_ls": [1e-3, 1e-2],
         "weight_decay": {"beta": 0, "alpha": 1},
     })
+    assert callable(action_s["step"][-1][1]) and action_s["step"][-1][1](1, 0) == 2
     check_consistency(action_s, {
-        'step': [
+        "step": [
             (':lr', 0.1),
             (':ratio_ls', [0.001, 0.01]),
             (':weight_decay', {'beta': 0, 'alpha': 0}),
-            (':weight_decay:alpha', '<f>lambda p, t: p+1')
+            (':weight_decay:alpha', action_s["step"][-1][1])  # '<eval>lambda p, t: p+1'
         ]
     })
 
     var_1, action_s_1 = sm.cal(trigger_state=dict(step=50, ), var=var)
     check_consistency(var, var_1)
-    check_consistency(action_s_1, {'step': []})
+    check_consistency(action_s_1, {"step": []})
 
     var_2, action_s_2 = sm.cal(trigger_state=dict(step=100, ), var=var_1)
     check_consistency(var_2["weight_decay"], {"beta": 0, "alpha": 2})
-    check_consistency(action_s_2, {'step': [(':weight_decay:alpha', '<f>lambda p, t: p+1')]})
+    assert callable(action_s_2["step"][-1][1]) and action_s_2["step"][-1][1](1, 0) == 2
+    check_consistency(action_s_2,
+                      {"step": [(':weight_decay:alpha', action_s_2["step"][-1][1])]})  # '<eval>lambda p, t: p+1'
 
     # 验证当 para_name 相同时，值匹配比函数匹配更加优先
     var_3, action_s_3 = sm.cal(trigger_state=dict(step=200, ), var=var_2)
     check_consistency(var_3["weight_decay"], {"beta": 0, "alpha": 1})
-    check_consistency(action_s_3, {'step': [(":weight_decay:alpha", 1)]})
+    check_consistency(action_s_3, {"step": [(":weight_decay:alpha", 1)]})
 
     # 验证当 para_name 相同时，值匹配比函数匹配更加优先
     var_4, action_s_4 = sm.cal(trigger_state=dict(epoch=300, step=300, ), var=var_3)
@@ -127,9 +130,12 @@ def test_Strategy_Manager():
         "ratio_ls": [1e-3, 1e-5],
         "weight_decay": {"beta": 300, "alpha": 2},
     })
+    assert callable(action_s_4["step"][-1][1]) and action_s_4["step"][-1][1](1, 0) == 2
+    assert callable(action_s_4["epoch"][0][1]) and action_s_4["epoch"][0][1](1, 0) == round(1 * 0.1, 4)
+    assert callable(action_s_4["epoch"][1][1]) and action_s_4["epoch"][1][1](1, 0) == 0
     check_consistency(action_s_4, {
-        'step': [(":ratio_ls@1", 1e-5),
-                 (":weight_decay:alpha", "<f>lambda p, t: p+1")],
-        "epoch": [(":lr", "<f>lambda p, t: round(p*0.1,4)"),
-                  (":weight_decay:beta", "<f>lambda p, t: t")]
+        "step": [(":ratio_ls@1", 1e-5),
+                 (":weight_decay:alpha", action_s_4["step"][-1][1])],  # "<eval>lambda p, t: p+1"
+        "epoch": [(":lr", action_s_4["epoch"][0][1]),  # "<eval>lambda p, t: round(p*0.1,4)"
+                  (":weight_decay:beta", action_s_4["epoch"][1][1])]  # "<eval>lambda p, t: t"
     })
