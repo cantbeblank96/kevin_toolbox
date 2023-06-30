@@ -27,7 +27,7 @@ pip install kevin-toolbox  --no-dependencies
 
 [版本更新记录](./notes/Release_Record.md)：
 
-- v 1.1.3（）
+- v 1.1.3（2023-06-30）
   - computer_science.algorithm.for_nested_dict_list
     - 在 traverse() 中新增了traversal_mode 参数用于控制遍历的顺序，目前支持三种模式： "dfs_pre_order" 深度优先-先序遍历、"dfs_post_order" 深度优先-后序遍历、以及 "bfs" 宽度优先。
       - 在单元测试中新增了对 traverse() 中 traversal_mode 参数的测试项目。

@@ -224,3 +224,16 @@
         - self.load_state_dict(): 加载
         - self.state_dict(): 获取
         - load_state_dict 和 state_dict 的接口名称是为了和 pytorch 中模型、优化器的状态加载、获取保持一致。
+  
+- v 1.1.3（2023-06-30）
+
+  - computer_science.algorithm.for_nested_dict_list
+    - 在 traverse() 中新增了traversal_mode 参数用于控制遍历的顺序，目前支持三种模式： "dfs_pre_order" 深度优先-先序遍历、"dfs_post_order" 深度优先-后序遍历、以及 "bfs" 宽度优先。
+      - 在单元测试中新增了对 traverse() 中 traversal_mode 参数的测试项目。
+    - value_parser
+      - 修改 eval_references() 中 converter_for_ref 参数的行为，从原来只是作为计算结果前对算式中引用节点值的预处理，变成直接改变被引用节点的值。亦即原来不会修改原被引用节点的值，现在变为会修改原节点的值了。
+  - computer_science.algorithm.scheduler
+    - 改进 Strategy_Manager
+      - 使用 `<eval>` 来标记需要使用 eval() 函数读取的字符串。相对于旧版通过 `<eval>` 来标记需要被读取为函数的字符串，使用 `<eval>` 不仅可以读取函数，也可以读取更多的数据结构。
+      - 在通过 add() 添加策略时即对 strategy 中被 `<eval>` 标记的键值进行解释，而非等到后续每次 cal() 时再进行解释，提高了效率。
+      - 修改了对应的单元测试。
