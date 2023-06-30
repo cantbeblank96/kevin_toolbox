@@ -9,8 +9,12 @@ def eval_references(var, node_s, order, converter_for_ref=None, converter_for_re
             var:
             node_s:                 <dict> 引用节点，parse_references() 返回的结果
             order:                  <list of name> 计算顺序，cal_relation_between_references() 返回的结果
-            converter_for_ref:      <callable> 对引用值施加何种处理
-                                        形如 def(idx, v): ... 的函数，其中 idx 是被引用节点的名字，v是其值
+            converter_for_ref:      <callable> 对被引用节点施加何种处理
+                                        形如 def(idx, v): ... 的函数，其中 idx 是被引用节点的名字，v是其值，
+                                        返回的结果将替换掉被引用节点中原来的值。
+                                        注意：
+                                            - 处理后得到的结果将替换掉原引用节点的值。（重要所以说两次）
+                                            - 当同一节点被多次引用时，仅会被处理、替换一次。
             converter_for_res:      <callable> 对计算结果施加何种处理
                                         形如 def(idx, v): ... 的函数，其中 idx 是节点的名字，v是计算结果
     """
@@ -18,13 +22,18 @@ def eval_references(var, node_s, order, converter_for_ref=None, converter_for_re
     assert converter_for_ref is None or callable(converter_for_ref)
     assert converter_for_res is None or callable(converter_for_res)
 
+    processed_ref_nodes = set()
+
     for name in order:
         details = node_s[name]
         # 获取依赖值
-        for k, v in details["paras"].items():
-            v_new = get_value_by_name(var=var, name=v)
-            if converter_for_ref is not None:
-                v_new = converter_for_ref(v, v_new)
+        for k, idx in details["paras"].items():
+            v_new = get_value_by_name(var=var, name=idx)
+            if converter_for_ref is not None and idx not in processed_ref_nodes:
+                v_new = converter_for_ref(idx, v_new)
+                # 赋值
+                set_value_by_name(var=var, name=idx, value=v_new, b_force=False)
+                processed_ref_nodes.add(idx)
             details["paras"][k] = v_new
         # 计算
         res = eval(details["expression"], details["paras"])

@@ -16,7 +16,7 @@ def test_all_0():
         "dataset": {
             # "name": "<v>{cfg:dataset:name}",
             "batch_size": "<v>{cfg:model:head:input_shape@0}",
-            "image_size": [110, 96],
+            "image_size": ["<eval>110", 96],
         },
     }
 
@@ -53,8 +53,10 @@ def test_all_0():
     check_consistency(":model:head:output_shape", order[-1])
 
     print("test value_parser.eval_references()")
-
-    vp.eval_references(var=x, node_s=node_s, order=order)
+    # 将被引用节点 "image_size@0": "<eval>110" 的值替换为 110
+    vp.eval_references(var=x, node_s=node_s, order=order,
+                       converter_for_ref=lambda idx, v: eval(v[6:]) if isinstance(v, (str,)) and v.startswith(
+                           "<eval>") else v)
     check_consistency(
         {'model': {'head': {'input_shape': [64, 3, 110, 96], 'output_shape': [16, 3, 110, 96]}},
          'dataset': {'batch_size': 64, 'image_size': [110, 96]}},
