@@ -63,8 +63,8 @@ def traverse(var, match_cond, action_mode="remove", converter=None,
     if traversal_mode is TRAVERSAL_MODE.bfs:
         return _bfs(var, match_cond, action_mode, converter, b_use_name_as_idx, b_traverse_matched_element)
     else:
-        return _recursive(var, match_cond, action_mode, converter, b_use_name_as_idx, traversal_mode,
-                          b_traverse_matched_element, "")
+        return _dfs(var, match_cond, action_mode, converter, b_use_name_as_idx, traversal_mode,
+                    b_traverse_matched_element, "")
 
 
 def _bfs(var, match_cond, action_mode, converter, b_use_name_as_idx, b_traverse_matched_element):
@@ -73,77 +73,76 @@ def _bfs(var, match_cond, action_mode, converter, b_use_name_as_idx, b_traverse_
     while len(temp):
         pre_name, i = temp.pop(0)
         if isinstance(i, (list, dict)):
-            # 添加 idx
-            items = []
-            for k, v in (enumerate(i) if isinstance(i, list) else i.items()):
-                if b_use_name_as_idx:
-                    method = "@" if isinstance(i, list) else ":"
-                    idx = f'{pre_name}{method}{escape_node(node=k, b_reversed=False, times=1)}'
-                else:
-                    idx = k
-                items.append((k, v, idx))
-            items.reverse()  # 反过来便于 列表 弹出元素
+            keys = list(range(len(i)) if isinstance(i, list) else i.keys())
+            keys.reverse()  # 反过来便于 列表 弹出元素
+            idx_ls = _gen_idx(i, keys, b_use_name_as_idx, pre_name)
+
             # 匹配&处理
-            for k, v, idx in items:
-                b_matched = _deal(i, k, v, idx, match_cond, converter, action_mode)
-                if b_matched and not b_traverse_matched_element:
+            for k, idx in zip(keys, idx_ls):
+                b_matched, b_popped = _deal(i, k, idx, match_cond, converter, action_mode)
+                if b_popped or (b_matched and not b_traverse_matched_element):
                     continue
                 # 添加到队尾
-                temp.append((idx, v))
+                temp.append((idx, i[k]))
 
     return var
 
 
-def _recursive(var, match_cond, action_mode, converter,
-               b_use_name_as_idx, traversal_mode, b_traverse_matched_element, pre_name):
+def _dfs(var, match_cond, action_mode, converter,
+         b_use_name_as_idx, traversal_mode, b_traverse_matched_element, pre_name):
     if isinstance(var, (list, dict)):
-        # 添加 idx
-        items = []
-        for k, v in (enumerate(var) if isinstance(var, list) else var.items()):
-            if b_use_name_as_idx:
-                method = "@" if isinstance(var, list) else ":"
-                idx = f'{pre_name}{method}{escape_node(node=k, b_reversed=False, times=1)}'
-            else:
-                idx = k
-            items.append((k, v, idx))
-        items.reverse()  # 反过来便于 列表 弹出元素
+        keys = list(range(len(var)) if isinstance(var, list) else var.keys())
+        keys.reverse()  # 反过来便于 列表 弹出元素
+        idx_ls = _gen_idx(var, keys, b_use_name_as_idx, pre_name)
 
+        #
         if traversal_mode is TRAVERSAL_MODE.dfs_pre_order:
             # 先序
             # 匹配&处理
-            b_matched_ls = []
-            for k, v, idx in items:
-                b_matched_ls.append(_deal(var, k, v, idx, match_cond, converter, action_mode))
+            deal_res_ls = []
+            for k, idx in zip(keys, idx_ls):
+                deal_res_ls.append(_deal(var, k, idx, match_cond, converter, action_mode))
             # 递归遍历
-            for b_matched, (k, v, idx) in zip(b_matched_ls, items):
-                if b_matched and not b_traverse_matched_element:
+            for (b_matched, b_popped), k, idx in zip(deal_res_ls, keys, idx_ls):
+                if b_popped or (b_matched and not b_traverse_matched_element):
                     continue
-                var[k] = _recursive(v, match_cond, action_mode, converter, b_use_name_as_idx, traversal_mode,
-                                    b_traverse_matched_element, idx)
+                var[k] = _dfs(var[k], match_cond, action_mode, converter, b_use_name_as_idx, traversal_mode,
+                              b_traverse_matched_element, idx)
         else:
             # 后序
             # 递归遍历
-            for k, v, idx in items:
-                var[k] = _recursive(v, match_cond, action_mode, converter, b_use_name_as_idx, traversal_mode,
-                                    b_traverse_matched_element, idx)
+            for k, idx in zip(keys, idx_ls):
+                var[k] = _dfs(var[k], match_cond, action_mode, converter, b_use_name_as_idx, traversal_mode,
+                              b_traverse_matched_element, idx)
             # 匹配&处理
-            for k, v, idx in items:
-                _deal(var, k, v, idx, match_cond, converter, action_mode)
+            for k, idx in zip(keys, idx_ls):
+                _deal(var, k, idx, match_cond, converter, action_mode)
     else:
         pass
     return var
 
 
-def _deal(var, k, v, idx, match_cond, converter, action_mode):
+def _deal(var, k, idx, match_cond, converter, action_mode):
     """处理节点"""
     # 匹配
-    b_matched = match_cond(type(var), idx, v)
+    b_matched = match_cond(type(var), idx, var[k])
+    b_popped = False
     # 处理
     if b_matched:
         if action_mode is ACTION_MODE.remove:
             var.pop(k)
+            b_popped = True
         elif action_mode is ACTION_MODE.replace:
-            var[k] = converter(idx, v)
+            var[k] = converter(idx, var[k])
         else:
             pass
-    return b_matched
+    return b_matched, b_popped
+
+
+def _gen_idx(var, keys, b_use_name_as_idx, pre_name):
+    if b_use_name_as_idx:
+        method = "@" if isinstance(var, list) else ":"
+        idx_ls = [f'{pre_name}{method}{escape_node(node=k, b_reversed=False, times=1)}' for k in keys]
+    else:
+        idx_ls = keys
+    return idx_ls

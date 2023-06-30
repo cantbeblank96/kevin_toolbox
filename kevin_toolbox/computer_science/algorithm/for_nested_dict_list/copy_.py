@@ -16,7 +16,8 @@ def copy_(var, b_deepcopy=False):
         return copy.deepcopy(var)
 
     return traverse(var=[var], match_cond=lambda _, __, value: isinstance(value, (list, dict,)),
-                    action_mode="replace", converter=lambda _, value: value.copy(), b_traverse_matched_element=True)[0]
+                    action_mode="replace", converter=lambda _, value: value.copy(),
+                    traversal_mode="dfs_pre_order", b_traverse_matched_element=True)[0]
 
 
 if __name__ == '__main__':
