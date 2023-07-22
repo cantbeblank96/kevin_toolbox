@@ -12,8 +12,9 @@ def write_json(content, file_path, sort_keys=False, converters=None):
     if converters is not None:
         converter = integrate(converters)
         content = traverse(var=[copy.deepcopy(content)],
-                           match_cond=lambda _, __, v: not isinstance(v, (list, dict)), action_mode="replace",
-                           converter=lambda _, x: converter(x))[0]
+                           match_cond=lambda _, __, ___: True, action_mode="replace",
+                           converter=lambda _, x: converter(x),
+                           b_traverse_matched_element=True)[0]
 
     with open(file_path, 'w') as f:
         json.dump(content, f, indent=4, ensure_ascii=False, sort_keys=sort_keys)
