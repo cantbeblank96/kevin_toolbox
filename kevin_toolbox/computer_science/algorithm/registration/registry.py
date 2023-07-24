@@ -111,13 +111,16 @@ class Registry:
                                     总之一切对象皆可
                 name：           <str> 成员名称
                                     默认为 None，此时将从被注册对象 obj 的属性中尝试推断出其名称。
-                                        若 obj 中有 name 或者 __name__ 属性（优先选择name），则推断出的名称是 f':{obj.name}'；
-                                            进一步若有 version 属性，则为 f':{obj.name}:{obj.version}'
+                                        若 obj 中有 name 或者 __name__ 属性（优先选择name），则推断出的名称是 f'{obj.name}' 或者 f':{obj.__name__}'；
+                                            进一步若有 version 属性，则为 f'{obj.name}:{obj.version}'
                                         否则报错。
                                         比如下面的类：
                                             class A:
                                                 version="1.0"
                                         的默认注册名称将是 ":A:1.0"
+                                        另一种等效的写法是：
+                                            class A:
+                                                name=":A:1.0"
                                     对于 int、str 和其他没有 name 或者 __name__ 属性的变量则必须要手动指定 name 参数。
                         需要注意的是，成员的名称确定了其在注册器内部 database 中的位置，名称的解释方式参考 get_value_by_name() 中的介绍。
                         因此不同的名称可能指向了同一个位置。
@@ -132,9 +135,13 @@ class Registry:
         """
         # 检验参数
         if name is None:
-            name = getattr(obj, "name", getattr(obj, "__name__", None))
+            name = getattr(obj, "name", None)
             if name is not None:
-                name = f':{name}'
+                name = f'{name}'
+            else:
+                name = getattr(obj, "__name__", None)
+                name = f':{name}' if name is not None else name
+            if name is not None:
                 version = getattr(obj, "version", None)
                 if version is not None:
                     name += f':{version}'
