@@ -237,3 +237,19 @@
       - 使用 `<eval>` 来标记需要使用 eval() 函数读取的字符串。相对于旧版通过 `<eval>` 来标记需要被读取为函数的字符串，使用 `<eval>` 不仅可以读取函数，也可以读取更多的数据结构。
       - 在通过 add() 添加策略时即对 strategy 中被 `<eval>` 标记的键值进行解释，而非等到后续每次 cal() 时再进行解释，提高了效率。
       - 修改了对应的单元测试。
+  
+- v 1.1.4（2023-07-24）【bug fix】
+
+  - patches.for_os
+    - add pack() and unpack() to patches.for_os，用于打包/解压 .tar 文件
+  - data_flow.file.json_【bug fix】
+    - fix bug in read()，修复了只对字典调用 converters 进行处理的问题。（converters理应对每个节点都去尝试进行处理）
+    - fix bug in write()，修复了只对非字典or列表调用 converters 进行处理的问题。（converters理应对每个节点都去尝试进行处理）
+    - 添加了新的 converter：
+      - escape_non_str_dict_key：将字典中的所有非字符串的 key 进行转义
+      - unescape_non_str_dict_key：反转义
+      - escape_tuple：将 tuple 进行转义
+      - unescape_tuple：反转义
+    - 建议对 write() 使用 `converters=[escape_non_str_dict_key, escape_tuple]`，对 read() 使用 `converters=[unescape_non_str_dict_key, unescape_tuple]`，可以通过在 write() 和 read() 中添加参数 b_use_suggested_converter=True 来直接使用建议的配置。
+  - computer_science.algorithm.registration【bug fix】
+    - fix bug in Registry.add()，重新调整了从属性中推断 name 的逻辑。
