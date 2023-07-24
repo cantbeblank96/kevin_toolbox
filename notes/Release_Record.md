@@ -253,3 +253,9 @@
     - 建议对 write() 使用 `converters=[escape_non_str_dict_key, escape_tuple]`，对 read() 使用 `converters=[unescape_non_str_dict_key, unescape_tuple]`，可以通过在 write() 和 read() 中添加参数 b_use_suggested_converter=True 来直接使用建议的配置。
   - computer_science.algorithm.registration【bug fix】
     - fix bug in Registry.add()，重新调整了从属性中推断 name 的逻辑。
+
+- v 1.1.5（2023-07-24）【bug fix】
+
+  - data_flow.file.json_【bug fix】
+    - fix bug in write()，修复了 b_use_suggested_converter 参数引起的报错
+    - 添加了测试用例

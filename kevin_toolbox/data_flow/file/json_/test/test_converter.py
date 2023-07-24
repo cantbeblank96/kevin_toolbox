@@ -1,10 +1,8 @@
+import os
 import pytest
 import torch
 import numpy as np
 from kevin_toolbox.patches.for_test import check_consistency
-
-import os
-
 from kevin_toolbox.data_flow.file import json_
 
 

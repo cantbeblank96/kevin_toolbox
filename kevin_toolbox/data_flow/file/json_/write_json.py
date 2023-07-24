@@ -1,7 +1,7 @@
 import os
 import json
 import copy
-from kevin_toolbox.data_flow.file.json_.converter import integrate
+from kevin_toolbox.data_flow.file.json_.converter import integrate, escape_tuple, escape_non_str_dict_key
 from kevin_toolbox.computer_science.algorithm.for_nested_dict_list import traverse
 
 
@@ -25,7 +25,7 @@ def write_json(content, file_path, sort_keys=False, converters=None, b_use_sugge
     file_path = os.path.abspath(file_path)
     os.makedirs(os.path.dirname(file_path), exist_ok=True)
     if converters is None and b_use_suggested_converter:
-        converters = [unescape_tuple, unescape_non_str_dict_key]
+        converters = [escape_tuple, escape_non_str_dict_key]
 
     if converters is not None:
         converter = integrate(converters)
