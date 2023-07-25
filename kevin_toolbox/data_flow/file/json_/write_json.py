@@ -11,7 +11,8 @@ def write_json(content, file_path, sort_keys=False, converters=None, b_use_sugge
 
         参数：
             content:                    待写入内容
-            file_path
+            file_path:                  <path or None> 写入路径
+                                            当设置为 None 时，将直接把（经converters处理后的）待写入内容作为结果返回，而不进行实际的写入
             sort_keys
             converters:                 <list of converters> 对写入内容中每个节点的处理方式
                                             转换器 converter 应该是一个形如 def(x): ... ; return x 的函数，具体可以参考
@@ -22,8 +23,8 @@ def write_json(content, file_path, sort_keys=False, converters=None, b_use_sugge
                                             默认为 False。
                     注意：当 converters 非 None，此参数失效，以 converters 中的具体设置为准
     """
-    file_path = os.path.abspath(file_path)
-    os.makedirs(os.path.dirname(file_path), exist_ok=True)
+    assert isinstance(file_path, (str, type(None)))
+
     if converters is None and b_use_suggested_converter:
         converters = [escape_tuple, escape_non_str_dict_key]
 
@@ -34,5 +35,12 @@ def write_json(content, file_path, sort_keys=False, converters=None, b_use_sugge
                            converter=lambda _, x: converter(x),
                            b_traverse_matched_element=True)[0]
 
-    with open(file_path, 'w') as f:
-        json.dump(content, f, indent=4, ensure_ascii=False, sort_keys=sort_keys)
+    content = json.dumps(content, indent=4, ensure_ascii=False, sort_keys=sort_keys)
+
+    if file_path is not None:
+        file_path = os.path.abspath(file_path)
+        os.makedirs(os.path.dirname(file_path), exist_ok=True)
+        with open(file_path, 'w') as f:
+            f.write(content)
+    else:
+        return content
