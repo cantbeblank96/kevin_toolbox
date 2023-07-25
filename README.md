@@ -27,7 +27,8 @@ pip install kevin-toolbox  --no-dependencies
 
 [版本更新记录](./notes/Release_Record.md)：
 
-- v 1.1.5（2023-07-24）【bug fix】
-  - data_flow.file.json_【bug fix】
-    - fix bug in write()，修复了 b_use_suggested_converter 参数引起的报错
-    - 添加了测试用例
+- v 1.1.6（2023-07-25）【bug fix】
+  - computer_science.algorithm.for_nested_dict_list【bug fix】
+    - fix bug in traverse()，修复了对于 dict 中 int 的键无法正确返回名称的 bug。添加了相应测试用例。
+  - data_flow.file.json_
+    - modify write()，支持 file_path 参数设置为 None 来直接获取序列化结果而非写入到具体文件中。 
