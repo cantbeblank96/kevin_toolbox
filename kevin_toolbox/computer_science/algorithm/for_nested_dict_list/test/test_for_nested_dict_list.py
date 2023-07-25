@@ -82,7 +82,7 @@ def test_set_value_by_name():
     check_consistency(0.1, res)
 
 
-def test_traverse():
+def test_traverse_0():
     print("test for_nested_dict_list.traverse()")
 
     for traversal_mode in ["dfs_pre_order", "dfs_post_order", "bfs"]:
@@ -122,6 +122,25 @@ def test_traverse():
             check_consistency(['@1', '@0', '@1@0', '@1@0@1', '@1@0@0', r'@0:c\@t'], names)
         else:
             check_consistency(['@1', '@0', '@1@0', r'@0:c\@t', '@1@0@1', '@1@0@0'], names)
+
+
+def test_traverse_1():
+    print("test for_nested_dict_list.traverse()")
+
+    x = [{"d": 3, "c@t": 4, 5: 6}, 2, (1, 2, 3)]
+
+    # 验证名字的正确性
+    idx_ls, value_ls = [], []
+
+    def converter(idx, value):
+        idx_ls.append(idx)
+        value_ls.append(value)
+        return value
+
+    x = fndl.traverse(var=x, match_cond=lambda _, __, ___: True, action_mode="replace", converter=converter,
+                      b_use_name_as_idx=True, b_traverse_matched_element=True)
+    for idx, value in zip(idx_ls, value_ls):
+        check_consistency(id(value), id(fndl.get_value_by_name(var=x, name=idx)))
 
 
 def test_count_leaf_node_nums():

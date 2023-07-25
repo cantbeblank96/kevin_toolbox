@@ -141,8 +141,11 @@ def _deal(var, k, idx, match_cond, converter, action_mode):
 
 def _gen_idx(var, keys, b_use_name_as_idx, pre_name):
     if b_use_name_as_idx:
-        method = "@" if isinstance(var, list) else ":"
-        idx_ls = [f'{pre_name}{method}{escape_node(node=k, b_reversed=False, times=1)}' for k in keys]
+        idx_ls = []
+        for k in keys:
+            method = "@" if isinstance(var, list) or not isinstance(k, str) else ":"
+            k = escape_node(node=k, b_reversed=False, times=1)
+            idx_ls.append(f'{pre_name}{method}{k}')
     else:
         idx_ls = keys
     return idx_ls

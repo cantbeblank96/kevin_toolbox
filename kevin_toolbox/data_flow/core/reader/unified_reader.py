@@ -2,8 +2,6 @@ from kevin_toolbox.data_flow.core.reader import Unified_Reader_Base, File_Iterat
 
 
 class UReader(Unified_Reader_Base):
-    def __index__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
 
     def get_file_iterative_reader(self, file_path, chunk_size, **kwargs):
         return super().get_file_iterative_reader(file_path, chunk_size, **kwargs)
