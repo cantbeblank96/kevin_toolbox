@@ -8,7 +8,7 @@ import kevin_toolbox.nested_dict_list as ndl
 from kevin_toolbox.nested_dict_list.serializer.variable import SERIALIZER_BACKEND
 
 
-def write(var, output_dir, settings, traversal_mode="bfs", b_pack_into_tar=True, **kwargs):
+def write(var, output_dir, settings=None, traversal_mode="bfs", b_pack_into_tar=True, **kwargs):
     """
         将输入的嵌套字典列表 var 的结构和节点值保存到文件中
             遍历 var，匹配并使用 settings 中设置的保存方式来对各部分结构/节点进行序列化
@@ -45,7 +45,7 @@ def write(var, output_dir, settings, traversal_mode="bfs", b_pack_into_tar=True,
                                             - ":pickle"         调用 pickle 中的 load() 和 save() 进行序列化
                                         比如组合 (":skip:simple", ":numpy:bin", ":torch:tensor", ":pickle") 则表示根据变量的类型，依次尝试这几种方式
                                             直至成功。其含义为：
-                                                - 如果是可以直接写入到 json 中的 int、float、str、tuple 等则选用 ":skip:simple"
+                                                - 如果是可以直接写入到 json 中的 int、float、str、简单的 tuple 等则选用 ":skip:simple"
                                                 - 如果是 np.array 则选用 ":numpy:bin"
                                                 - 如果是 tensor 则选用 ":torch:tensor"
                                                 - 其他无法处理的类型则选用 ":pickle"
@@ -62,7 +62,7 @@ def write(var, output_dir, settings, traversal_mode="bfs", b_pack_into_tar=True,
                                             - "bfs"                   宽度优先
                                             省略时默认使用参数 traversal_mode 中的设置，更多参考 traverse() 中的介绍。
                                         默认的处理模式是：
-                                            [{"match_cond": "<leaf>", "backend": (":skip:simple", ":numpy:bin", ":torch:tensor", ":pickle")}]
+                                            [{"match_cond": "<level>-1", "backend": (":skip:simple", ":numpy:npy", ":torch:tensor", ":pickle")}]
             traversal_mode:         <str> 遍历方式
                                         默认使用 "bfs"
             output_dir:             <path> 输出文件夹
@@ -74,6 +74,8 @@ def write(var, output_dir, settings, traversal_mode="bfs", b_pack_into_tar=True,
     assert traversal_mode in ("dfs_pre_order", "dfs_post_order", "bfs")
     os.makedirs(output_dir, exist_ok=True)
     var = ndl.copy_(var=var, b_deepcopy=True)
+    if settings is None:
+        settings = [{"match_cond": "<level>-1", "backend": (":skip:simple", ":numpy:npy", ":torch:tensor", ":pickle")}]
 
     # 构建 processed_s
     #     为了避免重复处理节点/结构，首先构建与 var 具有相似结构的 processed_s 来记录处理处理进度。
@@ -256,7 +258,7 @@ if __name__ == '__main__':
     # var_ = None
 
     _test_hook = dict()
-    settings = [
+    settings_ = [
         {"match_cond": lambda _, idx, value: "paras" == name_handler.parse_name(name=idx)[2][-1],
          "backend": (":pickle",),
          "traversal_mode": "dfs_post_order"},
@@ -266,7 +268,7 @@ if __name__ == '__main__':
          "backend": (":skip:simple",)},
     ]
     write(var=var_, output_dir=os.path.join(os.path.dirname(__file__), "temp3"), traversal_mode="bfs",
-          b_pack_into_tar=True, settings=settings, _test_hook=_test_hook)
+          b_pack_into_tar=True, settings=settings_, _test_hook=_test_hook)
 
     for bk_name, p in _test_hook["processed"]:
         print(f'backend: {bk_name}')

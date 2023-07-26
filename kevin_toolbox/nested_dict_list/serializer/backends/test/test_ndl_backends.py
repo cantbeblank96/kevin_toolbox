@@ -163,6 +163,20 @@ def test_skip_simple():
             assert True
 
 
+def test_skip_simple_1():
+    print("test backend :skip:simple")
+
+    # 测试
+    bk_name, node = ":skip:simple", ":1:skip:simple"
+    bk = SERIALIZER_BACKEND.get(name=bk_name)(folder=temp_folder)
+
+    for x in [(1, 2, 3), (5, "d", 3.0)]:
+        assert bk.writable(var=x)
+    # 应该拒绝具有结构复杂的元素的 tuple
+    for x in [([1, 2], 2, 3), (2, {"s": 1}), (5, "d", np.random.rand(10))]:
+        assert not bk.writable(var=x)
+
+
 def test_skip_all():
     print("test backend :skip:simple")
 

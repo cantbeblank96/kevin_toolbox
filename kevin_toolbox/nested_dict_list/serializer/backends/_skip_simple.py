@@ -5,8 +5,15 @@ from kevin_toolbox.nested_dict_list.serializer.variable import SERIALIZER_BACKEN
 @SERIALIZER_BACKEND.register(name=":skip:simple")
 class Skip_Simple(Backend_Base):
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.w_cache = None
+        self.w_cache_id = None
+
     def write(self, name, var, **kwargs):
-        assert self.writable(var=var)
+        if id(var) != self.w_cache_id:
+            assert self.writable(var=var)
         return var
 
     def read(self, name, **kwargs):
@@ -16,7 +23,13 @@ class Skip_Simple(Backend_Base):
         """
             是否可以写
         """
-        return isinstance(var, (int, float, str, tuple))
+        self.w_cache = False
+        if isinstance(var, (int, float, str)):
+            self.w_cache = True
+        elif isinstance(var, (tuple,)):
+            self.w_cache = all(isinstance(i, (int, float, str)) for i in var)
+        self.w_cache_id = id(var)
+        return self.w_cache
 
     def readable(self, name, **kwargs):
         """
