@@ -27,13 +27,9 @@ pip install kevin-toolbox  --no-dependencies
 
 [版本更新记录](./notes/Release_Record.md)：
 
-- v 1.2.0（2023-07-25）【refactor】【new feature】
+- v 1.2.1（2023-07-25）【bug fix】【new feature】
   - nested_dict_list
-    - refactor computer_science.algorithm.for_nested_dict_list to nested_dict_list【refactor】
-    - rename set_value_by_name() to set_value()
-    - rename get_value_by_name() to get_value()
-    - add serializer，添加序列化模块来写入 write() 和读取 read() 嵌套字典列表【new feature】
-      - 其中 write() 支持使用 settings 参数来指定不同部分的序列化方式和匹配方式
-      - 支持在 SERIALIZER_BACKEND 中注册自定义的序列化方式
-  - data_flow.file.json_
-    - modify write()，支持 file_path 参数设置为 None 来直接获取序列化结果而非写入到具体文件中。 
+    - fix bug in backend ":skip:simple" registered in SERIALIZER_BACKEND，修复了没有拒绝具有结构复杂的元素的 tuple 的问题。【bug fix】
+    - fix bug in write()，补充了参数 settings 缺少的默认值。【bug fix】
+  - data_flow.file【new feature】
+    - add new module markdown，包括 generate_link()、generate_list()、generate_table() 等方法，用于创建 markdown 格式的链接、多级列表、表格。
