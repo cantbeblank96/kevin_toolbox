@@ -3,7 +3,7 @@ import os
 import inspect
 import pkgutil
 import weakref
-from kevin_toolbox.computer_science.algorithm import for_nested_dict_list as fndl
+import kevin_toolbox.nested_dict_list as ndl
 
 
 class Registry:
@@ -122,7 +122,7 @@ class Registry:
                                             class A:
                                                 name=":A:1.0"
                                     对于 int、str 和其他没有 name 或者 __name__ 属性的变量则必须要手动指定 name 参数。
-                        需要注意的是，成员的名称确定了其在注册器内部 database 中的位置，名称的解释方式参考 get_value_by_name() 中的介绍。
+                        需要注意的是，成员的名称确定了其在注册器内部 database 中的位置，名称的解释方式参考 get_value() 中的介绍。
                         因此不同的名称可能指向了同一个位置。
                 b_force：          <boolean> 是否强制注册
                                     默认为 False，此时当 name 指向的位置上已经有成员或者需要强制修改database结构时，将不进行覆盖而直接跳过，注册失败
@@ -153,14 +153,14 @@ class Registry:
             return True
 
         # 尝试注册
-        temp = fndl.set_value_by_name(var=fndl.copy_(var=self.database, b_deepcopy=False), name=name, value=obj,
-                                      b_force=True)
+        temp = ndl.set_value(var=ndl.copy_(var=self.database, b_deepcopy=False), name=name, value=obj,
+                             b_force=True)
         # check
         if not b_force:
-            inc_node_nums = fndl.count_leaf_node_nums(var=obj) if isinstance(obj, (list, dict)) else 1  # 应该增加的节点数量
-            if fndl.count_leaf_node_nums(var=temp) != fndl.count_leaf_node_nums(var=self.database) + inc_node_nums:
+            inc_node_nums = ndl.count_leaf_node_nums(var=obj) if isinstance(obj, (list, dict)) else 1  # 应该增加的节点数量
+            if ndl.count_leaf_node_nums(var=temp) != ndl.count_leaf_node_nums(var=self.database) + inc_node_nums:
                 # print(f'registration failed, name {name} may be a conflict with an '
-                #       f'existing member in {[i for i, j in fndl.get_nodes(var=self.database)]}')
+                #       f'existing member in {[i for i, j in ndl.get_nodes(var=self.database)]}')
                 return False
 
         self.database = temp
@@ -187,7 +187,7 @@ class Registry:
                 self.collect_from_paths(**i)
             self._path_to_collect.clear()
 
-        return fndl.get_value_by_name(var=self.database, name=name, b_pop=b_pop, **kwargs)
+        return ndl.get_value(var=self.database, name=name, b_pop=b_pop, **kwargs)
 
     def clear(self):
         self.database.clear()

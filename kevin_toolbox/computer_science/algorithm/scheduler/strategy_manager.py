@@ -2,7 +2,7 @@ import random
 import torch
 import numpy as np
 import copy
-from kevin_toolbox.computer_science.algorithm.for_nested_dict_list import set_value_by_name, get_value_by_name, traverse
+from kevin_toolbox.nested_dict_list import set_value, get_value, traverse
 
 
 class Strategy_Manager:
@@ -123,7 +123,7 @@ class Strategy_Manager:
                                         以上两种形式等效。
 
                                         其中诸如 ":ratio_ls@1" 的参数名的含义参见 computer_science.algorithm.utils 下的
-                                        set_value_by_name() 函数介绍
+                                        set_value() 函数介绍
 
                 override:       <boolean> 当输入的策略与现有策略发生冲突时，是否强制覆盖旧策略。
                                     默认为 False，在发生冲突时候将直接抛出错误。
@@ -217,9 +217,9 @@ class Strategy_Manager:
             t_value = trigger_state[t_name]
             for name, p_value in copy.deepcopy(action_s):
                 if callable(p_value):
-                    raw_value = get_value_by_name(var=var, name=name)
+                    raw_value = get_value(var=var, name=name)
                     p_value = p_value(raw_value, t_value)
-                set_value_by_name(var=var, name=name, value=p_value)
+                set_value(var=var, name=name, value=p_value)
 
         return var, action_s_all
 

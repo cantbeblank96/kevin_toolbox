@@ -2,7 +2,7 @@ import copy
 import pytest
 import numpy as np
 from kevin_toolbox.patches.for_test import check_consistency
-from kevin_toolbox.computer_science.algorithm.for_nested_dict_list.name_handler import escape_node, parse_name, \
+from kevin_toolbox.nested_dict_list.name_handler import escape_node, parse_name, \
     build_name
 
 

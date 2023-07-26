@@ -42,7 +42,7 @@ def sample_from_feasible_domain(trial: optuna.trial.BaseTrial, inputs, pre_name=
                         }
             可能返回的采样结果是 res={"thr":[{"interval_thr":1000}, {"iou_thr":0.6}], }。
             当 pre_name="my" 时，这些参数在 trial 中注册的名称分别是 "my:thr@0:interval_thr" 和 "my:thr@1:iou_thr"。
-            这些名称的含义详见 get_value_by_name()。
+            这些名称的含义详见 get_value()。
     """
     if isinstance(inputs, (dict,)) and "p_type" in inputs:
         # 满足 <feasible_domain> 格式要求

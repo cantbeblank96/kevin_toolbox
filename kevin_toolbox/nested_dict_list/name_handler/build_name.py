@@ -1,5 +1,5 @@
 import re
-from kevin_toolbox.computer_science.algorithm.for_nested_dict_list.name_handler import escape_node
+from kevin_toolbox.nested_dict_list.name_handler import escape_node
 
 
 def build_name(root_node, method_ls, node_ls, b_escape_node=True):

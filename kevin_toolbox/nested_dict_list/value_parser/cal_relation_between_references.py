@@ -1,5 +1,5 @@
-from kevin_toolbox.computer_science.algorithm.for_nested_dict_list.name_handler import parse_name
-from kevin_toolbox.computer_science.algorithm.for_nested_dict_list import copy_
+from kevin_toolbox.nested_dict_list.name_handler import parse_name
+from kevin_toolbox.nested_dict_list import copy_
 
 
 def cal_relation_between_references(node_s, b_verbose=False):

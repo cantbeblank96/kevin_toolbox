@@ -1,5 +1,5 @@
-from kevin_toolbox.computer_science.algorithm.for_nested_dict_list import traverse, get_value_by_name
-from kevin_toolbox.computer_science.algorithm.for_nested_dict_list.name_handler import parse_name
+from kevin_toolbox.nested_dict_list import traverse, get_value
+from kevin_toolbox.nested_dict_list.name_handler import parse_name
 
 
 def get_nodes(var, level=-1, b_strict=True):
@@ -62,7 +62,7 @@ def get_nodes(var, level=-1, b_strict=True):
             raise ValueError
         res.clear()
         for name in names:
-            res.append((name, get_value_by_name(var=var, name=name)))
+            res.append((name, get_value(var=var, name=name)))
 
     return res
 
@@ -81,4 +81,4 @@ if __name__ == '__main__':
     print(get_nodes(var=x, level=2))
     print(get_nodes(var=x, level=3))
     print(get_nodes(var=x, level=4))
-    print(get_value_by_name(var=x, name=""))
+    print(get_value(var=x, name=""))

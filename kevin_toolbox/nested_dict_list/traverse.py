@@ -1,5 +1,5 @@
 from enum import Enum
-from kevin_toolbox.computer_science.algorithm.for_nested_dict_list.name_handler import escape_node
+from kevin_toolbox.nested_dict_list.name_handler import escape_node
 
 
 class ACTION_MODE(Enum):

@@ -1,7 +1,7 @@
-from kevin_toolbox.computer_science.algorithm.for_nested_dict_list.name_handler import parse_name
+from kevin_toolbox.nested_dict_list.name_handler import parse_name
 
 
-def get_value_by_name(var, name, b_pop=False, **kwargs):
+def get_value(var, name, b_pop=False, **kwargs):
     """
         通过解释名字得到取值方式，然后到 var 中获取对应部分的值。
 

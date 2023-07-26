@@ -1,8 +1,8 @@
-from kevin_toolbox.computer_science.algorithm.for_nested_dict_list import get_value_by_name
-from kevin_toolbox.computer_science.algorithm.for_nested_dict_list.name_handler import parse_name, escape_node
+from kevin_toolbox.nested_dict_list import get_value
+from kevin_toolbox.nested_dict_list.name_handler import parse_name, escape_node
 
 
-def set_value_by_name(var, name, value, b_force=False):
+def set_value(var, name, value, b_force=False):
     """
         通过解释名字得到取值方式，然后到 var 中将对应部分的值修改为 value。
 
@@ -29,7 +29,7 @@ def set_value_by_name(var, name, value, b_force=False):
     key = escape_node(node=node_ls[-1], b_reversed=True, times=1)
 
     try:
-        item = get_value_by_name(var=var, name=name[:-1 - len(node_ls[-1])])
+        item = get_value(var=var, name=name[:-1 - len(node_ls[-1])])
         if method_ls[-1] == "@":
             key = eval(key)
         elif method_ls[-1] == "|":
@@ -51,6 +51,6 @@ def set_value_by_name(var, name, value, b_force=False):
                 key = eval(key)
                 assert isinstance(key, (int,)) and key >= 0
                 value = [None] * key + [value]
-            var = set_value_by_name(var=var, name=name[:-1 - len(node_ls[-1])], value=value, b_force=b_force)
+            var = set_value(var=var, name=name[:-1 - len(node_ls[-1])], value=value, b_force=b_force)
 
     return var

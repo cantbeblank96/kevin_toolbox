@@ -1,4 +1,4 @@
-from kevin_toolbox.computer_science.algorithm.for_nested_dict_list import traverse
+from kevin_toolbox.nested_dict_list import traverse
 
 
 def count_leaf_node_nums(var):

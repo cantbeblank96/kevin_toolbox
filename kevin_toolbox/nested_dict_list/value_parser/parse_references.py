@@ -1,5 +1,5 @@
 import re
-from kevin_toolbox.computer_science.algorithm.for_nested_dict_list import get_nodes
+from kevin_toolbox.nested_dict_list import get_nodes
 
 
 def parse_references(var, flag="v"):
@@ -21,7 +21,7 @@ def parse_references(var, flag="v"):
                 name=":z", value="<v>{:x}+<v>{:y}"
             的节点，将会返回：
                 {":z": {"expression":"p_0+p_1" , "paras": {"p_0":":x","p_1":":y"}}, ...}
-            利用 "expression" 和 "paras" 中的内容，将可以很方便得使用 eval() 和 get_value_by_name() 完成对节点值的计算。
+            利用 "expression" 和 "paras" 中的内容，将可以很方便得使用 eval() 和 get_value() 完成对节点值的计算。
             但是由于节点之间可能存在相互引用，因此一般需要通过 cal_relation_between_references() 来确定计算顺序。
     """
     pattern = f'<{flag}>' + r"\{([^{}]+?)\}"

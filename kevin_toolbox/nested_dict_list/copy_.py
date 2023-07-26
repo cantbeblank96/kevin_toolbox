@@ -1,5 +1,5 @@
 import copy
-from kevin_toolbox.computer_science.algorithm.for_nested_dict_list import traverse
+from kevin_toolbox.nested_dict_list import traverse
 
 
 def copy_(var, b_deepcopy=False):

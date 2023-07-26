@@ -1,4 +1,4 @@
-from kevin_toolbox.computer_science.algorithm.for_nested_dict_list import set_value_by_name, get_value_by_name
+from kevin_toolbox.nested_dict_list import set_value, get_value
 
 
 def eval_references(var, node_s, order, converter_for_ref=None, converter_for_res=None):
@@ -28,11 +28,11 @@ def eval_references(var, node_s, order, converter_for_ref=None, converter_for_re
         details = node_s[name]
         # 获取依赖值
         for k, idx in details["paras"].items():
-            v_new = get_value_by_name(var=var, name=idx)
+            v_new = get_value(var=var, name=idx)
             if converter_for_ref is not None and idx not in processed_ref_nodes:
                 v_new = converter_for_ref(idx, v_new)
                 # 赋值
-                set_value_by_name(var=var, name=idx, value=v_new, b_force=False)
+                set_value(var=var, name=idx, value=v_new, b_force=False)
                 processed_ref_nodes.add(idx)
             details["paras"][k] = v_new
         # 计算
@@ -40,6 +40,6 @@ def eval_references(var, node_s, order, converter_for_ref=None, converter_for_re
         if converter_for_res is not None:
             res = converter_for_res(name, res)
         # 赋值
-        set_value_by_name(var=var, name=name, value=res, b_force=False)
+        set_value(var=var, name=name, value=res, b_force=False)
 
     return var

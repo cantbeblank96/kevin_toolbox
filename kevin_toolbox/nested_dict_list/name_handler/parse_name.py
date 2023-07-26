@@ -1,5 +1,5 @@
 import re
-from kevin_toolbox.computer_science.algorithm.for_nested_dict_list.name_handler import escape_node
+from kevin_toolbox.nested_dict_list.name_handler import escape_node
 
 
 def parse_name(name, b_de_escape_node=True):
@@ -10,7 +10,7 @@ def parse_name(name, b_de_escape_node=True):
             name:               <str> 名字
                                     由 "<变量名>" 加上多组 "<取值方式><键>" 组成。
                                     <变量名>
-                                        在实际使用时，比如 get_value_by_name()等函数，一般忽略该部分。
+                                        在实际使用时，比如 get_value()等函数，一般忽略该部分。
                                     <取值方式>
                                         支持以下几种:
                                             "@"     表示使用 eval() 读取键

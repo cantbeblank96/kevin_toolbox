@@ -1,6 +1,6 @@
 import copy
 from kevin_toolbox.computer_science.algorithm.registration import Registry
-from kevin_toolbox.computer_science.algorithm import for_nested_dict_list as fndl
+import kevin_toolbox.nested_dict_list as ndl
 
 
 class Trigger:
@@ -94,7 +94,7 @@ class Trigger:
             for target_name in target_names:
                 var = self.database.get(name=target_name, b_pop=False, default=None)
                 if isinstance(var, (list, dict,)):
-                    func_s.update({target_name + k: v for k, v in fndl.get_nodes(var=var, level=-1, b_strict=True)})
+                    func_s.update({target_name + k: v for k, v in ndl.get_nodes(var=var, level=-1, b_strict=True)})
                 else:
                     func_s[target_name] = var
             # update

@@ -1,7 +1,7 @@
 import os
 import json
 from kevin_toolbox.data_flow.file.json_.converter import integrate, unescape_tuple, unescape_non_str_dict_key
-from kevin_toolbox.computer_science.algorithm.for_nested_dict_list import traverse
+from kevin_toolbox.nested_dict_list import traverse
 
 
 def read_json(file_path, converters=None, b_use_suggested_converter=False):
