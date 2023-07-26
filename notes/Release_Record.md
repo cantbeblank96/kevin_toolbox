@@ -1,3 +1,18 @@
+#### v1.2
+
+- v 1.2.0（2023-07-25）【refactor】【new feature】
+  - nested_dict_list
+    - refactor computer_science.algorithm.for_nested_dict_list to nested_dict_list【refactor】
+    - rename set_value_by_name() to set_value()
+    - rename get_value_by_name() to get_value()
+    - add serializer，添加序列化模块来写入 write() 和读取 read() 嵌套字典列表【new feature】
+      - 其中 write() 支持使用 settings 参数来指定不同部分的序列化方式和匹配方式
+      - 支持在 SERIALIZER_BACKEND 中注册自定义的序列化方式
+  - data_flow.file.json_
+    - modify write()，支持 file_path 参数设置为 None 来直接获取序列化结果而非写入到具体文件中。 
+
+
+
 #### v1.1
 
 - v 1.1.0（2023-06-21） 【bug fix】
