@@ -194,3 +194,27 @@ def test_skip_all():
             assert False
         except:
             assert True
+
+
+def test_ndl():
+    print("test backend :ndl")
+
+    # 测试
+    bk_name, node = ":ndl", ":1:ndl"
+    bk = SERIALIZER_BACKEND.get(name=bk_name)(folder=temp_folder)
+
+    x = {"tensor": torch.randn([2, 3, 4], device=torch.device("cpu")),
+         "tensor_gpu": torch.randn([2, 3, 4], device=torch.device("cuda")),
+         233: [1, 2, 3, 3],
+         455: np.array([1, 2, 3, 4, 5])}
+    # for write
+    assert bk.writable(var=x)
+    handle = bk.write(name=node, var=x)
+    check_consistency(handle, dict(backend=bk_name, name=node))
+    assert os.path.isfile(os.path.join(temp_folder, f'{node}.tar')) or \
+           os.path.isdir(os.path.join(temp_folder, f'{node}'))
+    # for read
+    assert bk.readable(name=node)
+    res = bk.read(name=node)
+    for k in res.keys():
+        check_consistency(x[k], res[k])

@@ -43,6 +43,8 @@ def write(var, output_dir, settings=None, traversal_mode="bfs", b_pack_into_tar=
                                             - ":torch:all"      调用 torch 中的 load() 和 save() 进行序列化
                                             - ":json"           若对象可以被 json 格式保存，则将其按照 json 格式进行序列化
                                             - ":pickle"         调用 pickle 中的 load() 和 save() 进行序列化
+                                            - ":ndl"            调用本模块 nested_dict_list 中的 read() 和 write() 进行序列化
+                                                                    利用该方式可以实现递归的序列化
                                         比如组合 (":skip:simple", ":numpy:bin", ":torch:tensor", ":pickle") 则表示根据变量的类型，依次尝试这几种方式
                                             直至成功。其含义为：
                                                 - 如果是可以直接写入到 json 中的 int、float、str、简单的 tuple 等则选用 ":skip:simple"

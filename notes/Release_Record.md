@@ -16,6 +16,10 @@
     - fix bug in write()，补充了参数 settings 缺少的默认值。【bug fix】
   - data_flow.file【new feature】
     - add new module markdown，包括 generate_link()、generate_list()、generate_table() 等方法，用于创建 markdown 格式的链接、多级列表、表格。
+- v 1.2.2 （2023-08-10）【new feature】
+  - nested_dict_list
+    - add new backend ":ndl"，支持读取嵌套的序列化文件
+    - 添加了对应的测试用例
 
 
 

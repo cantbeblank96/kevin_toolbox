@@ -21,6 +21,7 @@ class Implement(MyABC):
 
 if __name__ == '__main__':
     myModel = Implement()
+    myModel.func()
     """
     结论：
         可以先在抽象方法中定义实体，然后在实现类中通过 super().func() 调用，不会报错。

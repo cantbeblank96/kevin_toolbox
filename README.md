@@ -27,9 +27,7 @@ pip install kevin-toolbox  --no-dependencies
 
 [版本更新记录](./notes/Release_Record.md)：
 
-- v 1.2.1（2023-07-25）【bug fix】【new feature】
+- v 1.2.2 （2023-08-10）【new feature】
   - nested_dict_list
-    - fix bug in backend ":skip:simple" registered in SERIALIZER_BACKEND，修复了没有拒绝具有结构复杂的元素的 tuple 的问题。【bug fix】
-    - fix bug in write()，补充了参数 settings 缺少的默认值。【bug fix】
-  - data_flow.file【new feature】
-    - add new module markdown，包括 generate_link()、generate_list()、generate_table() 等方法，用于创建 markdown 格式的链接、多级列表、表格。
+    - add new backend ":ndl"，支持读取嵌套的序列化文件
+    - 添加了对应的测试用例
