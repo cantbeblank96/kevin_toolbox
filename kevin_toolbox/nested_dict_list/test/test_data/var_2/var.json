@@ -1,0 +1,42 @@
+{
+    "a": {
+        "backend": ":numpy:npy",
+        "name": ":a",
+        "details": {
+            "shape": [
+                2,
+                5
+            ],
+            "dtype": "float64"
+        }
+    },
+    "b": [
+        {
+            "backend": ":torch:tensor",
+            "name": ":b@0",
+            "details": {
+                "shape": [
+                    5
+                ],
+                "device": "cpu",
+                "dtype": "torch.float32"
+            }
+        },
+        {
+            "backend": ":torch:tensor",
+            "name": ":b@1",
+            "details": {
+                "shape": [
+                    3
+                ],
+                "device": "cpu",
+                "dtype": "torch.float32"
+            }
+        }
+    ],
+    "<eval>(1, 2, 3)": "<eval>(1, 2, 3)",
+    "model": {
+        "backend": ":ndl",
+        "name": ":model"
+    }
+}

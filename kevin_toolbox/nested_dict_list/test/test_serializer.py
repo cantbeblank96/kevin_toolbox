@@ -7,6 +7,7 @@ import kevin_toolbox.nested_dict_list as ndl
 from kevin_toolbox.nested_dict_list import name_handler, serializer
 
 temp_folder = os.path.join(os.path.dirname(__file__), "temp")
+data_folder = os.path.join(os.path.dirname(__file__), "test_data")
 
 
 def test_write_and_read_0():
@@ -150,7 +151,7 @@ def test_write_and_read_2():
     }
 
     # for read
-    res = serializer.read(input_path=os.path.join(temp_folder, "var_2"))
+    res = serializer.read(input_path=os.path.join(data_folder, "var_2"))
     # check
     nodes = sorted(ndl.get_nodes(var=var_, level=-1), key=lambda x: x[0])
     nodes_1 = sorted(ndl.get_nodes(var=res, level=-1), key=lambda x: x[0])

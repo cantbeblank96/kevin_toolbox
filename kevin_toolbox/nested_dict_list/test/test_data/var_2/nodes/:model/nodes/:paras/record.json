@@ -1,0 +1,16 @@
+{
+    "processed": {
+        "paras": {
+            "input_shape": true,
+            "layer_nums": true
+        }
+    },
+    "raw_structure": {
+        "paras": {
+            "input_shape": false,
+            "layer_nums": false
+        }
+    },
+    "timestamp": 1691645335.3287652,
+    "kt_version": "1.2.1"
+}

@@ -1,0 +1,16 @@
+{
+    "paras": {
+        "layer_nums": 3,
+        "input_shape": {
+            "backend": ":numpy:npy",
+            "name": ":paras:input_shape",
+            "details": {
+                "shape": [
+                    2,
+                    5
+                ],
+                "dtype": "float64"
+            }
+        }
+    }
+}
