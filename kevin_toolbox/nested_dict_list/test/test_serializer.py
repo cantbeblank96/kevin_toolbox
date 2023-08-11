@@ -97,11 +97,7 @@ def test_write_and_read_0():
     # for read
     res = serializer.read(input_path=os.path.join(temp_folder, "var_.tar"))
     # check
-    nodes = sorted(ndl.get_nodes(var=var_, level=-1), key=lambda x: x[0])
-    nodes_1 = sorted(ndl.get_nodes(var=res, level=-1), key=lambda x: x[0])
-    check_consistency([i[0] for i in nodes], [i[0] for i in nodes_1])
-    for i, j in zip([i[1] for i in nodes], [i[1] for i in nodes_1]):
-        check_consistency(i, j)
+    check_consistency(res, var_)
 
 
 def test_write_and_read_1():
@@ -131,11 +127,7 @@ def test_write_and_read_1():
     # for read
     res = serializer.read(input_path=os.path.join(temp_folder, "var_1.tar"))
     # check
-    nodes = sorted(ndl.get_nodes(var=var_, level=-1), key=lambda x: x[0])
-    nodes_1 = sorted(ndl.get_nodes(var=res, level=-1), key=lambda x: x[0])
-    check_consistency([i[0] for i in nodes], [i[0] for i in nodes_1])
-    for i, j in zip([i[1] for i in nodes], [i[1] for i in nodes_1]):
-        check_consistency(i, j)
+    check_consistency(res, var_)
 
 
 def test_write_and_read_2():
@@ -153,8 +145,4 @@ def test_write_and_read_2():
     # for read
     res = serializer.read(input_path=os.path.join(data_folder, "var_2"))
     # check
-    nodes = sorted(ndl.get_nodes(var=var_, level=-1), key=lambda x: x[0])
-    nodes_1 = sorted(ndl.get_nodes(var=res, level=-1), key=lambda x: x[0])
-    check_consistency([i[0] for i in nodes], [i[0] for i in nodes_1])
-    for i, j in zip([i[1] for i in nodes], [i[1] for i in nodes_1]):
-        check_consistency(i, j)
+    check_consistency(res, var_)

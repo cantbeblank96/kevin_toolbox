@@ -20,6 +20,10 @@
   - nested_dict_list
     - add new backend ":ndl"，支持读取嵌套的序列化文件
     - 添加了对应的测试用例
+- v 1.2.3 （2023-08-11）【new feature】
+  - patches.for_test
+    - modify check_consistency to support compare nested_dict_list，改进以支持比较复杂的列表字典嵌套结构体
+    - 添加了对应的测试用例
 
 
 
