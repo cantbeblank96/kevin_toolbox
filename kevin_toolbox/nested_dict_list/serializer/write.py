@@ -72,7 +72,7 @@ def write(var, output_dir, settings=None, traversal_mode=Traversal_Mode.BFS, b_p
             output_dir:             <path> 输出文件夹
             b_pack_into_tar:        <boolean> 是否将输出打包成 tar 文件
                                         默认是 True，此时结果将保存到 /<output_dir>.tar 下。
-            strictness_level:       <Strictness_Level> 对写入过程中正确性与完整性的要求的严格程度
+            strictness_level:       <str/Strictness_Level> 对写入过程中正确性与完整性的要求的严格程度
                                         有以下可选项：
                                             - "high" / Strictness_Level.COMPLETE        所有节点均有一个或者多个匹配上的 backend，
                                                                                             且第一个匹配上的 backend 就成功写入。
@@ -86,6 +86,7 @@ def write(var, output_dir, settings=None, traversal_mode=Traversal_Mode.BFS, b_p
 
     #
     traversal_mode = Traversal_Mode(traversal_mode)
+    strictness_level = Strictness_Level(strictness_level)
     os.makedirs(output_dir, exist_ok=True)
     var = ndl.copy_(var=var, b_deepcopy=True)
     if settings is None:
