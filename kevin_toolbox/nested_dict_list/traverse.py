@@ -2,16 +2,16 @@ from enum import Enum
 from kevin_toolbox.nested_dict_list.name_handler import escape_node
 
 
-class ACTION_MODE(Enum):
-    remove = 1
-    replace = 2
-    skip = 3
+class Action_Mode(Enum):
+    REMOVE = "remove"
+    REPLACE = "replace"
+    SKIP = "skip"
 
 
-class TRAVERSAL_MODE(Enum):
-    dfs_pre_order = 1
-    dfs_post_order = 2
-    bfs = 3
+class Traversal_Mode(Enum):
+    DFS_PRE_ORDER = "dfs_pre_order"
+    DFS_POST_ORDER = "dfs_post_order"
+    BFS = "bfs"
 
 
 def traverse(var, match_cond, action_mode="remove", converter=None,
@@ -52,15 +52,12 @@ def traverse(var, match_cond, action_mode="remove", converter=None,
                                     默认为 False
     """
     assert callable(match_cond)
-    assert action_mode in ACTION_MODE.__members__.keys()
-    action_mode = ACTION_MODE.__members__[action_mode]
-    if action_mode is ACTION_MODE.replace:
+    action_mode = Action_Mode(action_mode)
+    if action_mode is Action_Mode.REPLACE:
         assert callable(converter)
-    #
-    assert traversal_mode in TRAVERSAL_MODE.__members__.keys()
-    traversal_mode = TRAVERSAL_MODE.__members__[traversal_mode]
+    traversal_mode = Traversal_Mode(traversal_mode)
 
-    if traversal_mode is TRAVERSAL_MODE.bfs:
+    if traversal_mode is Traversal_Mode.BFS:
         return _bfs(var, match_cond, action_mode, converter, b_use_name_as_idx, b_traverse_matched_element)
     else:
         return _dfs(var, match_cond, action_mode, converter, b_use_name_as_idx, traversal_mode,
@@ -96,7 +93,7 @@ def _dfs(var, match_cond, action_mode, converter,
         idx_ls = _gen_idx(var, keys, b_use_name_as_idx, pre_name)
 
         #
-        if traversal_mode is TRAVERSAL_MODE.dfs_pre_order:
+        if traversal_mode is Traversal_Mode.DFS_PRE_ORDER:
             # 先序
             # 匹配&处理
             deal_res_ls = []
@@ -129,10 +126,10 @@ def _deal(var, k, idx, match_cond, converter, action_mode):
     b_popped = False
     # 处理
     if b_matched:
-        if action_mode is ACTION_MODE.remove:
+        if action_mode is Action_Mode.REMOVE:
             var.pop(k)
             b_popped = True
-        elif action_mode is ACTION_MODE.replace:
+        elif action_mode is Action_Mode.REPLACE:
             var[k] = converter(idx, var[k])
         else:
             pass
