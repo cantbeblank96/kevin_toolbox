@@ -143,24 +143,18 @@ def test_skip_simple():
     bk_name, node = ":skip:simple", ":1:skip:simple"
     bk = SERIALIZER_BACKEND.get(name=bk_name)(folder=temp_folder)
 
-    for x in [1, 1.0, "1", (1, 1), [1, 1]]:
+    for x in [1, 1.0, "1", (1, 1), [1, 1], None, (None,)]:
         # for write
-        if isinstance(x, (int, float, str, tuple)):
+        if isinstance(x, (int, float, str, tuple, type(None))):
             assert bk.writable(var=x)
             check_consistency(x, bk.write(name=bk_name, var=x))
         else:
             assert not bk.writable(var=x)
-            try:
+            with pytest.raises(AssertionError):
                 _ = bk.write(name=bk_name, var=x)
-                assert False
-            except:
-                assert True
         # for read
-        try:
+        with pytest.raises(Exception):
             _ = bk.read(name=node)
-            assert False
-        except:
-            assert True
 
 
 def test_skip_simple_1():
@@ -189,11 +183,8 @@ def test_skip_all():
         assert bk.writable(var=x)
         check_consistency(x, bk.write(name=bk_name, var=x))
         # for read
-        try:
+        with pytest.raises(Exception):
             _ = bk.read(name=node)
-            assert False
-        except:
-            assert True
 
 
 def test_ndl():

@@ -31,12 +31,8 @@ def test_Registry_0():
     check_consistency(func_1, registry.get(name="|func|1"))
     check_consistency(Foo, registry.get(name=":Foo|1.0.3"))
     # 默认值
-    try:
+    with pytest.raises(IndexError):
         registry.get(name=":Foo|1.0.4")
-    except:
-        assert True
-    else:
-        assert False
     check_consistency(None, registry.get(name=":Foo|1.0.4", default=None))
     # pop
     check_consistency(dict(a=(1, 2)), registry.get(name=":var:a@2", b_pop=True))

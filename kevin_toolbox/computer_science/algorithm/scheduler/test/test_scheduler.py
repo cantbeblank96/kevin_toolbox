@@ -35,12 +35,8 @@ def test_Trigger():
     tg.update_by_state(cur_state=dict(epoch=2), target_names=[":func@1", ":inst@0"])
     check_consistency(res_ls, [{'epoch': 1}, "invoke func_2", "invoke cls_"])
     #   使用 unbind() 解除绑定
-    try:
+    with pytest.raises(IndexError):
         tg.unbind(name=":func@2", b_not_exist_ok=False)
-    except:
-        assert True
-    else:
-        assert False
     tg.unbind(name=":func@1", b_not_exist_ok=False)
     tg.update_by_state(cur_state=dict(epoch=3), target_names=[":func", ":inst"])
     check_consistency(res_ls, [{'epoch': 1}, "invoke func_2", "invoke cls_", {'epoch': 3}, "invoke cls_"])

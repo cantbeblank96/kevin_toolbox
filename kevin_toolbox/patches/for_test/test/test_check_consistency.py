@@ -11,24 +11,15 @@ def test_check_consistency_0():
     b = np.array([[1, 2, 3]])
     c = {'d': 3, 'c': 4}
     d = {'d': 3, 'c': 4}
-    try:
-        check_consistency([c, a], [d, b])
-    except:
-        assert False
+    check_consistency([c, a], [d, b])
 
     d["d"] = 10
-    try:
+    with pytest.raises(AssertionError):
         check_consistency([c, a], [d, b])
-        assert False
-    except:
-        assert True
 
     d.pop("d")
-    try:
+    with pytest.raises(AssertionError):
         check_consistency([c, a], [d, b])
-        assert False
-    except:
-        assert True
 
 
 def test_check_consistency_1():
@@ -39,23 +30,14 @@ def test_check_consistency_1():
     c = b + 1
     d = b + 1e-7
 
-    try:
+    with pytest.raises(AssertionError):
         check_consistency(a, b, c)
-        assert False
-    except:
-        assert True
 
-    try:
-        check_consistency(a, b)
-        check_consistency(a, b, d, tolerance=1e-5)
-    except:
-        assert False
+    check_consistency(a, b)
+    check_consistency(a, b, d, tolerance=1e-5)
 
-    try:
+    with pytest.raises(AssertionError):
         check_consistency(a, b, d, tolerance=1e-10)
-        assert False
-    except:
-        assert True
 
 
 def test_check_consistency_2():
@@ -65,14 +47,7 @@ def test_check_consistency_2():
     b = a.cpu().numpy()
     c = b + 1
 
-    try:
+    with pytest.raises(AssertionError):
         check_consistency(a, b, c)
-        assert False
-    except:
-        assert True
 
-    try:
-        check_consistency(a, b)
-        assert False
-    except:
-        assert True
+    check_consistency(a, b)

@@ -5,10 +5,12 @@ import kevin_toolbox
 from kevin_toolbox.data_flow.file import json_
 from kevin_toolbox.patches import for_os
 import kevin_toolbox.nested_dict_list as ndl
-from kevin_toolbox.nested_dict_list.serializer.variable import SERIALIZER_BACKEND
+from kevin_toolbox.nested_dict_list.traverse import Traversal_Mode
+from kevin_toolbox.nested_dict_list.serializer.variable import SERIALIZER_BACKEND, Strictness_Level
 
 
-def write(var, output_dir, settings=None, traversal_mode="bfs", b_pack_into_tar=True, **kwargs):
+def write(var, output_dir, settings=None, traversal_mode=Traversal_Mode.BFS, b_pack_into_tar=True,
+          strictness_level=Strictness_Level.COMPATIBLE, **kwargs):
     """
         将输入的嵌套字典列表 var 的结构和节点值保存到文件中
             遍历 var，匹配并使用 settings 中设置的保存方式来对各部分结构/节点进行序列化
@@ -35,7 +37,7 @@ def write(var, output_dir, settings=None, traversal_mode="bfs", b_pack_into_tar=
                                                                 见 traverse() 中的 match_cond 参数。函数返回 True 时视为匹配成功。
                                             - "<eval>..."   将使用 eval() 将该字符串解释为上面形式的函数来进行匹配。
                                         <序列化方式>默认支持以下几种及其组合：
-                                            - ":skip:simple"    若对象为 int、float、str、tuple，则不做处理直接保留在结构中
+                                            - ":skip:simple"    若对象为 int、float、str、None 或者 tuple of 前者的组合，则不做处理直接保留在结构中
                                             - ":skip:all"       不做处理直接保留在结构中
                                             - ":numpy:bin"      若对象为 np.array，则以 bin file 的形式进行序列化
                                             - ":numpy:npy"      若对象为 np.array，则以 .npy 的形式进行序列化
@@ -47,7 +49,7 @@ def write(var, output_dir, settings=None, traversal_mode="bfs", b_pack_into_tar=
                                                                     利用该方式可以实现递归的序列化
                                         比如组合 (":skip:simple", ":numpy:bin", ":torch:tensor", ":pickle") 则表示根据变量的类型，依次尝试这几种方式
                                             直至成功。其含义为：
-                                                - 如果是可以直接写入到 json 中的 int、float、str、简单的 tuple 等则选用 ":skip:simple"
+                                                - 如果是可以直接写入到 json 中的 int、float、str、None以及简单的 tuple 等则选用 ":skip:simple"
                                                 - 如果是 np.array 则选用 ":numpy:bin"
                                                 - 如果是 tensor 则选用 ":torch:tensor"
                                                 - 其他无法处理的类型则选用 ":pickle"
@@ -70,10 +72,20 @@ def write(var, output_dir, settings=None, traversal_mode="bfs", b_pack_into_tar=
             output_dir:             <path> 输出文件夹
             b_pack_into_tar:        <boolean> 是否将输出打包成 tar 文件
                                         默认是 True，此时结果将保存到 /<output_dir>.tar 下。
+            strictness_level:       <Strictness_Level> 对写入过程中正确性与完整性的要求的严格程度
+                                        有以下可选项：
+                                            - "high" / Strictness_Level.COMPLETE        所有节点均有一个或者多个匹配上的 backend，
+                                                                                            且第一个匹配上的 backend 就成功写入。
+                                            - "normal" / Strictness_Level.COMPATIBLE    所有节点均有一个或者多个匹配上的 backend，
+                                                                                            但是首先匹配到的 backend 写入出错，
+                                                                                            使用其后再次匹配到的其他 backend 能够成功写入
+                                            - "low" / Strictness_Level.IGNORE_FAILURE   匹配不完整，或者某些节点尝试过所有匹配到
+                                                                                            的 backend 之后仍然无法写入
+                                        默认是 "normal"
     """
 
     #
-    assert traversal_mode in ("dfs_pre_order", "dfs_post_order", "bfs")
+    traversal_mode = Traversal_Mode(traversal_mode)
     os.makedirs(output_dir, exist_ok=True)
     var = ndl.copy_(var=var, b_deepcopy=True)
     if settings is None:
@@ -104,25 +116,28 @@ def write(var, output_dir, settings=None, traversal_mode="bfs", b_pack_into_tar=
         for i in backend_name_ls:
             if i not in backend_s:
                 backend_s[i] = SERIALIZER_BACKEND.get(name=i)(folder=os.path.join(output_dir, "nodes"))
+        #
+        t_mode = Traversal_Mode(setting.get("traversal_mode", traversal_mode))
         # _process and  paras
         if callable(setting["match_cond"]):
-            if setting.get("traversal_mode", traversal_mode) in ("dfs_pre_order", "bfs"):
+            if t_mode in (Traversal_Mode.DFS_PRE_ORDER, Traversal_Mode.BFS):
                 _process = _process_from_top_to_down
             else:
                 _process = _process_from_down_to_top
             paras = dict(
                 var=var, processed_s=processed_s, match_cond=setting["match_cond"],
-                traversal_mode=setting.get("traversal_mode", traversal_mode)
+                traversal_mode=t_mode, strictness_level=strictness_level
             )
         elif setting["match_cond"].startswith("<level>"):
             _process = _process_for_level
             paras = dict(
                 var=var, processed_s=processed_s, processed_s_bak=processed_s_bak,
-                level=int(setting["match_cond"][7:])
+                level=int(setting["match_cond"][7:]), strictness_level=strictness_level
             )
         elif setting["match_cond"].startswith("<node>"):
             _process = _process_for_name
-            paras = dict(var=var, processed_s=processed_s, name=setting["match_cond"][6:])
+            paras = dict(var=var, processed_s=processed_s, name=setting["match_cond"][6:],
+                         strictness_level=strictness_level)
         else:
             raise ValueError(f'invalid match_cond: {setting["match_cond"]}')
         # 执行
@@ -136,16 +151,19 @@ def write(var, output_dir, settings=None, traversal_mode="bfs", b_pack_into_tar=
     # print(processed_s)
     # print(var)
 
-    b_processed_all = True
-    for n, v in ndl.get_nodes(var=processed_s, level=-1):
-        if not v:
+    # 完整性检查
+    failed_nodes = [n for n, v in ndl.get_nodes(var=processed_s, level=-1) if not v]
+    if strictness_level is Strictness_Level.IGNORE_FAILURE:
+        for n in failed_nodes:
+            ndl.set_value(var=var, name=n, value=None, b_force=False)
+    else:
+        for n in failed_nodes:
             warnings.warn(
                 message=f'node {n} failed to write',
                 category=UserWarning
             )
-            b_processed_all = False
-    assert b_processed_all, \
-        f'please check settings to make sure all nodes have been covered and can be deal with backend'
+        assert len(failed_nodes) == 0, \
+            f'please check settings to make sure all nodes have been covered and can be deal with backend'
 
     # 保存 var 的结构
     json_.write(content=var, file_path=os.path.join(output_dir, "var.json"), b_use_suggested_converter=True)
@@ -176,12 +194,13 @@ def _judge_processed_or_not(processed_s, name):
     return b_processed
 
 
-def _process_for_level(var, processed_s, processed_s_bak, level, backend):
+def _process_for_level(var, processed_s, processed_s_bak, level, backend, strictness_level):
     for name, _ in ndl.get_nodes(var=processed_s_bak, level=level, b_strict=True):
-        _process_for_name(var=var, processed_s=processed_s, name=name, backend=backend)
+        _process_for_name(var=var, processed_s=processed_s, name=name, backend=backend,
+                          strictness_level=strictness_level)
 
 
-def _process_for_name(var, processed_s, name, backend):
+def _process_for_name(var, processed_s, name, backend, strictness_level):
     if _judge_processed_or_not(processed_s=processed_s, name=name) is True:
         # has been processed
         return
@@ -191,12 +210,17 @@ def _process_for_name(var, processed_s, name, backend):
         return
 
     # write by backend
-    res = backend.write(name=name, var=value)
+    try:
+        res = backend.write(name=name, var=value)
+    except:
+        assert strictness_level in (Strictness_Level.IGNORE_FAILURE, Strictness_Level.COMPATIBLE), \
+            f'An error occurred when node {name} was saved using the first matched backend {backend}'
+        return
     ndl.set_value(var=processed_s, name=name, value=True, b_force=False)
     ndl.set_value(var=var, name=name, value=res, b_force=False)
 
 
-def _process_from_top_to_down(var, processed_s, match_cond, backend, traversal_mode):
+def _process_from_top_to_down(var, processed_s, match_cond, backend, traversal_mode, strictness_level):
     def match_cond_(parent_type, idx, value):
         nonlocal match_cond, processed_s
 
@@ -208,10 +232,15 @@ def _process_from_top_to_down(var, processed_s, match_cond, backend, traversal_m
         return match_cond(parent_type, idx, value)
 
     def converter(idx, value):
-        nonlocal processed_s, backend
+        nonlocal processed_s, backend, strictness_level
 
         # write by backend
-        res = backend.write(name=idx, var=value)
+        try:
+            res = backend.write(name=idx, var=value)
+        except:
+            assert strictness_level in (Strictness_Level.IGNORE_FAILURE, Strictness_Level.COMPATIBLE), \
+                f'An error occurred when node {name} was saved using the first matched backend {backend}'
+            return value
         ndl.set_value(var=processed_s, name=idx, value=True, b_force=True)
         return res
 
@@ -219,7 +248,7 @@ def _process_from_top_to_down(var, processed_s, match_cond, backend, traversal_m
                  b_use_name_as_idx=True, traversal_mode=traversal_mode, b_traverse_matched_element=False)
 
 
-def _process_from_down_to_top(var, processed_s, match_cond, backend, traversal_mode):
+def _process_from_down_to_top(var, processed_s, match_cond, backend, traversal_mode, strictness_level):
     processed_s_raw, processed_s = processed_s, ndl.copy_(var=processed_s, b_deepcopy=True)
 
     def match_cond_(parent_type, idx, value):
@@ -234,10 +263,15 @@ def _process_from_down_to_top(var, processed_s, match_cond, backend, traversal_m
         return match_cond(parent_type, idx, value)
 
     def converter(idx, value):
-        nonlocal processed_s, backend, processed_s_raw
+        nonlocal processed_s, backend, processed_s_raw, strictness_level
 
         # write by backend
-        res = backend.write(name=idx, var=value)
+        try:
+            res = backend.write(name=idx, var=value)
+        except:
+            assert strictness_level in (Strictness_Level.IGNORE_FAILURE, Strictness_Level.COMPATIBLE), \
+                f'An error occurred when node {name} was saved using the first matched backend {backend}'
+            return value
         ndl.set_value(var=processed_s, name=idx, value=True, b_force=True)
         ndl.set_value(var=processed_s_raw, name=idx, value=True, b_force=True)
         return res

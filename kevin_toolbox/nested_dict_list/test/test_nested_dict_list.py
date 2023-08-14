@@ -37,12 +37,8 @@ def test_get_value():
     )
 
     # 取值失败时返回默认值
-    try:
+    with pytest.raises(IndexError):
         ndl.get_value(var=x, name=":acc@2")
-    except:
-        assert True
-    else:
-        assert False
     check_consistency(
         None, ndl.get_value(var=x, name=":acc@2", default=None)
     )

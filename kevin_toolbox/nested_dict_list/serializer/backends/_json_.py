@@ -12,17 +12,15 @@ class Json_(Backend_Base):
         super().__init__(*args, **kwargs)
 
         self.w_cache = None
-        self.w_cache_id = None
+        self.w_cache_s = dict(able=None, id_=None, content=None)
 
     def write(self, name, var, **kwargs):
-        if id(var) != self.w_cache_id:
-            assert self.writable(var=var)
+        assert self.writable(var=var)
 
         with open(os.path.join(self.paras["folder"], f'{name}.json'), "w") as f:
-            f.write(self.w_cache)
+            f.write(self.w_cache_s["content"])
 
-        self.w_cache = None
-        self.w_cache_id = None
+        self.w_cache_s["content"], self.w_cache_s["id_"] = None, None
         return dict(backend=Json_.name, name=name)
 
     def read(self, name, **kwargs):
@@ -35,12 +33,17 @@ class Json_(Backend_Base):
         """
             是否可以写
         """
-        try:
-            self.w_cache = json_.write(content=var, file_path=None, sort_keys=False, b_use_suggested_converter=True)
-            self.w_cache_id = id(var)
-            return True
-        except:
-            return False
+        if id(var) != self.w_cache_s["id_"]:
+            try:
+                self.w_cache_s["content"] = json_.write(content=var, file_path=None, sort_keys=False,
+                                                        b_use_suggested_converter=True)
+            except:
+                self.w_cache_s["content"], self.w_cache_s["id_"] = None, None
+                self.w_cache_s["able"] = False
+            else:
+                self.w_cache_s["id_"] = None
+                self.w_cache_s["able"] = True
+        return self.w_cache_s["able"]
 
     def readable(self, name, **kwargs):
         """

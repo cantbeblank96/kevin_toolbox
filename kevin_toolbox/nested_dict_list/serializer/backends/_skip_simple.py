@@ -8,12 +8,10 @@ class Skip_Simple(Backend_Base):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.w_cache = None
-        self.w_cache_id = None
+        self.w_cache_s = dict(able=None, id_=None)
 
     def write(self, name, var, **kwargs):
-        if id(var) != self.w_cache_id:
-            assert self.writable(var=var)
+        assert self.writable(var=var)
         return var
 
     def read(self, name, **kwargs):
@@ -23,13 +21,14 @@ class Skip_Simple(Backend_Base):
         """
             是否可以写
         """
-        self.w_cache = False
-        if isinstance(var, (int, float, str)):
-            self.w_cache = True
-        elif isinstance(var, (tuple,)):
-            self.w_cache = all(isinstance(i, (int, float, str)) for i in var)
-        self.w_cache_id = id(var)
-        return self.w_cache
+        if id(var) != self.w_cache_s["id_"]:
+            self.w_cache_s["able"] = False
+            if isinstance(var, (int, float, str, type(None))):
+                self.w_cache_s["able"] = True
+            elif isinstance(var, (tuple,)):
+                self.w_cache_s["able"] = all(isinstance(i, (int, float, str, type(None))) for i in var)
+            self.w_cache_s["id_"] = id(var)
+        return self.w_cache_s["able"]
 
     def readable(self, name, **kwargs):
         """
@@ -43,7 +42,7 @@ if __name__ == '__main__':
 
     backend = Skip_Simple(folder=os.path.join(os.path.dirname(__file__), "temp"))
 
-    a = 100
+    a = None
     print(backend.write(name=":a:b", var=a))
 
     b = backend.read(name=":a:b")
