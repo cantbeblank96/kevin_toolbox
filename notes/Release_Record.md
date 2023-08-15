@@ -35,6 +35,16 @@
       - 添加了对应的测试用例。
     - 【bug fix】fix bug in backend :skip:simple and :json，修复了 writable() 中 cache 不能及时更新的问题。
   - 使用 `with pytest.raises(<Error>) ` 来代替测试用例中的 try else 方式来捕抓异常
+- v 1.2.5 （2023-08-15）【new feature】【bug fix】
+  - nested_dict_list
+    - 【bug fix】fix write()，修复了 strictness_level 参数不支持字符串输入的问题。
+  - computer_science.algorithm
+    - 【new feature】新增了 parallel_and_concurrent 模块用于处理与并行、并发有关的问题。其中包含了：
+      - multi_thread_execute(<list/generator/iterator of Executor>, ...) 函数，用于多线程执行给定的执行器序列，该函数使用线程池来管理，可以避免阻塞。
+      - 已经添加了对应的测试用例。
+  - computer_science.algorithm.for_seq
+    - 【new feature】增加了 chunk_generator() 函数，用于构建返回指定批大小的生成器。
+    - 已经添加了对应的测试用例。
 
 
 

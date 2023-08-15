@@ -86,12 +86,12 @@ def test_write_and_read_0():
         }]
     ]
 
-    _test_hook = dict()
+    _hook_for_debug = dict()
     serializer.write(var=var_, output_dir=os.path.join(temp_folder, "var_"), traversal_mode="bfs",
-                     b_pack_into_tar=True, settings=settings, _test_hook=_test_hook)
+                     b_pack_into_tar=True, settings=settings, _hook_for_debug=_hook_for_debug)
     # check
-    assert len(_test_hook["processed"]) == len(expected_processed)
-    for (bk_name, p), (bk_name_1, p_1) in zip(_test_hook["processed"], expected_processed):
+    assert len(_hook_for_debug["processed"]) == len(expected_processed)
+    for (bk_name, p), (bk_name_1, p_1) in zip(_hook_for_debug["processed"], expected_processed):
         nodes = sorted(ndl.get_nodes(var=p, level=-1), key=lambda x: x[0])
         nodes_1 = sorted(ndl.get_nodes(var=p_1, level=-1), key=lambda x: x[0])
         check_consistency([i[0] for i in nodes], [i[0] for i in nodes_1])

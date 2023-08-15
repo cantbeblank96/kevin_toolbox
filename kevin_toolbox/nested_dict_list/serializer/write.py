@@ -102,8 +102,8 @@ def write(var, output_dir, settings=None, traversal_mode=Traversal_Mode.BFS, b_p
         ndl.set_value(var=processed_s, name=n, value=False, b_force=True)
     # processed_s_bak 用于记录 var 的原始结构
     processed_s_bak = ndl.copy_(var=processed_s, b_deepcopy=True)
-    if "_test_hook" in kwargs:
-        kwargs["_test_hook"]["processed"] = [["raw", ndl.copy_(var=processed_s, b_deepcopy=True)], ]
+    if "_hook_for_debug" in kwargs:
+        kwargs["_hook_for_debug"]["processed"] = [["raw", ndl.copy_(var=processed_s, b_deepcopy=True)], ]
 
     # 处理 var
     backend_s = dict()
@@ -146,8 +146,8 @@ def write(var, output_dir, settings=None, traversal_mode=Traversal_Mode.BFS, b_p
             # print(processed_s)
             # print(f'backend: {i}')
             _process(backend=backend_s[i], **paras)
-            if "_test_hook" in kwargs:
-                kwargs["_test_hook"]["processed"].append([i, ndl.copy_(var=processed_s, b_deepcopy=True)])
+            if "_hook_for_debug" in kwargs:
+                kwargs["_hook_for_debug"]["processed"].append([i, ndl.copy_(var=processed_s, b_deepcopy=True)])
 
     # print(processed_s)
     # print(var)
@@ -294,7 +294,7 @@ if __name__ == '__main__':
     }
     # var_ = None
 
-    _test_hook = dict()
+    _hook_for_debug = dict()
     settings_ = [
         {"match_cond": lambda _, idx, value: "paras" == name_handler.parse_name(name=idx)[2][-1],
          "backend": (":pickle",),
@@ -305,8 +305,8 @@ if __name__ == '__main__':
          "backend": (":skip:simple",)},
     ]
     write(var=var_, output_dir=os.path.join(os.path.dirname(__file__), "temp3"), traversal_mode="bfs",
-          b_pack_into_tar=True, settings=settings_, _test_hook=_test_hook)
+          b_pack_into_tar=True, settings=settings_, _hook_for_debug=_hook_for_debug)
 
-    for bk_name, p in _test_hook["processed"]:
+    for bk_name, p in _hook_for_debug["processed"]:
         print(f'backend: {bk_name}')
         print(p)

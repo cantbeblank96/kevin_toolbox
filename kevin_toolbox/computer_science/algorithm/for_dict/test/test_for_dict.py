@@ -4,7 +4,7 @@ from kevin_toolbox.computer_science.algorithm import for_dict
 
 
 def test_deep_update():
-    print("test for_nested_dict_list.get_value()")
+    print("test for_dict.get_value()")
 
     #
     stem = {"a": {"b": [233], "g": 3}}
