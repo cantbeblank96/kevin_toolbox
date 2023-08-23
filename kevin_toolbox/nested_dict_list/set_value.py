@@ -21,6 +21,9 @@ def set_value(var, name, value, b_force=False):
                                     - 根据取值方式的不同，新创建或者修改的节点的类型可能是 dict 或者 list，
                                         对于 list，其中缺省值填充 None。
                                     - 当需要创建节点时，| 方式将优先创建 dict
+                注意：
+                    若 b_force 为 True 有可能不会在 var 的基础上进行改变，而是返回一个新的ndl结构，
+                    因此建议使用赋值 var = ndl.set_value(var) 来避免可能的错误。
     """
     _, method_ls, node_ls = parse_name(name=name, b_de_escape_node=False)
     if len(node_ls) == 0:

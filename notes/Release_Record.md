@@ -45,6 +45,17 @@
   - computer_science.algorithm.for_seq
     - 【new feature】增加了 chunk_generator() 函数，用于构建返回指定批大小的生成器。
     - 已经添加了对应的测试用例。
+- v 1.2.6 （2023-08-23）【bug fix】【new feature】
+  - data_flow.file.kevin_notation
+    - 【bug fix】fix Kevin_Notation_Reader() and Kevin_Notation_Writer()，修复了当只有单列，亦即 column_name 和 column_type 长度为 1 时，无法正确读写的问题。
+    - 同步添加了对应的测试用例。
+  - patches.for_optuna
+    - 【bug fix】【new feature】fix and modify sample_from_feasible_domain()，修复了不支持含有":@"等特殊符号的choices选项的问题，增加了输出被采样的节点名称。
+  - nested_dict_list.value_parser
+    - 【new feature】add parse_and_eval_references()，该方法系对 parse_references()，eval_references()以及 cal_relation_between_references.py()的集成，让使用更加便捷。该方法返回：
+      - var 是解释后的结果
+      - name_ls 是被解释的节点名称，按照解释顺序排列
+    - 补充了对应的测试用例。
 
 
 
