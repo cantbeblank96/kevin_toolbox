@@ -26,5 +26,20 @@
       "high": 10000,
       "log": true
     }
-  ]
+  ],
+  "connection": {
+    "p_type": "categorical",
+    "choices": {
+      "skip": 0,
+      "and": 1,
+      "or": 2
+    }
+  },
+  "block_type": {
+    "p_type": "categorical",
+    "choices": [
+      ":resnet:blocks:preact",
+      ":resnet:blocks:bottle"
+    ]
+  }
 }

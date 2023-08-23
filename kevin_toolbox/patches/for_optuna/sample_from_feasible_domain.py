@@ -1,7 +1,8 @@
 import optuna
+import kevin_toolbox.nested_dict_list as ndl
 
 
-def sample_from_feasible_domain(trial: optuna.trial.BaseTrial, inputs, pre_name=""):
+def sample_from_feasible_domain(var, trial: optuna.trial.BaseTrial, pre_name=""):
     """
         使用试验 trial 基于输入中的定义域 feasible_domain 部分进行参数采样和替换。
             遍历输入中的所有元素，找出符合 <feasible_domain> 格式要求的记录了参数定义域的元素，
@@ -20,6 +21,12 @@ def sample_from_feasible_domain(trial: optuna.trial.BaseTrial, inputs, pre_name=
                                         中的 suggest_xxx() 函数。
             trial:              <optuna.trial.BaseTrial> 试验
             pre_name:           <string> 采样出的参数在试验 trial 中注册的名称的前缀
+
+        返回：
+            var, name_ls
+                var 是采样后的结果
+                name_ls 是被采样的节点名称，注意并不带 pre_name 前缀
+
         实例：
             对于输入 inputs={
                             "thr":[
@@ -38,16 +45,30 @@ def sample_from_feasible_domain(trial: optuna.trial.BaseTrial, inputs, pre_name=
                                     "high": 1.0000001,
                                     "step": 0.05
                                 },
+                                "connection": {
+                                    "p_type": "categorical",
+                                    "choices": {
+                                        "skip": lambda x:x,
+                                        "and":  lambda x,y : x and y,
+                                        "or":  lambda x,y : x or y,
+                                    }
+                                },
                             ]
                         }
-            可能返回的采样结果是 res={"thr":[{"interval_thr":1000}, {"iou_thr":0.6}], }。
-            当 pre_name="my" 时，这些参数在 trial 中注册的名称分别是 "my:thr@0:interval_thr" 和 "my:thr@1:iou_thr"。
+            可能返回的采样结果是 res={"thr":[{"interval_thr":1000}, {"iou_thr":0.6}, {"connection":lambda x:x} ], }。
+            当 pre_name="my" 时，这些参数在 trial 中注册的名称分别是 "my:thr@0:interval_thr"，"my:thr@1:iou_thr" 和 "my:thr@1:connection"。
+            特别地，
+                - 对于字典形式的 choices，其中保存在 trial 中的取值是其键 key 而非 value。
+                - 对于list形式，但含有非支持类型的  choices，其中保存在 trial 中的取值是元素的 index。
             这些名称的含义详见 get_value()。
     """
-    if isinstance(inputs, (dict,)) and "p_type" in inputs:
-        # 满足 <feasible_domain> 格式要求
-        p_type = inputs.pop("p_type")
-        kwargs = inputs
+
+    name_ls=[]
+
+    def func(idx, v):
+        nonlocal name_ls
+        p_type = v.pop("p_type")
+        kwargs = v
         choice_values = None
         if p_type == "categorical":
             # optuna 目前的类别元素仅支持 None, bool, int, float 和 str 类型
@@ -62,17 +83,14 @@ def sample_from_feasible_domain(trial: optuna.trial.BaseTrial, inputs, pre_name=
                 choice_values = kwargs["choices"]
                 kwargs["choices"] = list(kwargs["choices"].keys())
 
-        inputs = eval(f'trial.suggest_{p_type}(name=name, **kwargs)',
-                      {"trial": trial, "name": pre_name, "kwargs": kwargs})
+        v = eval(f'trial.suggest_{p_type}(name=name, **kwargs)',
+                 {"trial": trial, "name": f'{pre_name}{idx}', "kwargs": kwargs})
         if choice_values is not None:
-            inputs = choice_values[inputs]
+            v = choice_values[v]
+        name_ls.append(idx)
+        return v
 
-    # 递归
-    if isinstance(inputs, (dict,)):
-        for k, v in inputs.items():
-            inputs[k] = sample_from_feasible_domain(trial=trial, inputs=v, pre_name=":".join([pre_name, k]))
-    elif isinstance(inputs, (list, tuple,)):
-        for idx, i in enumerate(inputs):
-            inputs[idx] = sample_from_feasible_domain(trial=trial, inputs=i, pre_name="@".join([pre_name, str(idx)]))
+    var = ndl.traverse(var=var, match_cond=lambda _, __, v: isinstance(v, (dict,)) and "p_type" in v,
+                       action_mode="replace", converter=func, b_use_name_as_idx=True)
 
-    return inputs
+    return var, name_ls
