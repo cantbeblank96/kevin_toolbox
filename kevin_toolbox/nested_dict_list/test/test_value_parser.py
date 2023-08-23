@@ -19,6 +19,7 @@ def test_all_0():
             "image_size": ["<eval>110", 96],
         },
     }
+    raw_x = copy.deepcopy(x)
 
     print("test value_parser.parse_references()")
     node_s = vp.parse_references(
@@ -63,6 +64,16 @@ def test_all_0():
         x
     )
 
+    print("test value_parser.parse_and_eval_references()")
+    raw_x, name_ls = vp.parse_and_eval_references(
+        var=raw_x,
+        flag="v",
+        converter_for_ref=lambda idx, v: eval(v[6:]) if isinstance(v, (str,)) and v.startswith(
+            "<eval>") else v
+    )
+    check_consistency(raw_x, x)
+    check_consistency(name_ls, order)
+
 
 def test_all_1():
     x = {
@@ -78,6 +89,7 @@ def test_all_1():
             "image_size": [110, 96],
         },
     }
+    raw_x = copy.deepcopy(x)
 
     print("test value_parser.parse_references()")
     node_s = vp.parse_references(
