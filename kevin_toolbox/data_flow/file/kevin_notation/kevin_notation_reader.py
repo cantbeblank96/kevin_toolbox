@@ -126,8 +126,9 @@ class Kevin_Notation_Reader:
                 paras_dict.update({k: v for (k, v) in paras_ls})
             sep = paras_dict.get("sep", res["sep"])
             #
-            if sep in value:
-                value = value.split(sep, -1)
+            value = value.split(sep, -1)
+            if len(value) == 1 and key not in ["column_name", "column_type"]:
+                value = value[0]
             #
             res[key] = value
 

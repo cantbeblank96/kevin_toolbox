@@ -170,7 +170,7 @@ class Kevin_Notation_Writer:
 
         # metadata
         value = list(value)
-        self.metadata[key] = value[0] if len(value) == 1 else value
+        self.metadata[key] = value[0] if len(value) == 1 and key not in ["column_name", "column_type"] else value
         #
         if key in ["column_name", "column_type"]:
             self.metadata["column_num"] = len(value)
