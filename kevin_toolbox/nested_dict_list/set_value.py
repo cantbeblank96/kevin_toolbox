@@ -29,17 +29,20 @@ def set_value(var, name, value, b_force=False):
     if len(node_ls) == 0:
         return value
 
-    key = escape_node(node=node_ls[-1], b_reversed=True, times=1)
+    raw_key = escape_node(node=node_ls[-1], b_reversed=True, times=1)
 
     try:
         item = get_value(var=var, name=name[:-1 - len(node_ls[-1])])
         if method_ls[-1] == "@":
-            key = eval(key)
+            key = eval(raw_key)
         elif method_ls[-1] == "|":
             try:
-                _ = item[key]
+                _ = item[raw_key]
+                key = raw_key
             except:
-                key = eval(key)
+                key = eval(raw_key)
+        else:
+            key = raw_key
 
         if isinstance(item, (list,)) and isinstance(key, (int,)) and len(item) <= key:
             item.extend([None] * (key - len(item) + 1))
@@ -49,9 +52,9 @@ def set_value(var, name, value, b_force=False):
             raise ValueError(f'The location pointed to by name {name} does not exist in var')
         else:
             if method_ls[-1] in "|:":
-                value = {f'{key}': value}
+                value = {raw_key: value}
             else:
-                key = eval(key)
+                key = eval(raw_key)
                 assert isinstance(key, (int,)) and key >= 0
                 value = [None] * key + [value]
             var = set_value(var=var, name=name[:-1 - len(node_ls[-1])], value=value, b_force=b_force)

@@ -53,7 +53,7 @@ def test_get_value():
                       ndl.get_value(var=x, name=r":strategy:\:settings\:for_all\:lr@1"))
 
 
-def test_set_value():
+def test_set_value_0():
     print("test nested_dict_list.set_value()")
 
     x = dict(acc=[0.66, 0.78, 0.99])
@@ -76,6 +76,14 @@ def test_set_value():
     # 特殊情况
     res = ndl.set_value(var=x, name="www", value=0.1, b_force=True)
     check_consistency(0.1, res)
+
+
+def test_set_value_1():
+    print("test nested_dict_list.set_value()")
+
+    # 为了验证bug（无法强制设置以@开头的name）是否修复
+    y = ndl.set_value(var=None, name="@1", value=1, b_force=True)
+    check_consistency([None, 1], y)
 
 
 def test_traverse_0():
