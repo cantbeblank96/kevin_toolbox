@@ -1,4 +1,5 @@
 import os
+import time
 from kevin_toolbox.patches import for_os
 from kevin_toolbox.data_flow.file import json_
 import kevin_toolbox.nested_dict_list as ndl
@@ -13,18 +14,15 @@ def read(input_path, **kwargs):
             input_path:             <path> 文件夹或者 .tar 文件，具体结构参考 write()
     """
     assert os.path.exists(input_path)
-    t = 0
 
     # 解压
     temp_dir = None
     if os.path.isfile(input_path) and input_path.endswith(".tar"):
         while True:
-            temp_dir = os.path.join(os.path.dirname(input_path), f'temp{t}')
+            temp_dir = os.path.join(os.path.dirname(input_path), f'temp{time.time()}')
             if not os.path.isdir(temp_dir):
                 os.makedirs(temp_dir)
                 break
-            else:
-                t += 1
         for_os.unpack(source=input_path, target=temp_dir)
         input_path = os.path.join(temp_dir, os.listdir(temp_dir)[0])
 
