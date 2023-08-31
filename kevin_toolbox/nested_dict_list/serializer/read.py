@@ -14,15 +14,17 @@ def read(input_path, **kwargs):
     """
     assert os.path.exists(input_path)
     t = 0
-    while True:
-        temp_dir = os.path.join(os.path.dirname(input_path), f'temp{t}')
-        if not os.path.isdir(temp_dir):
-            os.makedirs(temp_dir)
-            break
-        else:
-            t += 1
 
+    # 解压
+    temp_dir = None
     if os.path.isfile(input_path) and input_path.endswith(".tar"):
+        while True:
+            temp_dir = os.path.join(os.path.dirname(input_path), f'temp{t}')
+            if not os.path.isdir(temp_dir):
+                os.makedirs(temp_dir)
+                break
+            else:
+                t += 1
         for_os.unpack(source=input_path, target=temp_dir)
         input_path = os.path.join(temp_dir, os.listdir(temp_dir)[0])
 
