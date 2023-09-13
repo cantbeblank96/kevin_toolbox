@@ -88,7 +88,7 @@ def write(var, output_dir, settings=None, traversal_mode=Traversal_Mode.BFS, b_p
     traversal_mode = Traversal_Mode(traversal_mode)
     strictness_level = Strictness_Level(strictness_level)
     os.makedirs(output_dir, exist_ok=True)
-    var = ndl.copy_(var=var, b_deepcopy=True)
+    var = ndl.copy_(var=var, b_deepcopy=False)
     if settings is None:
         settings = [{"match_cond": "<level>-1", "backend": (":skip:simple", ":numpy:npy", ":torch:tensor", ":pickle")}]
 
