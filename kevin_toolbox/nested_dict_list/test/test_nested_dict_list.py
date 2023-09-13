@@ -1,5 +1,6 @@
 import copy
 import pytest
+import torch
 import numpy as np
 from kevin_toolbox.patches.for_test import check_consistency
 import kevin_toolbox.nested_dict_list as ndl
@@ -203,7 +204,7 @@ def test_get_nodes():
     check_consistency([], ndl.get_nodes(var=x, level=-1))
 
 
-def test_copy_():
+def test_copy_0():
     print("test nested_dict_list.copy_()")
 
     class A:
@@ -225,6 +226,70 @@ def test_copy_():
             if id(copy.deepcopy(v_old)) != id(v_old):
                 # 除了 int、str 等不可变对象之外，其他对象经过深拷贝之后应该指向另一个id
                 assert id(v_new) != id(v_old), f'{name}'
+
+        # 测试 浅拷贝模式
+        x_new = ndl.copy_(var=x, b_deepcopy=False)
+        # 叶节点指向同一个 id
+        for name, v_old in ndl.get_nodes(var=x, level=-1):
+            v_new = ndl.get_value(var=x_new, name=name)
+            assert id(v_new) == id(v_old)
+        # 父节点则指向不同 id
+        level = -1
+        while True:
+            level -= 1
+            nodes = ndl.get_nodes(var=x, level=level)
+            if not nodes:
+                break
+            for name, v_old in nodes:
+                v_new = ndl.get_value(var=x_new, name=name)
+                assert id(v_new) != id(v_old), f'{name}'
+
+
+def test_copy_1():
+    print("test nested_dict_list.copy_()")
+
+    """
+    本测试用例主要测试是否修复无法复制带有 grad_func 的tensor的问题
+    
+    起因：
+        直接使用 copy.deepcopy 去复制带有非空 grad_func 的tensor将会报错：
+            RuntimeError: Only Tensors created explicitly by the user (graph leaves) support the deepcopy protocol at the moment
+    解决方法：
+        参考 https://discuss.pytorch.org/t/copy-deepcopy-vs-clone/55022/10，使用 x.detach().clone() 来复制 tensor
+        
+    实例：
+        t = torch.tensor([1,2,3.5],dtype=torch.float32, requires_grad=True, device='cuda:0')
+        copy.deepcopy(t)
+        # 不会报错
+        t1 = t[:2]  # tensor([1., 2.], device='cuda:0', grad_fn=<SliceBackward0>)
+        copy.deepcopy(t1)
+        # 报错
+        t1.detach().clone() # tensor([1., 2.], device='cuda:0')
+        # 不报错
+        
+    局限：
+        对于其他不支持deepcopy或者内部含有不支持deepcopy的变量，仍然是无法复制的，比如使用上面实例中的 t1 构建这样一个 tuple：
+            (t1, t1, )
+        则 ndl.copy_ 仍然无法对齐实现深复制
+    """
+
+    t = torch.tensor([1, 2, 3.5], dtype=torch.float32, requires_grad=True, device='cuda:0')
+    t1 = t[:2]
+    t2 = t1[:1]
+
+    for x in [
+        t, t1, t2,
+        dict(t=t, t1=t1, t2=t2),
+        [t, t1, t2],
+        # (t, t1, t2)
+    ]:
+        # 测试 深拷贝模式
+        x_new = ndl.copy_(var=x, b_deepcopy=True)
+
+        for name, v_old in ndl.get_nodes(var=x, level=-1):
+            v_new = ndl.get_value(var=x_new, name=name)
+            # 除了 int、str 等不可变对象之外，其他对象经过深拷贝之后应该指向另一个id
+            assert id(v_new) != id(v_old), f'{name}'
 
         # 测试 浅拷贝模式
         x_new = ndl.copy_(var=x, b_deepcopy=False)
