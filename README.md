@@ -45,5 +45,6 @@ pip install kevin-toolbox  --no-dependencies
     - 【bug fix】fix bug in copy_()，修复了无法复制带有 grad_func 的tensor的问题。
       - 添加了测试用例。
       - 注意：本修复只解决节点是tensor的情况，对于节点是含有不能deepcopy的tensor的变量，比如由带有 grad_func 的tensor组成的tuple等的结构，copy_()函数仍然会报错。考虑到这种情况非常复杂，因此不作解决，只能尽量避免，或者出错时专门排查。
+    - 改造模块加载方式，支持通过x.y间接加载子模块，比如 nested_dict_list.serializer 等
   - nested_dict_list.serializer
     - modify write()，只对输入进行浅拷贝，减少对内存的消耗。
