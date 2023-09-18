@@ -1,4 +1,5 @@
 import copy
+from collections import defaultdict
 import pytest
 import torch
 import numpy as np
@@ -234,15 +235,9 @@ def test_copy_0():
             v_new = ndl.get_value(var=x_new, name=name)
             assert id(v_new) == id(v_old)
         # 父节点则指向不同 id
-        level = -1
-        while True:
-            level -= 1
-            nodes = ndl.get_nodes(var=x, level=level)
-            if not nodes:
-                break
-            for name, v_old in nodes:
-                v_new = ndl.get_value(var=x_new, name=name)
-                assert id(v_new) != id(v_old), f'{name}'
+        for name, v_old in _get_non_leaf_nodes(var=x):
+            v_new = ndl.get_value(var=x_new, name=name)
+            assert id(v_new) != id(v_old), f'{name}'
 
 
 def test_copy_1():
@@ -298,12 +293,238 @@ def test_copy_1():
             v_new = ndl.get_value(var=x_new, name=name)
             assert id(v_new) == id(v_old)
         # 父节点则指向不同 id
-        level = -1
-        while True:
-            level -= 1
-            nodes = ndl.get_nodes(var=x, level=level)
-            if not nodes:
-                break
-            for name, v_old in nodes:
-                v_new = ndl.get_value(var=x_new, name=name)
-                assert id(v_new) != id(v_old), f'{name}'
+        for name, v_old in _get_non_leaf_nodes(var=x):
+            v_new = ndl.get_value(var=x_new, name=name)
+            assert id(v_new) != id(v_old), f'{name}'
+
+
+def _get_non_leaf_nodes(var):
+    level = -1
+    res = []
+    while True:
+        level -= 1
+        nodes = ndl.get_nodes(var=var, level=level, b_strict=True)
+        if not nodes:
+            break
+        res.extend(nodes)
+    return res
+
+
+def test_copy_2():
+    print("test nested_dict_list.copy_()")
+
+    """
+    测试 copy_ 中的 b_keep_internal_references 参数
+        该参数用于决定是否保留内部的引用关系
+    """
+
+    # 测试数据
+    """
+    以下面的结构为例（<xx>表示该结构体/节点内存中的地址）：
+        {<0>
+            "a": [<1>
+                {<2> 1, 2, 3},
+                {<3> 4, 5, 6),
+                {<2> 1, 2, 3}
+            ],
+            "b": [<1>
+                {<2> 1, 2, 3},
+                {<3> 4, 5, 6),
+                {<2> 1, 2, 3}
+            ],
+        }
+    """
+    set_0, set_1 = {1, 2, 3}, {4, 5, 6}
+    ls = [set_0, set_1, set_0]
+    x = dict(a=ls, b=ls)
+
+    def _judge_node_ids_consistent(var_0, var_1, part="leaf"):
+        """
+            计算输入的 var_0 和 var_1 中节点的id的差异
+
+            返回：
+                {
+                    "same": [<node_name>, ...],  # node name with same id in both var_0 and var_1
+                    "diff":[<node_name>, ...]
+                }
+        """
+        nodes_0 = ndl.get_nodes(var=var_0, level=-1) if part == "leaf" else _get_non_leaf_nodes(var=var_0)
+        nodes_1 = ndl.get_nodes(var=var_1, level=-1) if part == "leaf" else _get_non_leaf_nodes(var=var_1)
+        res_0 = {name: id(v) for name, v in nodes_0}
+        res_1 = {name: id(v) for name, v in nodes_1}
+        check_consistency(sorted(list(res_0.keys())), sorted(list(res_1.keys())))
+        same, diff = set(), set()
+        for k in res_0:
+            if res_0[k] == res_1[k]:
+                same.add(k)
+            else:
+                diff.add(k)
+        return dict(same=same, diff=diff)
+
+    def _judge_node_ref_consistent(var_0, var_1, part="leaf"):
+        """
+            计算输入的 var_0 和 var_1 中节点引用组的差异
+
+            返回：
+                {
+                    "same": [[<node_name>, ...], ...],  # 两边共有的引用组，in which [<node_name>, ...] is a ref group has name id
+                    "diff_0": [[<node_name>, ...], ...],  # var_0 中独有的
+                    "diff_1": [[<node_name>, ...], ...],  # var_1 中独有的
+                }
+        """
+        nodes_0 = ndl.get_nodes(var=var_0, level=-1) if part == "leaf" else _get_non_leaf_nodes(var=var_0)
+        nodes_1 = ndl.get_nodes(var=var_1, level=-1) if part == "leaf" else _get_non_leaf_nodes(var=var_1)
+        id_name_s_0, id_name_s_1 = defaultdict(list), defaultdict(list)
+        for name, v in nodes_0:
+            id_name_s_0[id(v)].append(name)
+        for name, v in nodes_1:
+            id_name_s_1[id(v)].append(name)
+        ref_group_0 = [tuple(sorted(i)) for i in id_name_s_0.values()]
+        ref_group_1 = [tuple(sorted(i)) for i in id_name_s_1.values()]
+        #
+        same, diff_0 = set(), set()
+        for i in ref_group_0:
+            if i in ref_group_1:
+                same.add(i)
+                ref_group_1.remove(i)
+            else:
+                diff_0.add(i)
+        return dict(same=same, diff_0=diff_0, diff_1=set(ref_group_1))
+
+    # 浅拷贝，保留引用 b_deepcopy=False，b_keep_internal_references=True
+    """
+    生成：
+        {<5>
+            "a": [<6>
+                {<2> 1, 2, 3},
+                {<3> 4, 5, 6),
+                {<2> 1, 2, 3}
+            ],
+            "b": [<6>
+                {<2> 1, 2, 3},
+                {<3> 4, 5, 6),
+                {<2> 1, 2, 3}
+            ],
+        }
+    """
+    x_new = ndl.copy_(var=x, b_deepcopy=False, b_keep_internal_references=True)
+    # 叶节点相同（不改变引用关系）
+    check_consistency(
+        _judge_node_ids_consistent(var_0=x, var_1=x_new, part="leaf"),
+        {'same': {':b@2', ':b@1', ':b@0', ':a@2', ':a@1', ':a@0'}, 'diff': set()}
+    )
+    # 结构不同，且保留引用
+    check_consistency(
+        _judge_node_ids_consistent(var_0=x, var_1=x_new, part="sub"),
+        {'same': set(), 'diff': {':a', ':b', ''}}
+    )
+    check_consistency(
+        _judge_node_ref_consistent(var_0=x, var_1=x_new, part="sub"),
+        {'same': {('',), (':a', ':b')}, 'diff_0': set(), 'diff_1': set()}
+    )
+
+    # 浅拷贝，不保留引用 b_deepcopy=False，b_keep_internal_references=False
+    """
+    生成：
+        {<5>
+            "a": [<6>
+                {<2> 1, 2, 3},
+                {<3> 4, 5, 6),
+                {<2> 1, 2, 3}
+            ],
+            "b": [<7>  # !!!
+                {<2> 1, 2, 3},
+                {<3> 4, 5, 6),
+                {<2> 1, 2, 3}
+            ],
+        }
+    """
+    x_new = ndl.copy_(var=x, b_deepcopy=False, b_keep_internal_references=False)
+    # 叶节点相同（不改变引用关系）
+    check_consistency(
+        _judge_node_ids_consistent(var_0=x, var_1=x_new, part="leaf"),
+        {'same': {':b@2', ':b@1', ':b@0', ':a@2', ':a@1', ':a@0'}, 'diff': set()}
+    )
+    # 结构不同，不保留引用
+    check_consistency(
+        _judge_node_ids_consistent(var_0=x, var_1=x_new, part="sub"),
+        {'same': set(), 'diff': {':a', ':b', ''}}
+    )
+    check_consistency(
+        _judge_node_ref_consistent(var_0=x, var_1=x_new, part="sub"),
+        {'same': {('',)}, 'diff_0': {(':a', ':b')}, 'diff_1': {(':b',), (':a',)}}
+    )
+
+    # 深拷贝，保留引用 b_deepcopy=True，b_keep_internal_references=True
+    """
+    生成：
+        {<5>
+            "a": [<6>
+                {<8> 1, 2, 3},
+                {<9> 4, 5, 6},
+                {<8> 1, 2, 3}
+            ],
+            "b": [<6>
+                {<8> 1, 2, 3},
+                {<9> 4, 5, 6},
+                {<8> 1, 2, 3}
+            ],
+        }
+    """
+    x_new = ndl.copy_(var=x, b_deepcopy=True, b_keep_internal_references=True)
+    # 叶节点不相同，保留引用关系
+    check_consistency(
+        _judge_node_ids_consistent(var_0=x, var_1=x_new, part="leaf"),
+        {'same': set(), 'diff': {':b@2', ':b@1', ':b@0', ':a@2', ':a@1', ':a@0'}}
+    )
+    check_consistency(
+        _judge_node_ref_consistent(var_0=x, var_1=x_new, part="leaf"),
+        {'same': {(':a@0', ':a@2', ':b@0', ':b@2'), (':a@1', ':b@1')}, 'diff_0': set(), 'diff_1': set()}
+    )
+    # 结构不同，保留引用关系
+    check_consistency(
+        _judge_node_ids_consistent(var_0=x, var_1=x_new, part="sub"),
+        {'same': set(), 'diff': {':a', ':b', ''}}
+    )
+    check_consistency(
+        _judge_node_ref_consistent(var_0=x, var_1=x_new, part="sub"),
+        {'same': {('',), (':a', ':b')}, 'diff_0': set(), 'diff_1': set()}
+    )
+
+    # # 深拷贝，保留引用 b_deepcopy=True，b_keep_internal_references=False
+    """
+    生成：
+        {<5>
+            "a": [<6>
+                {<8> 1, 2, 3},
+                {<9> 4, 5, 6},
+                {<8> 1, 2, 3}
+            ],
+            "b": [<7>  # !!!
+                {<10> 1, 2, 3},  # !!!
+                {<11> 4, 5, 6},  # !!!
+                {<10> 1, 2, 3}  # !!!
+            ],
+        }
+    """
+    x_new = ndl.copy_(var=x, b_deepcopy=True, b_keep_internal_references=False)
+    # 叶节点不相同，不保留引用关系
+    check_consistency(
+        _judge_node_ids_consistent(var_0=x, var_1=x_new, part="leaf"),
+        {'same': set(), 'diff': {':b@2', ':b@1', ':b@0', ':a@2', ':a@1', ':a@0'}}
+    )
+    check_consistency(
+        _judge_node_ref_consistent(var_0=x, var_1=x_new, part="leaf"),
+        {'same': set(),
+         'diff_0': {(':a@0', ':a@2', ':b@0', ':b@2'), (':a@1', ':b@1')},
+         'diff_1': {(':a@0',), (':a@2',), (':b@0',), (':b@2',), (':a@1',), (':b@1',)}}
+    )
+    # 结构不同，不保留引用关系
+    check_consistency(
+        _judge_node_ids_consistent(var_0=x, var_1=x_new, part="sub"),
+        {'same': set(), 'diff': {':a', ':b', ''}}
+    )
+    check_consistency(
+        _judge_node_ref_consistent(var_0=x, var_1=x_new, part="sub"),
+        {'same': {('',)}, 'diff_0': {(':a', ':b')}, 'diff_1': {(':b',), (':a',)}}
+    )
