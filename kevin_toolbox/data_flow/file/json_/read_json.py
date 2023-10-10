@@ -19,7 +19,7 @@ def read_json(file_path, converters=None, b_use_suggested_converter=False):
                                             默认为 False。
                     注意：当 converters 非 None，此参数失效，以 converters 中的具体设置为准
     """
-    assert os.path.isfile(file_path)
+    assert os.path.isfile(file_path), f'file {file_path} not found'
     if converters is None and b_use_suggested_converter:
         converters = [unescape_tuple, unescape_non_str_dict_key]
 
