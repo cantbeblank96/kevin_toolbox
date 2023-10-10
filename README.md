@@ -44,4 +44,7 @@ pip install kevin-toolbox  --no-dependencies
       - 支持通过 b_allow_misaligned_values 参数来允许不对齐的 values。
       - 支持通过 f_gen_order_of_values 来指定 values 的排序顺序。
       - 添加了对应的测试用例。
-  - 
+  - patches.for_numpy.linalg
+    - 【new feature】modify softmax()
+      - 新增了 temperature 参数，该参数起到对输入中的相对小/大值的抑制/增强作用。
+      - 添加了对应的测试用例。

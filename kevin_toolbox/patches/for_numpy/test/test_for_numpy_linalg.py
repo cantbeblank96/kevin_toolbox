@@ -1,0 +1,19 @@
+import pytest
+import numpy as np
+from kevin_toolbox.patches.for_test import check_consistency
+from kevin_toolbox.patches.for_numpy import linalg
+
+
+def test_softmax():
+    print("test for_numpy.linalg.softmax()")
+
+    check_consistency(
+        linalg.softmax(np.asarray([0, 0.1]) * 10),
+        linalg.softmax(np.asarray([0, 0.1]), temperature=0.1),
+        [0.26894142, 0.73105858]
+    )
+    check_consistency(
+        linalg.softmax(np.asarray([[[0], [0.1]]]), temperature=0.00001, axis=1),
+        linalg.softmax(np.asarray([[[0], [0.1]]]), temperature=0, axis=1),
+        [[[0], [1]]]
+    )
