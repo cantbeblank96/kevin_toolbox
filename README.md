@@ -47,4 +47,5 @@ pip install kevin-toolbox  --no-dependencies
   - patches.for_numpy.linalg
     - 【new feature】modify softmax()
       - 新增了 temperature 参数，该参数起到对输入中的相对小/大值的抑制/增强作用。
+      - 新增了 b_use_log_over_x 参数，用于简化 softmax(log(x)) 计算。
       - 添加了对应的测试用例。
