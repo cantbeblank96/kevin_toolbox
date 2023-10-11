@@ -22,3 +22,8 @@ def test_softmax():
         linalg.softmax(np.asarray([0.1, 0.9]), temperature=0.5, b_use_log_over_x=True),
         [0.01219512, 0.98780488]
     )
+    check_consistency(
+        linalg.softmax(np.asarray([[[0.1], [0.1]]]), temperature=0.00001, axis=1),
+        linalg.softmax(np.asarray([[[0.1], [0.1]]]), temperature=0, axis=1),
+        [[[0.5], [0.5]]]
+    )

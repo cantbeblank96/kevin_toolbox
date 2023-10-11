@@ -24,6 +24,7 @@ def softmax(x, axis=-1, temperature=None, b_use_log_over_x=False):
         # quick
         res = np.zeros_like(x)
         res = np.where(x == np.max(x, axis=axis), 1, res)
+        res = res / np.sum(res, axis=axis, keepdims=True)
     elif b_use_log_over_x:
         # softmax(log(x))
         x = x ** (1 / temperature)
