@@ -5,6 +5,7 @@ import torch
 import numpy as np
 from kevin_toolbox.patches.for_test import check_consistency
 import kevin_toolbox.nested_dict_list as ndl
+from kevin_toolbox.nested_dict_list import name_handler, serializer
 from kevin_toolbox.nested_dict_list.serializer.variable import Strictness_Level
 from kevin_toolbox.computer_science.algorithm.for_dict import deep_update
 
@@ -26,16 +27,16 @@ def test_write_and_read_0():
 
     # for write
     settings = [
-        {"match_cond": lambda _, idx, value: "paras" == ndl.name_handler.parse_name(name=idx)[2][-1],
+        {"match_cond": lambda _, idx, value: "paras" == name_handler.parse_name(name=idx)[2][-1],
          "backend": (":pickle",),
          "traversal_mode": "dfs_post_order"},
         {"match_cond": "<level>-1",
          "backend": (":numpy:bin", ":torch:tensor")},
         {"match_cond":
-             f'<node>{ndl.name_handler.build_name(root_node="", method_ls=[":", ":"], node_ls=["model", "name@1"])}',
+             f'<node>{name_handler.build_name(root_node="", method_ls=[":", ":"], node_ls=["model", "name@1"])}',
          "backend": (":skip:simple",)},
         {"match_cond":
-             f'<node>{ndl.name_handler.build_name(root_node="", method_ls=["@", ], node_ls=[(1, 2, 3), ])}',
+             f'<node>{name_handler.build_name(root_node="", method_ls=["@", ], node_ls=[(1, 2, 3), ])}',
          "backend": (":json",)},
         {"match_cond": lambda _, __, value: not isinstance(value, (list, dict)),
          "backend": (":skip:simple",)},
@@ -86,7 +87,7 @@ def test_write_and_read_0():
     ]
 
     _hook_for_debug = dict()
-    ndl.serializer.write(var=var_, output_dir=os.path.join(temp_folder, "var_"), traversal_mode="bfs",
+    serializer.write(var=var_, output_dir=os.path.join(temp_folder, "var_"), traversal_mode="bfs",
                      b_pack_into_tar=True, settings=settings, _hook_for_debug=_hook_for_debug)
     # check
     assert len(_hook_for_debug["processed"]) == len(expected_processed)
@@ -97,7 +98,7 @@ def test_write_and_read_0():
         check_consistency([i[1] for i in nodes], [i[1] for i in nodes_1])
 
     # for read
-    res = ndl.serializer.read(input_path=os.path.join(temp_folder, "var_.tar"))
+    res = serializer.read(input_path=os.path.join(temp_folder, "var_.tar"))
     # check
     check_consistency(res, var_)
 
@@ -121,13 +122,13 @@ def test_write_and_read_1():
         {"match_cond": "<level>-1", "backend": (":skip:simple", ":numpy:npy", ":torch:tensor", ":pickle")},
     ]
 
-    ndl.serializer.write(var=var_, output_dir=os.path.join(temp_folder, "var_1"), traversal_mode="bfs",
+    serializer.write(var=var_, output_dir=os.path.join(temp_folder, "var_1"), traversal_mode="bfs",
                      b_pack_into_tar=True, settings=settings)
     # check
     assert os.path.isfile(os.path.join(temp_folder, "var_1.tar"))
 
     # for read
-    res = ndl.serializer.read(input_path=os.path.join(temp_folder, "var_1.tar"))
+    res = serializer.read(input_path=os.path.join(temp_folder, "var_1.tar"))
     # check
     check_consistency(res, var_)
 
@@ -145,7 +146,7 @@ def test_write_and_read_2():
     }
 
     # for read
-    res = ndl.serializer.read(input_path=os.path.join(data_folder, "var_2"))
+    res = serializer.read(input_path=os.path.join(data_folder, "var_2"))
     # check
     check_consistency(res, var_)
 
@@ -175,17 +176,17 @@ def test_write_and_read_3():
 
     for level in (Strictness_Level.COMPLETE, Strictness_Level.COMPATIBLE):
         with pytest.raises(AssertionError):
-            ndl.serializer.write(var=var_, output_dir=os.path.join(temp_folder, "var_1"), traversal_mode="bfs",
+            serializer.write(var=var_, output_dir=os.path.join(temp_folder, "var_1"), traversal_mode="bfs",
                              b_pack_into_tar=True, settings=settings, strictness_level=level)
 
     for level in (Strictness_Level.IGNORE_FAILURE,):
-        ndl.serializer.write(var=var_, output_dir=os.path.join(temp_folder, "var_1"), traversal_mode="bfs",
+        serializer.write(var=var_, output_dir=os.path.join(temp_folder, "var_1"), traversal_mode="bfs",
                          b_pack_into_tar=True, settings=settings, strictness_level=level)
         # check
         assert os.path.isfile(os.path.join(temp_folder, "var_1.tar"))
 
         # for read
-        res = ndl.serializer.read(input_path=os.path.join(temp_folder, "var_1.tar"))
+        res = serializer.read(input_path=os.path.join(temp_folder, "var_1.tar"))
         # check
         check_consistency(res, deep_update(stem=ndl.copy_(var=var_, b_deepcopy=True), patch={"b": [None, None]}))
 
@@ -220,16 +221,16 @@ def test_write_and_read_4():
 
     for level in (Strictness_Level.COMPLETE, Strictness_Level.COMPATIBLE):
         with pytest.raises(AssertionError):
-            ndl.serializer.write(var=var_, output_dir=os.path.join(temp_folder, "var_1"), traversal_mode="bfs",
+            serializer.write(var=var_, output_dir=os.path.join(temp_folder, "var_1"), traversal_mode="bfs",
                              b_pack_into_tar=True, settings=settings, strictness_level=level)
 
     for level in (Strictness_Level.IGNORE_FAILURE,):
-        ndl.serializer.write(var=var_, output_dir=os.path.join(temp_folder, "var_1"), traversal_mode="bfs",
+        serializer.write(var=var_, output_dir=os.path.join(temp_folder, "var_1"), traversal_mode="bfs",
                          b_pack_into_tar=True, settings=settings, strictness_level=level)
         # check
         assert os.path.isfile(os.path.join(temp_folder, "var_1.tar"))
 
         # for read
-        res = ndl.serializer.read(input_path=os.path.join(temp_folder, "var_1.tar"))
+        res = serializer.read(input_path=os.path.join(temp_folder, "var_1.tar"))
         # check
         check_consistency(res, deep_update(stem=ndl.copy_(var=var_, b_deepcopy=True), patch={None: None}))

@@ -1,5 +1,5 @@
 import copy
-import kevin_toolbox.nested_dict_list as ndl
+from kevin_toolbox.nested_dict_list import traverse
 import torch
 
 
@@ -121,9 +121,9 @@ def _copy_structure(var, b_keep_internal_references):
         else:
             return value.copy()
 
-    return ndl.traverse(var=[var], match_cond=lambda _, __, value: isinstance(value, (list, dict,)),
-                        action_mode="replace", converter=converter,
-                        traversal_mode="dfs_pre_order", b_traverse_matched_element=True)[0]
+    return traverse(var=[var], match_cond=lambda _, __, value: isinstance(value, (list, dict,)),
+                    action_mode="replace", converter=converter,
+                    traversal_mode="dfs_pre_order", b_traverse_matched_element=True)[0]
 
 
 def _copy_nodes(var, b_keep_internal_references):
@@ -147,9 +147,9 @@ def _copy_nodes(var, b_keep_internal_references):
         else:
             return copy_item(value)
 
-    return ndl.traverse(var=[var], match_cond=lambda _, __, value: not isinstance(value, (list, dict,)),
-                        action_mode="replace", converter=converter,
-                        traversal_mode="dfs_pre_order", b_traverse_matched_element=True)[0]
+    return traverse(var=[var], match_cond=lambda _, __, value: not isinstance(value, (list, dict,)),
+                    action_mode="replace", converter=converter,
+                    traversal_mode="dfs_pre_order", b_traverse_matched_element=True)[0]
 
 
 if __name__ == '__main__':
