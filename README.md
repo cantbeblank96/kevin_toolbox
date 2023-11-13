@@ -27,7 +27,7 @@ pip install kevin-toolbox  --no-dependencies
 
 [版本更新记录](./notes/Release_Record.md)：
 
-- v 1.2.8 （）【new feature】
+- v 1.2.8 （2023-11-13）【new feature】
   - data_flow.file.markdown
     - 【new feature】modify generate_table()
       - 支持两种输入模式（新增了第二种模式）
@@ -49,3 +49,9 @@ pip install kevin-toolbox  --no-dependencies
       - 新增了 temperature 参数，该参数起到对输入中的相对小/大值的抑制/增强作用。
       - 新增了 b_use_log_over_x 参数，用于简化 softmax(log(x)) 计算。
       - 添加了对应的测试用例。
+  - nested_dict_list
+    - 改造模块加载方式，不再支持通过x.y间接加载子模块，比如 nested_dict_list.serializer 等（相当于回退到1.2.6）
+  - computer_science.algorithm.statistician
+    - 进行重构，从 Average_Accumulator 和 Exponential_Moving_Average 中抽象出基类 Accumulator_Base。
+    - 【new feature】在 Accumulator_Base 中增加了 load_state_dict() 和 state_dict() 接口用于加载和获取实例状态。
+      - 增加了对应的测试用例。
