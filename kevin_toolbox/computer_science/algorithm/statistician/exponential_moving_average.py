@@ -1,10 +1,7 @@
-import copy
-import torch
-import numpy as np
-from kevin_toolbox.computer_science.algorithm.statistician._init_var import _init_var
+from kevin_toolbox.computer_science.algorithm.statistician import Accumulator_Base
 
 
-class Exponential_Moving_Average:
+class Exponential_Moving_Average(Accumulator_Base):
     """
         滑动平均器
             支持为每个输入数据配置不同的权重
@@ -59,12 +56,7 @@ class Exponential_Moving_Average:
         # 校验参数
         assert isinstance(paras["keep_ratio"], (int, float,)) and 0 <= paras["keep_ratio"] <= 1
         #
-        self.paras = paras
-        self.var = _init_var(like=paras["like"], data_format=paras["data_format"])
-        self.state = dict(
-            total_nums=0,
-            bias_fix=1,
-        )
+        super(Exponential_Moving_Average, self).__init__(**paras)
 
     def add_sequence(self, var_ls, weight_ls=None):
         if weight_ls is not None:
@@ -87,7 +79,7 @@ class Exponential_Moving_Average:
                                         默认为 1
         """
         if self.var is None:
-            self.var = _init_var(like=var)
+            self.var = self._init_var(like=var)
         new_ratio = (1 - self.paras["keep_ratio"]) * weight
         keep_ratio = (1 - new_ratio)
         # 累积
@@ -113,18 +105,18 @@ class Exponential_Moving_Average:
         else:
             return self.var
 
-    def clear(self):
-        self.var = _init_var(like=self.var)
-        self.state = dict(
+    @staticmethod
+    def _init_state():
+        return dict(
             total_nums=0,
             bias_fix=1,
         )
 
-    def __len__(self):
-        return self.state["total_nums"]
-
 
 if __name__ == '__main__':
+    import torch
+    import numpy as np
+
     seq = list(torch.tensor(range(1, 10)))
     wls = np.asarray([0.1] * 5 + [0.9] + [0.1] * 4) * 0.1
     ema = Exponential_Moving_Average(keep_ratio=0.9, bias_correction=True)

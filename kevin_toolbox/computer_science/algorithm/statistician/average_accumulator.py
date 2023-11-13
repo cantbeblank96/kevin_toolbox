@@ -1,10 +1,7 @@
-import copy
-import torch
-import numpy as np
-from kevin_toolbox.computer_science.algorithm.statistician._init_var import _init_var
+from kevin_toolbox.computer_science.algorithm.statistician import Accumulator_Base
 
 
-class Average_Accumulator:
+class Average_Accumulator(Accumulator_Base):
     """
         用于计算平均值的累积器
     """
@@ -30,30 +27,13 @@ class Average_Accumulator:
                         以上三种方式，默认选用最后一种。
                         如果三种方式同时被指定，则优先级与对应方式在上面的排名相同。
         """
+        super(Average_Accumulator, self).__init__(**kwargs)
 
-        # 默认参数
-        paras = {
-            # 指定输入数据的形状、设备
-            "data_format": None,
-            "like": None,
-        }
-
-        # 获取参数
-        paras.update(kwargs)
-
-        # 校验参数
-        #
-        self.paras = paras
-        self.var = _init_var(like=paras["like"], data_format=paras["data_format"])
-        self.state = dict(
-            total_nums=0,
-        )
-
-    def add_sequence(self, var_ls):
+    def add_sequence(self, var_ls, **kwargs):
         for var in var_ls:
             self.add(var)
 
-    def add(self, var):
+    def add(self, var, **kwargs):
         """
             添加单个数据
 
@@ -61,12 +41,12 @@ class Average_Accumulator:
                 var:                数据
         """
         if self.var is None:
-            self.var = _init_var(like=var)
+            self.var = self._init_var(like=var)
         # 累积
         self.var += var
         self.state["total_nums"] += 1
 
-    def get(self):
+    def get(self, **kwargs):
         """
             获取当前累加的平均值
                 当未有累积时，返回 None
@@ -75,17 +55,10 @@ class Average_Accumulator:
             return None
         return self.var / len(self)
 
-    def clear(self):
-        self.var = _init_var(like=self.var)
-        self.state = dict(
-            total_nums=0,
-        )
-
-    def __len__(self):
-        return self.state["total_nums"]
-
 
 if __name__ == '__main__':
+    import torch
+
     seq = list(torch.tensor(range(1, 10)))
     avg = Average_Accumulator()
     for i, v in enumerate(seq):
