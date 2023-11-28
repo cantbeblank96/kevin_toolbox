@@ -3,7 +3,6 @@ import time
 from kevin_toolbox.patches import for_os
 from kevin_toolbox.data_flow.file import json_
 import kevin_toolbox.nested_dict_list as ndl
-from kevin_toolbox.nested_dict_list.serializer.variable import SERIALIZER_BACKEND
 
 
 def read(input_path, **kwargs):
@@ -13,6 +12,8 @@ def read(input_path, **kwargs):
         参数：
             input_path:             <path> 文件夹或者 .tar 文件，具体结构参考 write()
     """
+    from kevin_toolbox.nested_dict_list.serializer.variable import SERIALIZER_BACKEND
+
     assert os.path.exists(input_path)
 
     # 解压

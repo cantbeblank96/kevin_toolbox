@@ -6,7 +6,7 @@ from kevin_toolbox.data_flow.file import json_
 from kevin_toolbox.patches import for_os
 import kevin_toolbox.nested_dict_list as ndl
 from kevin_toolbox.nested_dict_list.traverse import Traversal_Mode
-from kevin_toolbox.nested_dict_list.serializer.variable import SERIALIZER_BACKEND, Strictness_Level
+from .enum_variable import Strictness_Level
 
 
 def write(var, output_dir, settings=None, traversal_mode=Traversal_Mode.BFS, b_pack_into_tar=True,
@@ -83,6 +83,7 @@ def write(var, output_dir, settings=None, traversal_mode=Traversal_Mode.BFS, b_p
                                                                                             的 backend 之后仍然无法写入
                                         默认是 "normal"
     """
+    from kevin_toolbox.nested_dict_list.serializer.variable import SERIALIZER_BACKEND
 
     #
     traversal_mode = Traversal_Mode(traversal_mode)

@@ -6,7 +6,7 @@ import numpy as np
 from kevin_toolbox.patches.for_test import check_consistency
 import kevin_toolbox.nested_dict_list as ndl
 from kevin_toolbox.nested_dict_list import name_handler, serializer
-from kevin_toolbox.nested_dict_list.serializer.variable import Strictness_Level
+from kevin_toolbox.nested_dict_list.serializer import Strictness_Level
 from kevin_toolbox.computer_science.algorithm.for_dict import deep_update
 
 temp_folder = os.path.join(os.path.dirname(__file__), "temp")

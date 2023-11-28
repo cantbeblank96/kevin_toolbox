@@ -88,6 +88,21 @@ def test_set_value_1():
     check_consistency([None, 1], y)
 
 
+def test_set_value_2():
+    print("test nested_dict_list.set_value()")
+
+    #
+    y = ndl.set_value(var=None, name=":1", value=1, b_force=True)
+    check_consistency({"1": 1}, y)
+
+    # 为了验证bug（无法在 var=None 对 var 进行多层强制的设置）是否修复
+    y = ndl.set_value(var=None, name=":1:2", value=1, b_force=True)
+    check_consistency({"1": {"2": 1}}, y)
+    #
+    y = ndl.set_value(var=None, name=":1@2", value=1, b_force=True)
+    check_consistency({"1": [None, None, 1]}, y)
+
+
 def test_traverse_0():
     print("test nested_dict_list.traverse()")
 
