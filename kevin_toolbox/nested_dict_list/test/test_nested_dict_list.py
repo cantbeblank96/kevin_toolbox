@@ -89,18 +89,40 @@ def test_set_value_1():
 
 
 def test_set_value_2():
+    """
+        为了验证以下bug是否修复：
+            - 无法在 var=None 对 var 进行多层强制的设置
+    """
     print("test nested_dict_list.set_value()")
 
     #
     y = ndl.set_value(var=None, name=":1", value=1, b_force=True)
     check_consistency({"1": 1}, y)
 
-    # 为了验证bug（无法在 var=None 对 var 进行多层强制的设置）是否修复
+    #
     y = ndl.set_value(var=None, name=":1:2", value=1, b_force=True)
     check_consistency({"1": {"2": 1}}, y)
     #
     y = ndl.set_value(var=None, name=":1@2", value=1, b_force=True)
     check_consistency({"1": [None, None, 1]}, y)
+
+
+def test_set_value_3():
+    """
+        为了验证以下bug是否修复：
+            - 对于method=@,但是node不为正整数的name，错误地使用了list进行构建
+    """
+    print("test nested_dict_list.set_value()")
+
+    #
+    name = ":for_exp:optimizer:ema_s:for_first_moment@(0, 55)"
+    value = 233
+
+    var = ndl.set_value(var=None, name=name, value=value, b_force=True)
+
+    #
+    check_consistency(ndl.get_value(var=var, name=name), value)
+    check_consistency(var, {'for_exp': {'optimizer': {'ema_s': {'for_first_moment': {(0, 55): value}}}}})
 
 
 def test_traverse_0():

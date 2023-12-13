@@ -28,8 +28,11 @@ pip install kevin-toolbox  --no-dependencies
 [版本更新记录](./notes/Release_Record.md)：
 
 - v 1.2.9 （）【bug fix】【new feature】【incompatible change】
-  - nested_dict_list.serializer
-    - 【bug fix】fix bug in read() and write()，解除这两个函数中出现的 nested_dict_list 和 kevin_toolbox.computer_science.algorithm.registration.Registry 模块之间的交叉引用。
+  - nested_dict_list
+    - serializer
+      - 【bug fix】fix bug in read() and write()，解除这两个函数中出现的 nested_dict_list 和 kevin_toolbox.computer_science.algorithm.registration.Registry 模块之间的交叉引用。
+    - 【bug fix】fix bug in set_value()，对于使用method=@，但是node不为正整数的name进行强制写入的情况，未修复前表现为错误地尝试使用list进行构建并报错，现修复为使用 dict 进行构建。在新的策略下，对于强制写入，只有 method=@ 且 node 为非负正整数的情况下才会使用 list 进行构建，其他一律用 dict。
+      - 添加了对应的测试用例。
   - patches.for_os
     - 【new feature】add walk()，该方法在 os.walk() 的基础上增加了 ignore_s 参数，用于设定规则排除特定的目录和文件。相较于先使用 os.walk() 递归遍历这个目录，再对内容进行逐个过滤筛选的这种方式，本方法在遍历过程中就可以使用规则进行过滤并决定是否要继续深入遍历，更加高效。
       - 补充了对应的测试用例。

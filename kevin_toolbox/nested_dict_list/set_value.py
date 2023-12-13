@@ -52,11 +52,17 @@ def set_value(var, name, value, b_force=False):
             raise ValueError(f'The location pointed to by name {name} does not exist in var')
         else:
             if method_ls[-1] in "|:":
+                # 对于字符串默认使用 dict 构建
                 value = {raw_key: value}
             else:
+                # 对于需要eval的情况
                 key = eval(raw_key)
-                assert isinstance(key, (int,)) and key >= 0
-                value = [None] * key + [value]
+                if isinstance(key, (int,)) and key >= 0:
+                    # 只有当 key 为非负整数时，才会使用 list 构建
+                    value = [None] * key + [value]
+                else:
+                    # 其他，比如当 key 为元组、浮点数等等时，则使用 dict 构建
+                    value = {key: value}
             var = set_value(var=var, name=name[:-1 - len(node_ls[-1])], value=value, b_force=b_force)
 
     return var
