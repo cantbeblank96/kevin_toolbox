@@ -1,0 +1,1 @@
+from .c_func import b_func

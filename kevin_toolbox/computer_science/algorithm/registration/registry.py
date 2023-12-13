@@ -4,6 +4,8 @@ import inspect
 import pkgutil
 import weakref
 import kevin_toolbox.nested_dict_list as ndl
+from kevin_toolbox.patches import for_os
+from kevin_toolbox.patches.for_os import Path_Ignorer, Ignore_Scope
 
 
 class Registry:
@@ -218,14 +220,22 @@ class Registry:
 
     # -------------------- 通过路径添加 --------------------- #
 
-    def collect_from_paths(self, path_ls=None, path_ls_to_exclude=None, b_execute_now=False):
+    def collect_from_paths(self, path_ls=None, ignore_s=None, b_execute_now=False):
         """
             遍历 path_ls 下的所有模块，并自动导入其中主要被注册的部分
                 比如被 register() 装饰器包裹或者通过 add() 添加的部分
 
             参数：
                 path_ls:            <list of paths> 需要搜索的目录
-                path_ls_to_exclude: <list of paths> 需要排除的目录
+                ignore_s:           <list/tuple of dict> 在搜索遍历目录时候要执行的排除规则
+                                        具体设置方式参考 patches.for_os.walk() 中的 ignore_s 参数。
+                                        比如使用下面的规则就可以排除待搜索目录下的所有 temp/ 和 test/ 文件夹：
+                                        [
+                                            {
+                                                "func": lambda _, __, path: os.path.basename(path) in ["temp", "test"],
+                                                "scope": ["root", "dirs"]
+                                            },
+                                        ]
                 b_execute_now:      <boolean> 现在就执行导入
                                         默认为 False，将等到第一次执行 get() 函数时才会真正尝试导入
 
@@ -243,10 +253,13 @@ class Registry:
             f'calling Registry.collect_from_paths() in __init__.py is forbidden, file: {caller_frame.filename}.\n' \
             f'you can call it in other files, and then import the result of the call in __init__.py'
 
+        # 根据 ignore_s 构建 Path_Ignorer
+        path_ignorer = ignore_s if isinstance(ignore_s, (Path_Ignorer,)) else Path_Ignorer(ignore_s=ignore_s)
+
         #
         if not b_execute_now:
             self._path_to_collect.append(
-                dict(path_ls=path_ls, path_ls_to_exclude=path_ls_to_exclude, b_execute_now=True))
+                dict(path_ls=path_ls, ignore_s=path_ignorer, b_execute_now=True))
             return
 
         #
@@ -254,27 +267,38 @@ class Registry:
             temp = []
             for path in filter(lambda x: os.path.isdir(x), path_ls):
                 temp.append(path)
-                for root, dirs, _ in os.walk(path, topdown=False):
+                for root, dirs, _ in for_os.walk(path, topdown=False, ignore_s=path_ignorer, followlinks=True):
                     temp.extend([os.path.join(root, i) for i in dirs])
-            if path_ls_to_exclude is not None:
-                for path_ex in path_ls_to_exclude:
-                    if not os.path.exists(path_ex):
-                        continue
-                    for i in reversed(range(len(temp))):
-                        if os.path.samefile(os.path.commonpath([path_ex, temp[i]]), path_ex):
-                            temp.pop(i)
             # 从深到浅导入，可以避免继承引起的 TypeError: super(type, obj) 类型错误
             path_ls = list(set(temp))
             path_ls.sort(reverse=True)
+        path_set = set(path_ls)
 
         temp = None
         for loader, module_name, is_pkg in pkgutil.walk_packages(path_ls):
+            # 判断该模块是否需要导入
+            #   （快速判断）判断该模块所在目录是否在 path_set 中
+            if loader.path not in path_set:
+                continue
+            if is_pkg:
+                #   若不是 package，判断是否满足 Path_Ignorer 中的 dirs 对应的规则
+                path = os.path.dirname(loader.find_module(module_name).path)
+                if path_ignorer(Ignore_Scope.DIRS, True, os.path.islink(path), path):
+                    continue
+            else:
+                #   若该模块是 package，判断该模块的文件路径是否满足 Path_Ignorer 中的 files 对应的规则
+                path = loader.find_module(module_name).path
+                if path_ignorer(Ignore_Scope.FILES, False, os.path.islink(path), path):
+                    continue
+            # 加载模块
             module = loader.find_module(module_name).load_module(module_name)
+            # 选择遍历过程中第一次找到的 Registry 实例
             if temp is None:
                 for name, obj in inspect.getmembers(module):
                     if getattr(obj, "name", None) == Registry.name and getattr(obj, "uid", None) == self.uid:
                         temp = obj
                         break
+
         if temp is not None:
             self.database = temp.database
 
