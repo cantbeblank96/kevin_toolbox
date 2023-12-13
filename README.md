@@ -27,7 +27,7 @@ pip install kevin-toolbox  --no-dependencies
 
 [版本更新记录](./notes/Release_Record.md)：
 
-- v 1.2.9 （）【bug fix】【new feature】【incompatible change】
+- v 1.3.0 （2023-12-13）【bug fix】【new feature】【incompatible change】
   - nested_dict_list
     - serializer
       - 【bug fix】fix bug in read() and write()，解除这两个函数中出现的 nested_dict_list 和 kevin_toolbox.computer_science.algorithm.registration.Registry 模块之间的交叉引用。
