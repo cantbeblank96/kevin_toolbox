@@ -14,7 +14,7 @@ study = optuna.create_study(
 )
 
 
-def test_sample_from_feasible_domain():
+def test_sample_from_feasible_domain_0():
     print("test for_optuna.sample_from_feasible_domain()")
 
     trial = study.ask()
@@ -31,3 +31,20 @@ def test_sample_from_feasible_domain():
     assert isinstance(get_value(var=res, name=":iou_thr_ls@1"), (int,))
     assert isinstance(get_value(var=res, name=":connection"), (int,))
     assert isinstance(get_value(var=res, name=":block_type"), (str,))
+
+
+def test_sample_from_feasible_domain_1():
+    print("test for_optuna.sample_from_feasible_domain()")
+
+    trial = study.ask()
+
+    res, node_vs_paras_s = for_optuna.sample_from_feasible_domain(
+        trial=trial, var=json_.read(file_path=os.path.join(data_dir, "feasible_domain_1.json")),
+        f_p_name_builder=lambda idx, p_type: f"<{p_type}>{idx}",
+        b_use_name_as_idx=False
+    )
+
+    check_consistency({"keep_ratio", "<categorical>hhh:block_type"}, set(node_vs_paras_s.values()),
+                      set(trial.params.keys()))
+    assert isinstance(get_value(var=res, name=":for_ema:keep_ratio"), (float,))
+    assert isinstance(get_value(var=res, name=":hhh\\:block_type"), (str,))

@@ -38,3 +38,10 @@ pip install kevin-toolbox  --no-dependencies
   - computer_science.algorithm.registration
     - 【new feature】【incompatible change】modify Registry.collect_from_paths()，将原有的通过目录前缀匹配来排除目录的 path_ls_to_exclude 参数，替换成通过规则匹配待排除目录的 ignore_s 参数，更加自由灵活。ignore_s 参数的设定方式与 for_os.walk() 中的 ignore_s 参数相同。
       - 添加了对应的测试用例。
+  - patches.for_optuna
+    - 【new feature】【incompatible change】modify sample_from_feasible_domain()，进行了以下改变：
+      - 允许在 <feasible_domain> 中通过 "p_name" 字段来强制指定该参数在 trial 中的注册名称。
+      - 支持通过 f_p_name_builder 和 b_use_name_as_idx 决定如何从 <feasible_domain> 的位置生成参数的注册名称。
+      - 删去了 pre_name 参数，如果要实现原 pre_name 的效果，可以等效使用：
+        - `f_p_name_builder =lambda idx, p_type: f'{pre_name}{idx}'`
+      - 原来返回 var, node_name_ls 改为返回 var, node_vs_paras_s，其中 node_vs_paras_s 是一个`<dict>`，以被采样的节点在 var 中位置的名称作为键，以对应节点在 trial 中注册的参数名为值。

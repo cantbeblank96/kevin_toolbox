@@ -1,0 +1,20 @@
+{
+  "for_ema": {
+    "keep_ratio": {
+      "p_type": "categorical",
+      "p_name": "keep_ratio",
+      "choices": [
+        0.3,
+        0.5,
+        0.7
+      ]
+    }
+  },
+  "hhh:block_type": {
+    "p_type": "categorical",
+    "choices": [
+      ":resnet:blocks:preact",
+      ":resnet:blocks:bottle"
+    ]
+  }
+}
