@@ -135,14 +135,14 @@ class Test_walk:
             res = [list(i) for i in for_os.walk(top, topdown=topdown, followlinks=followlinks)]
             check_consistency(gt, res)
 
-    def test_ignore_s_0(self):
+    def test_ignore_s(self):
         """
             测试 ignore_s 参数
         """
         # 准备测试数据
         temp_dir = self.build_data()
         #
-        ignore_s = [
+        ignore_s_0 = [
             {
                 "func": lambda _, __, path: os.path.basename(path) in ["temp", "g"],
                 "scope": ["root", "dirs"]
@@ -156,6 +156,19 @@ class Test_walk:
                 "scope": ["files", ]
             }
         ]
+        # 另一种等效形式
+        ignore_s_1 = {
+            "root": [
+                lambda _, __, path: os.path.basename(path) in ["temp", "g"],
+                lambda _, b_is_symlink, path: not b_is_symlink and os.path.basename(path).startswith("d"),
+            ],
+            "dirs": [
+                lambda _, __, path: os.path.basename(path) in ["temp", "g"],
+            ],
+            "files": [
+                lambda _, b_is_symlink, path: b_is_symlink or not path.endswith((".png", ".jpg", ".md")),
+            ]
+        }
         """
         按照规则进行排除后，需要遍历的部分：
             temp
@@ -179,7 +192,7 @@ class Test_walk:
             os.path.join(temp_dir, "b", "c", "e"): {"dirs": {"f"}, "files": set()},
             os.path.join(temp_dir, "b", "c", "e", "f"): {"dirs": set(), "files": set()},
         }
-        for topdown, followlinks in itertools.product([True, False], [True, False]):
+        for ignore_s, topdown, followlinks in itertools.product([ignore_s_0, ignore_s_1], [True, False], [True, False]):
             res = dict()
             for root, dirs, files in for_os.walk(temp_dir, topdown=topdown, followlinks=followlinks, ignore_s=ignore_s):
                 res[root] = {"dirs": set(dirs), "files": set(files)}
