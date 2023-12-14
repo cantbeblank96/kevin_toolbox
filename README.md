@@ -48,3 +48,7 @@ pip install kevin-toolbox  --no-dependencies
       - 删去了 pre_name 参数，如果要实现原 pre_name 的效果，可以等效使用：
         - `f_p_name_builder =lambda idx, p_type: f'{pre_name}{idx}'`
       - 原来返回 var, node_name_ls 改为返回 var, node_vs_paras_s，其中 node_vs_paras_s 是一个`<dict>`，以被采样的节点在 var 中位置的名称作为键，以对应节点在 trial 中注册的参数名为值。
+- v 1.3.1 （）【new feature】
+  - nested_dict_list
+    - 【new feature】add set_default()，该方法实现了类似于 dict.setdefault() 的行为，当 name 指向的位置在 var 中不存在时，将会把 default 插入到对应的位置。
+      - 添加了测试用例。

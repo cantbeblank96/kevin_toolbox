@@ -125,6 +125,29 @@ def test_set_value_3():
     check_consistency(var, {'for_exp': {'optimizer': {'ema_s': {'for_first_moment': {(0, 55): value}}}}})
 
 
+def test_set_default():
+    print("test nested_dict_list.set_default()")
+
+    x = None
+
+    # 不存在时创建
+    x = ndl.set_default(var=x, name=":model_paras:name", default="fuck", b_force=True)
+    check_consistency(dict(model_paras=dict(name="fuck", )), x)
+
+    # 存在时不创建
+    #   当给定有 cache 时，只要经过检查就添加到 cache 中
+    cache = set()
+    x = ndl.set_default(var=x, name=":model_paras:name", default="you", b_force=True, cache_for_verified_names=cache)
+    check_consistency(dict(model_paras=dict(name="fuck", )), x)
+    check_consistency({":model_paras:name", }, cache)
+
+    # 当给定有 cache 时，只要检测到 name 在 cache 中，就直接跳过 set_default
+    cache.add(":model_paras:layers")
+    x = ndl.set_default(var=x, name=":model_paras:layers", default=(1, 2, 3), b_force=True,
+                        cache_for_verified_names=cache)
+    check_consistency(dict(model_paras=dict(name="fuck", )), x)
+
+
 def test_traverse_0():
     print("test nested_dict_list.traverse()")
 
