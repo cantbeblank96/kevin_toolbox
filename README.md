@@ -27,7 +27,7 @@ pip install kevin-toolbox  --no-dependencies
 
 [版本更新记录](./notes/Release_Record.md)：
 
-- v 1.3.1 （）【new feature】【bug fix】
+- v 1.3.1 （2024-01-05）【new feature】【bug fix】
   - nested_dict_list
     - 【new feature】add set_default()，该方法实现了类似于 dict.setdefault() 的行为，当 name 指向的位置在 var 中不存在时，将会把 default 插入到对应的位置。
       - 添加了测试用例。

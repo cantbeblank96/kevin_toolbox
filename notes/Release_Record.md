@@ -21,6 +21,46 @@
       - 删去了 pre_name 参数，如果要实现原 pre_name 的效果，可以等效使用：
         - `f_p_name_builder =lambda idx, p_type: f'{pre_name}{idx}'`
       - 原来返回 var, node_name_ls 改为返回 var, node_vs_paras_s，其中 node_vs_paras_s 是一个`<dict>`，以被采样的节点在 var 中位置的名称作为键，以对应节点在 trial 中注册的参数名为值。
+  
+- v 1.3.1 （2024-01-05）【new feature】【bug fix】
+
+  - nested_dict_list
+
+    - 【new feature】add set_default()，该方法实现了类似于 dict.setdefault() 的行为，当 name 指向的位置在 var 中不存在时，将会把 default 插入到对应的位置。
+      - 添加了测试用例。
+
+  - patches.for_optuna
+
+    - 【new feature】add build_sampler()，用于从配置构建采样优化算法实例
+
+    - 【new feature】add build_storage()，用于从配置构建数据库实例
+
+    - 【new feature】add build_study()，用于从配置构建实验
+
+    - 【new feature】add copy_study()，用于复制实验。
+
+      - 该函数改进自 optuna.copy_study，但是支持更多复制方式：内存与静态数据库之间，内存到内存，静态数据库到静态数据库等等。
+
+    - 【new feature】add serialize，新增序列化模块，用于将 optuna 中的 trial、study 对象序列化为可以使用 json 或者 ndl 保存的结构。包含以下子模块：
+
+      - for_trial，包含 dump() 和 load() 方法。
+
+      - for_study，包含 dump() 和 load() 方法。
+
+    - 添加了对应的测试用例。
+
+  - patches.for_numpy.linalg
+
+    - 【bug fix】fix bug in softmax()，修复了当输入的概率分布是整数类型时会引发的异常。
+
+  - computer_science.algorithm.pareto_front
+
+    - modify get_pareto_points_idx()，增加了枚举类型 Direction 用于检查函数的 directions 参数，让其对异常输入能够及时报错。
+
+  - patches
+
+    - 【new feature】add module for_logging，内含 build_logger() 函数用于构建 logger，并注册到给定的 registry 空间中。
+    - 添加了对应的测试用例。
 
 
 
