@@ -18,7 +18,7 @@ def softmax(x, axis=-1, temperature=None, b_use_log_over_x=False):
                                     当设为 True 开启后，该函数将从 softmax 变为：
                                     softmax(log(x))[k] = x_k^{1/t} / sum_{i}( x_i^{1/t} )
     """
-    x = np.asarray(x)
+    x = np.asarray(x, dtype=float)
 
     if temperature == 0:
         # quick
@@ -45,3 +45,4 @@ if __name__ == '__main__':
     print(softmax(np.asarray([0, 0.1]), temperature=0.1))
     print(softmax(np.asarray([[[0], [0.1]]]), temperature=0.00001, axis=1))
     print(softmax(np.asarray([[[0], [0.1]]]), temperature=0, axis=1))
+    print(softmax([0, 1, 2], temperature=0.1))
