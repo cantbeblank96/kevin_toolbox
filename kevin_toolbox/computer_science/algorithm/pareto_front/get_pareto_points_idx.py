@@ -1,4 +1,14 @@
 import numpy as np
+from enum import Enum
+
+
+class Direction(Enum):
+    """
+        优化方向
+    """
+    MAXIMIZE = "maximize"  # 越大越好
+    MINIMIZE = "minimize"  # 越小越好
+    NOT_CARE = "not_care"  # 不考虑该维度
 
 
 def get_pareto_points_idx(points, directions=None):
@@ -9,7 +19,7 @@ def get_pareto_points_idx(points, directions=None):
         参数：
             points:             <list/tuple/np.array> 点集
                                     shape: [nums, dims]
-            directions:         <list/tuple of str> 各个维度的优化方向
+            directions:         <list/tuple of str/Direction> 各个维度的优化方向
                                     shape: [dims]
                                     目前支持以下三种优化方向：
                                         "maximize":     越大越好
@@ -26,12 +36,13 @@ def get_pareto_points_idx(points, directions=None):
     # 计算排序的权重
     if directions is not None:
         weights = []
+        directions = [Direction(i) for i in directions]
         for i, direction in enumerate(directions):
-            if direction == "maximize":
+            if direction is Direction.MAXIMIZE:
                 weights.append(-points[:, i:i + 1])
-            elif direction == "minimize":
+            elif direction is Direction.MINIMIZE:
                 weights.append(points[:, i:i + 1])
-            elif direction == "not_care":
+            else:  # Direction.NOT_CARE
                 pass
         if len(weights) == 0:  # 全部都是 not_care，那就别找了
             return []

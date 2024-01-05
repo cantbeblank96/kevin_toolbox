@@ -49,7 +49,7 @@ pip install kevin-toolbox  --no-dependencies
         - `f_p_name_builder =lambda idx, p_type: f'{pre_name}{idx}'`
       - 原来返回 var, node_name_ls 改为返回 var, node_vs_paras_s，其中 node_vs_paras_s 是一个`<dict>`，以被采样的节点在 var 中位置的名称作为键，以对应节点在 trial 中注册的参数名为值。
   
-- v 1.3.1 （）【new feature】
+- v 1.3.1 （）【new feature】【bug fix】
   - nested_dict_list
     - 【new feature】add set_default()，该方法实现了类似于 dict.setdefault() 的行为，当 name 指向的位置在 var 中不存在时，将会把 default 插入到对应的位置。
       - 添加了测试用例。
@@ -73,5 +73,14 @@ pip install kevin-toolbox  --no-dependencies
       - for_study，包含 dump() 和 load() 方法。
   
     - 添加了对应的测试用例。
+  
+  - patches.for_numpy.linalg
+  
+    - 【bug fix】fix bug in softmax()，修复了当输入的概率分布是整数类型时会引发的异常。
+  
+  - computer_science.algorithm.pareto_front
+  
+    - modify get_pareto_points_idx()，增加了枚举类型 Direction 用于检查函数的 directions 参数，让其对异常输入能够及时报错。
+    - 
   
   
