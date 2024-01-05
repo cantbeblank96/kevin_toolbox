@@ -8,6 +8,7 @@ def test_softmax():
     print("test for_numpy.linalg.softmax()")
 
     check_consistency(
+        linalg.softmax(np.asarray([0, 1], dtype=int)),
         linalg.softmax(np.asarray([0, 0.1]) * 10),
         linalg.softmax(np.asarray([0, 0.1]), temperature=0.1),
         [0.26894142, 0.73105858]
