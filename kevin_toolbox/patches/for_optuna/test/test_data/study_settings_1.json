@@ -1,0 +1,25 @@
+{
+  "for_create_study": {
+    "study_name": "default",
+    "directions": [
+      "maximize",
+      "minimize"
+    ],
+    "sampler": {
+      "name": "TPESampler",
+      "seed": 114514
+    },
+    "storage": {
+      "mode": "sqlite",
+      "db_name": "study.db",
+      "b_clear_before_create": false
+    },
+    "load_if_exists": true,
+    "user_attr_s": {
+      "author": "hsu-kevin"
+    }
+  },
+  "for_optimize": {
+    "n_trials": 200
+  }
+}

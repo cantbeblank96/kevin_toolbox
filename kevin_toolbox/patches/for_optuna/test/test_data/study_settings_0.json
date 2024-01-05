@@ -1,0 +1,24 @@
+{
+  "for_create_study": {
+    "study_name": "default",
+    "direction": "minimize",
+    "sampler": {
+      "name": "GridSampler",
+      "seed": 114514
+    },
+    "storage": {
+      "mode": "mysql",
+      "host": "localhost",
+      "user": "root",
+      "db_name": "test_kevin_toolbox",
+      "b_clear_before_create": true
+    },
+    "load_if_exists": true,
+    "user_attr_s": {
+      "author": "hsu-kevin"
+    }
+  },
+  "for_optimize": {
+    "n_trials": 20
+  }
+}
