@@ -23,7 +23,13 @@ def dump(study: optuna.study.Study):
     keys = ['best_params', 'best_trial', 'best_trials', 'best_value', 'direction', 'directions', 'trials', 'user_attrs']
     if version.compare(optuna.__version__, "<", "3.1.0"):
         keys.append('system_attrs')
-    res_s = {k: getattr(study, k, None) for k in keys}
+    # 【bug fix】不能直接用 res_s = {k: getattr(study, k, None) for k in keys} 以免在获取某些属性时，比如 best_trials，产生错误
+    res_s = dict()
+    for k in keys:
+        try:
+            res_s[k] = getattr(study, k)
+        except:
+            res_s[k] = None
 
     # 其他信息
     res_s["__dict__"] = dict()
