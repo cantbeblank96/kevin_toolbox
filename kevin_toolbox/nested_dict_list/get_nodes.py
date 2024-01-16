@@ -25,21 +25,26 @@ def get_nodes(var, level=-1, b_strict=True):
     assert isinstance(level, (int,))
     if level == 0:
         return [("", var)]
-    res = []
 
-    # 首先找出所有叶节点 level=-1
+    # 首先找出所有叶节点 level=-1，以及空的 level=-2 的节点
+    res = []
+    res_empty = set()
+
     def func(_, idx, v):
         nonlocal res
         if not isinstance(v, (list, dict,)):
             res.append((idx, v))
+        elif len(v) == 0:
+            res_empty.add(idx + "@None")  # 添加哨兵，表示空节点，并不会被实际解释
         return False
 
     traverse(var=var, match_cond=func, action_mode="skip", b_use_name_as_idx=True)
 
     if level != -1:
         names = set()
+        leaf_node_names = res_empty.union(set(i for i, _ in res))
         if level < -1:
-            for name, _ in res:
+            for name in leaf_node_names:
                 root_node, _, node_ls = parse_name(name=name, b_de_escape_node=False)
                 node_ls.insert(0, root_node)
                 temp = [len(i) for i in node_ls[level + 1:]]
@@ -50,7 +55,7 @@ def get_nodes(var, level=-1, b_strict=True):
                     temp = max(temp, 0)
                 names.add(name[:temp])
         elif level > 0:
-            for name, _ in res:
+            for name in leaf_node_names:
                 root_node, _, node_ls = parse_name(name=name, b_de_escape_node=False)
                 node_ls.insert(0, root_node)
                 temp = [len(i) for i in node_ls[:level + 1]]
@@ -61,7 +66,7 @@ def get_nodes(var, level=-1, b_strict=True):
         else:
             raise ValueError
         res.clear()
-        for name in names:
+        for name in names.difference(res_empty):
             res.append((name, get_value(var=var, name=name)))
 
     return res

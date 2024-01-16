@@ -1,5 +1,5 @@
 import re
-from kevin_toolbox.nested_dict_list.name_handler import escape_node
+from .escape_node import escape_node
 
 
 def parse_name(name, b_de_escape_node=True):

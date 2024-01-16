@@ -219,7 +219,7 @@ def test_count_leaf_node_nums():
     check_consistency(0, ndl.count_leaf_node_nums(var=x))
 
 
-def test_get_nodes():
+def test_get_nodes_0():
     print("test nested_dict_list.get_nodes()")
 
     x = [{"d": 3, "c@t": 4}, np.array([[1, 2, 3]])]
@@ -263,6 +263,59 @@ def test_get_nodes():
             for name, value in ndl.get_nodes(var=x, level=level, b_strict=b_strict):
                 check_consistency(value, ndl.get_value(var=x, name=name))
     check_consistency([], ndl.get_nodes(var=x, level=-1))
+
+
+def test_get_nodes_1():
+    print("test nested_dict_list.get_nodes()")
+
+    # 验证是否修复以下bug：
+    #   - 当 level<-1 时，错误地跳过其下叶节点均不存在的节点
+    # （对于 level=-1 的情况，由于本身就是要去遍历叶节点，所以当叶节点为不存在时跳过是合理的，你不可能对不存在的节点进行取值）
+
+    def check(*args, **kwargs):
+        temp_ls = [{k: v for k, v in i} for i in args]
+        check_consistency(*temp_ls, **kwargs)
+
+    # 比如对于下面的例子：
+    var = {
+        "a":
+            {
+                "b":
+                    [],
+                "e":
+                    [1, 2]
+            }
+    }
+    # level=-1 时，返回 [(':a:e@1', 2), (':a:e@0', 1)] 是合理的，因为此时 :a:b 下没有叶节点
+    check(ndl.get_nodes(var=var, level=-1, b_strict=True), [(':a:e@1', 2), (':a:e@0', 1)])
+    # 但是当 level=-2 时，返回的节点就应该包括 :a:b 了，亦即应该是 [(':a:b', []), (':a:e', [1, 2])]
+    # 在 2024-01-16 该 bug 修复前，这种情况错误得返回了 [(':a:e', [1, 2]), ]
+    check(ndl.get_nodes(var=var, level=-2, b_strict=True), ndl.get_nodes(var=var, level=2, b_strict=True),
+          [(':a:b', list()), (':a:e', [1, 2])])
+    var = {
+        "a":
+            {
+                "b":
+                    [
+                        {
+                            "c": [],
+                        },
+                        dict()
+                    ],
+                "e":
+                    [1, 2]
+            },
+        "f": []
+    }
+    check(ndl.get_nodes(var=var, level=-1, b_strict=True), [(':a:e@1', 2), (':a:e@0', 1)])
+    check(ndl.get_nodes(var=var, level=-2, b_strict=True),
+          [(':f', list()), (':a:e', [1, 2]), (':a:b@1', dict()), (':a:b@0:c', list()), ])
+    check(ndl.get_nodes(var=var, level=-3, b_strict=True),
+          [('', var), (':a', var["a"]), (':a:b', var["a"]["b"]), (':a:b@0', var["a"]["b"][0]), ])
+    check(ndl.get_nodes(var=var, level=2, b_strict=True),
+          [(':a:b', var["a"]["b"]), (':a:e', var["a"]["e"])])
+    check(ndl.get_nodes(var=var, level=3, b_strict=True),
+          [(':a:b@0', var["a"]["b"][0]), (':a:b@1', dict()), (':a:e@1', 2), (':a:e@0', 1)])
 
 
 def test_copy_0():
