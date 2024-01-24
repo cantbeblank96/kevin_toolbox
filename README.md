@@ -60,10 +60,11 @@ pip install kevin-toolbox  --no-dependencies
 
     - 【new feature】add module for_logging，内含 build_logger() 函数用于构建 logger，并注册到给定的 registry 空间中。
     - 添加了对应的测试用例。
-  
 - v 1.3.1 （）【bug fix】
   - patches.for_optuna.serialize
     - 【bug fix】fix bug in for_study.dump()，使用 try except 来捕抓并跳过使用 getattr(study, k) 读取 study 中属性时产生的错误。（比如单变量优化时的best_trials参数） 
+    - 【bug fix】fix bug in for_study.dump()，避免意外修改 study 中的属性。
+      - 添加了对应的测试用例。
   - nested_dict_list
     - 【bug fix】fix bug in get_nodes()，修复了遍历非叶节点时，当节点下的叶节点均不存在时会异常跳过该节点的问题。
       - 添加了对应的测试用例。

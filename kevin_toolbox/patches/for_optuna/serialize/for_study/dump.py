@@ -41,7 +41,9 @@ def dump(study: optuna.study.Study):
         res_s["__dict__"][k] = v
 
     # 序列化
-    res_s = ndl.traverse(var=res_s, match_cond=lambda _, __, v: not isinstance(v, (list, dict,)),
+    # 【bug fix】不能对原始的 res_s 进行遍历和替换，以免意外修改 study 中的属性。
+    res_s = ndl.traverse(var=ndl.copy_(var=res_s, b_deepcopy=True),
+                         match_cond=lambda _, __, v: not isinstance(v, (list, dict,)),
                          action_mode="replace", converter=__converter, b_use_name_as_idx=False,
                          b_traverse_matched_element=False)
 
