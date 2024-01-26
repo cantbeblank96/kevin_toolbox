@@ -68,4 +68,6 @@ pip install kevin-toolbox  --no-dependencies
   - nested_dict_list
     - 【bug fix】fix bug in get_nodes()，修复了遍历非叶节点时，当节点下的叶节点均不存在时会异常跳过该节点的问题。
       - 添加了对应的测试用例。
+    - 【new feature】modify set_default()，修改后将默认返回对应name的值，而不是返回整体的var，从而与python dict的setdefault函数的行为对齐。特别地，也支持通过设置b_return_var参数来获取 var。
+      - 修改了对应的测试用例。
 

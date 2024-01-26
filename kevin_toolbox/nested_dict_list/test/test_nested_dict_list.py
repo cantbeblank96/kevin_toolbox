@@ -131,19 +131,23 @@ def test_set_default():
     x = None
 
     # 不存在时创建
-    x = ndl.set_default(var=x, name=":model_paras:name", default="fuck", b_force=True)
+    v, x = ndl.set_default(var=x, name=":model_paras:name", default="fuck", b_force=True, b_return_var=True)
     check_consistency(dict(model_paras=dict(name="fuck", )), x)
+    check_consistency("fuck", v)
 
     # 存在时不创建
     #   当给定有 cache 时，只要经过检查就添加到 cache 中
     cache = set()
-    x = ndl.set_default(var=x, name=":model_paras:name", default="you", b_force=True, cache_for_verified_names=cache)
+    v = ndl.set_default(var=x, name=":model_paras:name", default="you", b_force=True, cache_for_verified_names=cache)
     check_consistency(dict(model_paras=dict(name="fuck", )), x)
+    check_consistency("fuck", v)
     check_consistency({":model_paras:name", }, cache)
 
-    # 当给定有 cache 时，只要检测到 name 在 cache 中，就直接跳过 set_default
+    # 当给定有 cache 时
+    #   只要检测到 name 在 cache 中，但是却无法从 var 中获取时，就会报错
     cache.add(":model_paras:layers")
-    x = ndl.set_default(var=x, name=":model_paras:layers", default=(1, 2, 3), b_force=True,
+    with pytest.raises(Exception):
+        ndl.set_default(var=x, name=":model_paras:layers", default=(1, 2, 3), b_force=True,
                         cache_for_verified_names=cache)
     check_consistency(dict(model_paras=dict(name="fuck", )), x)
 
