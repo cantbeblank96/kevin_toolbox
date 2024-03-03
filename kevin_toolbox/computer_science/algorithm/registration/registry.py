@@ -186,6 +186,7 @@ class Registry:
             self._item_to_add.clear()
         if len(self._path_to_collect) > 0:
             for i in self._path_to_collect:
+                i.setdefault("caller_file", inspect.stack()[1].filename)
                 self.collect_from_paths(**i)
             self._path_to_collect.clear()
 
@@ -220,7 +221,7 @@ class Registry:
 
     # -------------------- 通过路径添加 --------------------- #
 
-    def collect_from_paths(self, path_ls=None, ignore_s=None, b_execute_now=False):
+    def collect_from_paths(self, path_ls=None, ignore_s=None, b_execute_now=False, **kwargs):
         """
             遍历 path_ls 下的所有模块，并自动导入其中主要被注册的部分
                 比如被 register() 装饰器包裹或者通过 add() 添加的部分
@@ -243,14 +244,15 @@ class Registry:
                             1. 在当前脚本中显式导入该实例前，调用了其他脚本执行了该实例的 collect_from_paths() 函数，且设置 b_execute_now=True，
                                 此时若导入的成员中有类，且该类继承自某个父类，且在初始化时使用了 super(xx,self).__init__ 继承初始化函数，将出现
                                 TypeError: super(type, obj): obj must be an instance or subtype of type 的错误
-                            2. 在模块的 __init__.py 文件中使用 collect_from_paths()
+                            2. 在模块的 __init__.py 文件中使用 collect_from_paths() 或间接通过 get() 调用 collect_from_paths()
+                            3. collect_from_paths() 函数中的搜索路径中包含了调用该函数的文件位置。
                         为了避免情况 1，应该尽量避免设置 b_execute_now=True。
                             或者省略 super(xx,self).__init__ 中的参数改为 super().__init__
         """
         # 检查调用位置
-        caller_frame = inspect.stack()[1]
-        assert os.path.basename(caller_frame.filename) != "__init__.py", \
-            f'calling Registry.collect_from_paths() in __init__.py is forbidden, file: {caller_frame.filename}.\n' \
+        caller_file = kwargs.get("caller_file", inspect.stack()[1].filename)
+        assert os.path.basename(caller_file) != "__init__.py", \
+            f'calling Registry.collect_from_paths() in __init__.py is forbidden, file: {caller_file}.\n' \
             f'you can call it in other files, and then import the result of the call in __init__.py'
 
         # 根据 ignore_s 构建 Path_Ignorer
@@ -259,7 +261,7 @@ class Registry:
         #
         if not b_execute_now:
             self._path_to_collect.append(
-                dict(path_ls=path_ls, ignore_s=path_ignorer, b_execute_now=True))
+                dict(path_ls=path_ls, ignore_s=path_ignorer, b_execute_now=True, caller_file=caller_file))
             return
 
         #
@@ -280,16 +282,35 @@ class Registry:
             #   （快速判断）判断该模块所在目录是否在 path_set 中
             if loader.path not in path_set:
                 continue
+            # is_pkg:
+            #   - 为 True 时表示当前遍历到的模块是一个包（即一个包含其他模块或子包的目录）
+            #   - 为 False 时表示当前模块是一个普通的 Python 模块（文件），不包含其他模块或子包。
             if is_pkg:
-                #   若不是 package，判断是否满足 Path_Ignorer 中的 dirs 对应的规则
+                #   若是目录形式的 package，判断是否满足 Path_Ignorer 中的 dirs 对应的规则
                 path = os.path.dirname(loader.find_module(module_name).path)
                 if path_ignorer(Ignore_Scope.DIRS, True, os.path.islink(path), path):
                     continue
             else:
-                #   若该模块是 package，判断该模块的文件路径是否满足 Path_Ignorer 中的 files 对应的规则
+                #   若该模块是 module，判断该模块的文件路径是否满足 Path_Ignorer 中的 files 对应的规则
                 path = loader.find_module(module_name).path
                 if path_ignorer(Ignore_Scope.FILES, False, os.path.islink(path), path):
                     continue
+                #   若该模块与调用的文件相同，则报错。
+                if path == caller_file:
+                    # collect_from_paths() 函数中的搜索路径不应该包含调用该函数文件。
+                    #   因为这样将会导致该函数被自己无限递归调用。
+                    # 要避免这样的错误，你可以选择：
+                    #   1. 将该函数的调用位置放置在待搜索路径外；
+                    #   2. 使用 ignore_s 参数来避免加载该函数的调用位置。
+                    raise RuntimeError(
+                        f'Registry.collect_from_paths(): \n'
+                        f'\tThe search path in a function should not include the file location from which it is called. \n'
+                        f'\tBecause this will cause the function to be called infinitely recursively by itself. \n'
+                        f'To avoid such errors, you can choose: \n'
+                        f'\t1. Place the calling location of this function ({path}) outside the path to be searched; \n'
+                        f'\t2. Use the ignore_s parameter to avoid searching the calling location of the function, '
+                        f'such as {{"func": lambda _, __, path: path == "{path}", "scope": ["files",]}}'
+                    )
             # 加载模块
             module = loader.find_module(module_name).load_module(module_name)
             # 选择遍历过程中第一次找到的 Registry 实例

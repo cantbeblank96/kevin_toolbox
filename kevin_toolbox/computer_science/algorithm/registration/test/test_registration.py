@@ -5,6 +5,10 @@ from kevin_toolbox.patches.for_test import check_consistency
 from kevin_toolbox.patches import for_os
 from kevin_toolbox.computer_science.algorithm.registration import Registry, UNIFIED_REGISTRY
 
+"""
+用于测试 Registry 的基础功能
+"""
+
 
 def test_Registry_0():
     print("test registration.Registry()")

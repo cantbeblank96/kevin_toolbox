@@ -60,7 +60,7 @@ pip install kevin-toolbox  --no-dependencies
 
     - 【new feature】add module for_logging，内含 build_logger() 函数用于构建 logger，并注册到给定的 registry 空间中。
     - 添加了对应的测试用例。
-- v 1.3.1 （）【bug fix】
+- v 1.3.2 （）【bug fix】【new feature】
   - patches.for_optuna.serialize
     - 【bug fix】fix bug in for_study.dump()，使用 try except 来捕抓并跳过使用 getattr(study, k) 读取 study 中属性时产生的错误。（比如单变量优化时的best_trials参数） 
     - 【bug fix】fix bug in for_study.dump()，避免意外修改 study 中的属性。
@@ -70,4 +70,7 @@ pip install kevin-toolbox  --no-dependencies
       - 添加了对应的测试用例。
     - 【new feature】modify set_default()，修改后将默认返回对应name的值，而不是返回整体的var，从而与python dict的setdefault函数的行为对齐。特别地，也支持通过设置b_return_var参数来获取 var。
       - 修改了对应的测试用例。
+  - computer_science.algorithm.registration
+    - 【new feature】改进 Registry 类中的 collect_from_paths() 函数。
+      - 增加一个检查用于避免待搜索路径包含调用该函数的文件。如果包含，则报错，同时提示这样会导致  collect_from_paths() 函数被无限递归调用，从而引起死循环。并建议将该函数的调用位置放置在待搜索路径外，或者使用 ignore_s 将其进行屏蔽。 
 
