@@ -180,15 +180,16 @@ class Registry:
                                     找不到时，若无默认值则报错，否则将返回默认值
         """
         # 加载待注册成员
-        if len(self._item_to_add) > 0:
-            for i in self._item_to_add:
-                self.add(**i)
-            self._item_to_add.clear()
-        if len(self._path_to_collect) > 0:
-            for i in self._path_to_collect:
-                i.setdefault("caller_file", inspect.stack()[1].filename)
-                self.collect_from_paths(**i)
-            self._path_to_collect.clear()
+        while self._item_to_add or self._path_to_collect:
+            if len(self._item_to_add) > 0:
+                for i in self._item_to_add:
+                    self.add(**i)
+                self._item_to_add.clear()
+            if len(self._path_to_collect) > 0:
+                for i in self._path_to_collect:
+                    i.setdefault("caller_file", inspect.stack()[1].filename)
+                    self.collect_from_paths(**i)
+                self._path_to_collect.clear()
 
         return ndl.get_value(var=self.database, name=name, b_pop=b_pop, **kwargs)
 
