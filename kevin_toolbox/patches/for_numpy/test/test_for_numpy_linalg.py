@@ -28,3 +28,18 @@ def test_softmax():
         linalg.softmax(np.asarray([[[0.1], [0.1]]]), temperature=0, axis=1),
         [[[0.5], [0.5]]]
     )
+
+
+def test_entropy():
+    print("test for_numpy.linalg.entropy()")
+
+    check_consistency(
+        linalg.entropy(np.asarray([1, 1, 7, 1], dtype=int), b_need_normalize=True),
+        linalg.entropy([0.1, 0.1, 0.7, 0.1], b_need_normalize=True),
+        0.6783898247235198
+    )
+    check_consistency(
+        linalg.entropy(np.asarray([5, 5, 5, 5, 80], dtype=int), b_need_normalize=True),
+        linalg.entropy([0.05, 0.05, 0.05, 0.05, 0.8], b_need_normalize=True),
+        0.4831881303119284
+    )

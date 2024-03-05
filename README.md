@@ -68,6 +68,8 @@ pip install kevin-toolbox  --no-dependencies
         - 添加了对应的测试用例。
     - for_matplotlib
       - 【new feature】add generate_color_list()，用于生成指定数量的颜色列表，支持对指定颜色的排除。
+    - for_numpy.linalg
+      - 【new feature】add entropy()，用于计算分布的熵。
   - nested_dict_list
     - 【bug fix】fix bug in get_nodes()，修复了遍历非叶节点时，当节点下的叶节点均不存在时会异常跳过该节点的问题。
       - 添加了对应的测试用例。
