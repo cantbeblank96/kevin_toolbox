@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 import os
 import numpy as np
 from kevin_toolbox.data_flow.core.reader import File_Iterative_Reader
-from kevin_toolbox.data_flow.core.cache import Cache_Manager_for_Iterator, Strategies
+from kevin_toolbox.data_flow.core.cache import Cache_Manager_for_Iterator
 
 
 class Unified_Reader_Base(ABC):
@@ -126,10 +126,9 @@ class Unified_Reader_Base(ABC):
         """
             默认使用 Cache_Manager_for_Iterator
         """
-        manager = Cache_Manager_for_Iterator(iterator=iterator, folder_path=folder_path,
-                                             cache_update_strategy=lambda x: Strategies.drop_min_last_time(
-                                                 cache_metadata=x,
-                                                 cache_size_upper_bound=3))
+        manager = Cache_Manager_for_Iterator(
+            iterator=iterator, folder_path=folder_path,
+            paras_for_memo_cache=dict(upper_bound=20, refactor_size=0.7, strategy=":by_last_time:LRU"))
         return manager
 
     def read(self, *args, **kwargs):

@@ -90,4 +90,7 @@ pip install kevin-toolbox  --no-dependencies
           - 删除访问频率最低的部分：`LST_Strategy`，注册名 `":by_survival_time:LST_Strategy"` 等等。
         - 缓存管理器：Cache_Manager（主要用这个）
       - 添加了测试用例。
+  - data_flow.core.cache
+    - modify Cache_Manager_for_Iterator，使用新增的 cache_manager 模块替换 Cache_Manager_for_Iterator 中基于内存的缓存。相关参数有修改。
+      - 添加了测试用例。
 

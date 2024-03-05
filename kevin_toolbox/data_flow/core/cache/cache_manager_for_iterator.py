@@ -2,6 +2,7 @@ import os
 import time
 import importlib.util
 from kevin_toolbox.developing.decorator import restore_original_work_path
+from kevin_toolbox.computer_science.algorithm.cache_manager import Cache_Manager
 
 if importlib.util.find_spec("cPickle") is not None:
     # 如果安装有 cPickle，可以更快处理串行化
@@ -27,29 +28,10 @@ class Cache_Manager_for_Iterator:
                     file_dict:      二进制文件的文件名与序号的对应关系表
                                         例如：{ 0: "0.pkl", 1: "1.pkl", 2: "2.pkl", ...}
                                         其中 index 0 对应于文件 ./temp/cache_name/0.pkl
-            然后在进行读取时，将先到 cache 中寻找是否已经有需要的 chunk 分块，如果没有则到前面 file_dict 中读取，同时更新 cache
+            然后在进行读取时，将先到基于内存的缓存 memo_cache_manager 中寻找是否已经有需要的 chunk 分块，如果没有则到前面 file_dict 中读取，同时更新 memo_cache_manager
                 相关变量：
-                    cache_dict：     缓存
-                                        例如：{ 1: chunk_var_1, 3: chunk_var_3 }
+                    memo_cache_manager： 基于内存的缓存，由 Cache_Manager 构建，指定有更新策略等
                                         其中 key 是 chunk 分块的 index，value 是对应的保存在内存中的变量
-                    cache_metadata:  缓存的属性数据
-                                        包含以下字段，各字段将自动更新
-                                        例如：{ 1: {  "last_time": xxx,      # 最近读取时间
-                                                     "initial_time": xxx,   # 最初读取时间
-                                                     "counts": xxx,         # 读取次数
-                                                     },
-                                               ... }
-                    cache_update_strategy：缓存更新策略
-                                        是一个函数，该函数的输入是 cache_metadata ，输出是需要删除的缓存的序号
-                                        触发：
-                                            在每次出现 cache_dict 无法命中，导致有新的 cache 添加到 cache_dict 时，将会采用该策略进行更新
-                                        现有策略：
-                                            drop_min_counts:    去除读取次数最小的
-                                            drop_min_last_time:    去除最近没有读取的
-                                            drop_min_survival_time:    去除生存时间最短的，生成时间 survival_time:=last_time-initial_time
-                                        默认使用 drop_min_last_time
-                    （cache_dict 的大小受 cache_update_strategy 中的 cache_size 限制，当大小超过限制时，
-                    将根据 cache_update_strategy 去除优先级较低的部分来更新缓存）
 
         支持以下几种方式来：
             以迭代器的形式进行顺序读取
@@ -60,44 +42,43 @@ class Cache_Manager_for_Iterator:
         """
             设定关键参数
             参数：
-                iterator:       迭代器/生成器
-                folder_path:    保存二进制文件的路径
-                cache_update_strategy：缓存更新策略
+                iterator:               迭代器/生成器
+                folder_path:            <path> 构建基于磁盘的缓存时，保存二进制文件的路径
+                paras_for_memo_cache：   <dict> 构建基于内存的缓存的参数
             其他参数：
-                strict_mode:    禁止同时设置 iterator 和给定一个非空的 folder_path
-                                    默认为 True 开启，此时同时设置将报错。
-                                    当设置为 False 时，同时设置将以 folder_path 中的二进制文件为准
-                del_cache_when_exit:    退出时删除生成的缓存二进制文件
-                                    只有在设置了 iterator 的前提下，才会触发。
-                                    （对于非本实例生成的文件，比如只给定了非空的 folder_path，不做删除。）
-                                    默认为 True 开启。
+                b_strict_mode:          <boolean> 禁止同时设置 iterator 和给定一个非空的 folder_path
+                                            默认为 True 开启，此时同时设置将报错。
+                                            当设置为 False 时，同时设置将以 folder_path 中的二进制文件为准
+                b_del_cache_when_exit:  <boolean> 退出时删除生成的缓存二进制文件
+                                            只有在设置了 iterator 的前提下，才会触发。
+                                            （对于非本实例生成的文件，比如只给定了非空的 folder_path，不做删除。）
+                                            默认为 True 开启。
         """
 
         # 默认参数
         paras = {
             "iterator": None,
             "folder_path": None,
-            "cache_update_strategy": None,
-            #
-            "strict_mode": True,
-            "del_cache_when_exit": True,
+            "paras_for_memo_cache": dict(upper_bound=20, refactor_size=0.7, strategy=":by_last_time:LRU",
+                                         cache=":in_memory:Memo"),
+            "b_strict_mode": True,
+            "b_del_cache_when_exit": True,
         }
 
         # 获取参数
         paras.update(kwargs)
 
         # 校验参数
-        # cache_update_strategy
-        if paras["cache_update_strategy"] is None:
-            paras["cache_update_strategy"] = lambda x: Strategies.drop_min_last_time(cache_metadata=x,
-                                                                                     cache_size_upper_bound=10)
+        # paras_for_memo_cache
+        assert isinstance(paras["paras_for_memo_cache"], (dict,))
+        paras["paras_for_memo_cache"]["strategy"] = ":by_last_time:LRU"
         # 同时非空
         b_folder_not_empty = isinstance(paras["folder_path"], (str,)) and paras[
             "folder_path"] is not None and os.path.exists(paras["folder_path"]) and len(
             os.listdir(paras["folder_path"])) > 0
         if paras["iterator"] is not None and b_folder_not_empty:
             # iterator 非空，folder_path 非空
-            if paras["strict_mode"]:
+            if paras["b_strict_mode"]:
                 # 不能同时设置
                 raise Exception(f"Error: folder_path and iterator cannot be set at the same time\n"
                                 f"iterator {paras['iterator']} is given when "
@@ -123,12 +104,11 @@ class Cache_Manager_for_Iterator:
             # 尝试直接根据已有文件构建 file_dict
             file_dict = self.find_chuck_files(paras["folder_path"])
 
+        # 构建基于内存的缓存
+        self.memo_cache_manager = Cache_Manager(**paras["paras_for_memo_cache"])
+
         self.file_dict = file_dict
         self.paras = paras
-
-        # 初始化基于内存的缓存
-        self.cache_dict = dict()
-        self.cache_metadata = dict()
 
         # 记录最后读取的index
         self.index = -1
@@ -181,49 +161,19 @@ class Cache_Manager_for_Iterator:
             chunk = pickle.load(f)
         return chunk
 
-    # ------------------------------------ 基于内存的缓存 ------------------------------------ #
-
-    def __read_from_cache(self, index):
-        """
-            从内存中读取
-        """
-        chunk = self.cache_dict[index]
-        # 更新缓存属性
-        self.cache_metadata[index]["counts"] += 1
-        self.cache_metadata[index]["last_time"] = time.time()
-        return chunk
-
-    def __add_to_cache(self, index, chunk):
-        """
-            添加到内存中
-        """
-        # 更新缓存
-        self.cache_dict[index] = chunk
-        # 更新缓存属性
-        self.cache_metadata[index] = {
-            "last_time": time.time(),  # 最近读取时间
-            "initial_time": time.time(),  # 最初读取时间
-            "counts": 1,  # 读取次数
-        }
-        # 依据策略去除优先级较低的缓存
-        drop_ls = self.paras["cache_update_strategy"](self.cache_metadata)
-        for i in drop_ls:
-            self.cache_dict.pop(i)
-            self.cache_metadata.pop(i)
-
     # ------------------------------------ 读取 ------------------------------------ #
 
     def read(self, index):
         assert 0 <= index < len(self), \
             KeyError(f"Error: index {index} not in [0, {len(self)})")
-        if index in self.cache_dict:
+        if self.memo_cache_manager.has(key=index):
             # 直接从内存中读取
-            chunk = self.__read_from_cache(index)
+            chunk = self.memo_cache_manager.get(key=index)
         else:
             # 到磁盘读取
             chunk = self.__read_from_files(index)
             # 添加到缓存
-            self.__add_to_cache(index, chunk)
+            self.memo_cache_manager.add(key=index, value=chunk)
         self.index = index
         return chunk
 
@@ -246,8 +196,8 @@ class Cache_Manager_for_Iterator:
         return len(self.file_dict)
 
     def __del__(self):
-        if self.paras["iterator"] is not None and self.paras["del_cache_when_exit"] and self.paras["strict_mode"]:
-            # 在 strict_mode 开启，且 iterator 非空的情况下 self.file_dict 中的二进制文件一定是根据 iterator 生成的
+        if self.paras["iterator"] is not None and self.paras["b_del_cache_when_exit"] and self.paras["b_strict_mode"]:
+            # 在 b_strict_mode 开启，且 iterator 非空的情况下 self.file_dict 中的二进制文件一定是根据 iterator 生成的
             # 删除文件
             pwd_bak = os.getcwd()
             os.chdir(self.paras["folder_path"])
@@ -259,97 +209,15 @@ class Cache_Manager_for_Iterator:
                 os.removedirs(self.paras["folder_path"])
 
 
-class Strategies:
-    """
-        现有策略：
-                drop_min_counts:    去除读取次数最小的
-                drop_min_last_time:    去除最近没有读取的
-                drop_min_survival_time:    去除生存时间最短的，生成时间 survival_time:=last_time-initial_time
-    """
-
-    @staticmethod
-    def drop_min_counts(cache_metadata, cache_size_upper_bound, cache_size_after_drop=None):
-        """
-            去除读取次数最小的
-            参数：
-                cache_metadata:  缓存的属性数据
-                                    包含以下字段，各字段将自动更新
-                                    例如：{ 1: {  "last_time": xxx,      # 最近读取时间
-                                                 "initial_time": xxx,   # 最初读取时间
-                                                 "counts": xxx,         # 读取次数
-                                                 },
-                                           ... }
-                cache_size_upper_bound： 当 cache_metadata 的大小超过该值时触发更新
-                cache_size_after_drop：  更新后 cache_metadata 的目标大小
-                                    默认为 cache_size_upper_bound
-        """
-        if cache_size_upper_bound >= len(cache_metadata):
-            return []
-
-        cache_size_after_drop = cache_size_upper_bound if cache_size_after_drop is None else cache_size_after_drop
-        # （这里其实可以用最大堆来优化，但是我懒啊）
-        drop_ls = [i for i, j in sorted(cache_metadata.items(), key=lambda x: x[1]["counts"])[:-cache_size_after_drop]]
-        return drop_ls
-
-    @staticmethod
-    def drop_min_last_time(cache_metadata, cache_size_upper_bound, cache_size_after_drop=None):
-        """
-            去除最近没有读取的
-        """
-        if cache_size_upper_bound >= len(cache_metadata):
-            return []
-
-        cache_size_after_drop = cache_size_upper_bound if cache_size_after_drop is None else cache_size_after_drop
-        drop_ls = [i for i, j in
-                   sorted(cache_metadata.items(), key=lambda x: x[1]["last_time"])[:-cache_size_after_drop]]
-        return drop_ls
-
-    @staticmethod
-    def drop_min_survival_time(cache_metadata, cache_size_upper_bound, cache_size_after_drop=None):
-        """
-            去除生存时间最短的，生成时间 survival_time:=last_time-initial_time
-        """
-        if cache_size_upper_bound >= len(cache_metadata):
-            return []
-
-        cache_size_after_drop = cache_size_upper_bound if cache_size_after_drop is None else cache_size_after_drop
-        drop_ls = [i for i, j in sorted(cache_metadata.items(), key=lambda x: x[1]["last_time"] - x[1]["initial_time"])[
-                                 :-cache_size_after_drop]]
-        return drop_ls
-
-
 if __name__ == '__main__':
-    "测试 Strategies"
-    _cache_metadata = {
-        1: {
-            "last_time": 123,
-            "initial_time": 56,
-            "counts": 2,
-        },
-        2: {
-            "last_time": 110,
-            "initial_time": 0,
-            "counts": 4,
-        },
-        3: {
-            "last_time": 126,
-            "initial_time": 121,
-            "counts": 1,
-        },
-    }
-
-    print(Strategies.drop_min_counts(_cache_metadata, 2))
-    print(Strategies.drop_min_last_time(_cache_metadata, 1))
-    print(Strategies.drop_min_survival_time(_cache_metadata, 1))
-
     "测试 Cache_Manager_for_Iterator"
-    cache_manager = Cache_Manager_for_Iterator(iterator=range(10),
-                                               del_cache_when_exit=True,
-                                               cache_update_strategy=lambda x: Strategies.drop_min_last_time(
-                                                   cache_metadata=x,
-                                                   cache_size_upper_bound=3))
+    cache_manager = Cache_Manager_for_Iterator(
+        iterator=range(10),
+        b_del_cache_when_exit=True,
+        paras_for_memo_cache=dict(upper_bound=3, refactor_size=3, strategy=":by_last_time:LRU")
+    )
     print(cache_manager.file_dict)
-    print(cache_manager.cache_metadata)
+    print(cache_manager.memo_cache_manager.metadata_s)
     for i in range(3):
         print(cache_manager.read(0))
     for i in range(2):
@@ -358,4 +226,4 @@ if __name__ == '__main__':
         print(cache_manager.read(6))
     for i in range(4):
         print(cache_manager.read(9))
-    print(cache_manager.cache_metadata)
+    print(cache_manager.memo_cache_manager.metadata_s)
