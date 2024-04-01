@@ -1,4 +1,4 @@
-from kevin_toolbox.math.utils import spilt_integer_most_evenly
+from kevin_toolbox.math.utils import split_integer_most_evenly
 
 
 def generate_table(content_s, orientation="vertical", chunk_nums=None, chunk_size=None, b_allow_misaligned_values=False,
@@ -60,7 +60,7 @@ def generate_table(content_s, orientation="vertical", chunk_nums=None, chunk_siz
     # 按照 chunk_nums 或者 chunk_size 对表格进行分割
     if chunk_nums is not None or chunk_size is not None:
         if chunk_nums is not None:
-            split_len_ls = spilt_integer_most_evenly(x=max_length, group_nums=chunk_nums)
+            split_len_ls = split_integer_most_evenly(x=max_length, group_nums=chunk_nums)
         else:
             split_len_ls = [chunk_size] * (max_length // chunk_size)
             if max_length % chunk_size != 0:

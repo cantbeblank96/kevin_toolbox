@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def spilt_integer_most_evenly(x, group_nums):
+def split_integer_most_evenly(x, group_nums):
     assert isinstance(x, (int, np.integer,)) and x >= 0 and group_nums > 0
 
     res = np.ones(group_nums, dtype=int) * (x // group_nums)
@@ -10,4 +10,4 @@ def spilt_integer_most_evenly(x, group_nums):
 
 
 if __name__ == '__main__':
-    print(spilt_integer_most_evenly(x=100, group_nums=7))
+    print(split_integer_most_evenly(x=100, group_nums=7))
