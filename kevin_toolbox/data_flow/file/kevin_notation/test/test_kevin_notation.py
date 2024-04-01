@@ -134,11 +134,23 @@ def test_writer_1(expected_metadata, expected_content, file_path):
                          zip(metadata_ls, content_ls, file_path_ls))
 def test_read(expected_metadata, expected_content, file_path):
     print("test read()")
-    # 读取
+    # 使用 file_path 读取
     metadata, content = kevin_notation.read(file_path=file_path)
+
+    # 使用 file_obj 读取
+    file_obj = open(file_path, "r")
+    metadata_1, content_1 = kevin_notation.read(file_obj=file_obj)
+    assert len(file_obj.read()) > 0  # 不影响输入的 file_obj
+
+    # 使用字符串构造 file_obj 读取
+    from io import StringIO
+    file_obj = StringIO(initial_value=open(file_path, "r").read())
+    metadata_2, content_2 = kevin_notation.read(file_obj=file_obj)
+    assert len(file_obj.read()) > 0
+
     # 检验
-    check_consistency(expected_metadata, metadata)
-    check_consistency(expected_content, content)
+    check_consistency(expected_metadata, metadata, metadata_1, metadata_2)
+    check_consistency(expected_content, content, content_1, content_2)
 
 
 @pytest.mark.parametrize("expected_metadata, expected_content, file_path",

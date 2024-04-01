@@ -15,6 +15,8 @@ class Kevin_Notation_Reader:
 
             必要参数：
                 file_path:          <string> 文件路径
+                file_obj:           <file object> 文件对象
+                    以上参数2选一，具体参见 File_Iterative_Reader
             读取相关参数：
                 chunk_size:         <integer> 每次读取多少行数据
                 beg：                <integer> 开始读取的位置
@@ -28,6 +30,7 @@ class Kevin_Notation_Reader:
         paras = {
             # 必要参数
             "file_path": None,
+            "file_obj": None,
             # 读取相关参数
             "chunk_size": 100,
             "beg": 0,
@@ -38,9 +41,7 @@ class Kevin_Notation_Reader:
         paras.update(kwargs)
 
         # 校验参数
-        assert isinstance(paras["file_path"], (str,)) and os.path.isfile(paras["file_path"]), \
-            f'file not exists :{paras["file_path"]}'
-        #
+        #   file_path 和 file_obj 交给 File_Iterative_Reader 校验
         assert isinstance(paras["chunk_size"], (int,)) and (paras["chunk_size"] > 0 or paras["chunk_size"] == -1)
         assert isinstance(paras["beg"], (int,)) and paras["beg"] >= 0
         assert isinstance(paras["converter"], (Converter, dict,))
@@ -48,7 +49,7 @@ class Kevin_Notation_Reader:
         self.paras = paras
 
         # 读取开头
-        self.reader = File_Iterative_Reader(file_path=self.paras["file_path"],
+        self.reader = File_Iterative_Reader(file_path=self.paras["file_path"], file_obj=self.paras["file_obj"],
                                             pre_jump_size=self.paras["beg"],
                                             filter_=lambda x: x != "\n" and not x.startswith("//"),  # 去除注释
                                             map_func=lambda x: x.rsplit("\n", 1)[0].split("//", 1)[0],
@@ -64,7 +65,7 @@ class Kevin_Notation_Reader:
         del self.reader
 
         # 读取内容
-        self.reader = File_Iterative_Reader(file_path=self.paras["file_path"],
+        self.reader = File_Iterative_Reader(file_path=self.paras["file_path"], file_obj=self.paras["file_obj"],
                                             pre_jump_size=self.paras["beg"] + offset,
                                             filter_=lambda x: x != "\n" and not x.startswith("//"),  # 去除注释
                                             map_func=lambda x: x.rsplit("\n", 1)[0].split("//", 1)[0],
