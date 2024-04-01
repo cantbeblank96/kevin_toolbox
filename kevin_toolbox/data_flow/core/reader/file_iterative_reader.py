@@ -1,4 +1,5 @@
 import os
+import copy
 
 
 class File_Iterative_Reader:
@@ -12,11 +13,14 @@ class File_Iterative_Reader:
             设定关键参数
             必要参数：
                 file_path:  文件路径
+                file_obj:   文件对象
+                    注意！！以上两个参数指定其一即可，同时指定时候，以后者为准。
             读取模式相关参数：
                 paras_for_open:     open() 函数的补充参数
                 mode:       读取模式，默认为 "lines"
                                 "lines"：  按行数计算批次大小
                                 "bytes"：  按字节数计算
+                    注意！！以上两个参数在指定了 file_obj 参数后将失效。
                 chunk_size: 批次大小
                                 默认为 1k
                                 当为-1时，读取整个文件
@@ -51,6 +55,7 @@ class File_Iterative_Reader:
         paras = {
             # 必要参数
             "file_path": None,
+            "file_obj": None,
             # 读取模式相关参数
             "paras_for_open": dict(mode="r", encoding='utf-8'),
             "mode": "lines",
@@ -74,16 +79,21 @@ class File_Iterative_Reader:
         assert mode in ["lines", "bytes"]
         paras["chunk_size"] = int(paras["chunk_size"])
         paras["loop_num"] = int(paras["loop_num"]) - 1
-        #
-        file_path = paras["file_path"]
-        assert isinstance(file_path, (str,)) and os.path.exists(file_path), \
-            Exception(f"Error: file {file_path} not exists!")
-        #
-        paras_for_open = paras["paras_for_open"]
-        assert isinstance(paras_for_open, (dict,))
 
         # 获取文件对象
-        self.file = open(file_path, **paras_for_open)
+        if paras["file_obj"] is None:
+            assert isinstance(paras["file_path"], (str,)) and os.path.isfile(paras["file_path"]), \
+                Exception(f'Error: file {paras["file_path"]} not exists!')
+            #
+            assert isinstance(paras["paras_for_open"], (dict,))
+            self.file = open(paras["file_path"], **paras["paras_for_open"])
+        else:
+            # 拷贝对象，防止修改外部对象
+            try:
+                self.file = copy.deepcopy(paras["file_obj"])
+            except:
+                self.file = open(paras["file_obj"].name, mode=paras["file_obj"].mode)
+
         # 选择相应模式
         self.__read_func = {"lines": self.__read_lines, "bytes": self.__read_bytes}[mode]
         self.__jump_func = {"lines": self.__jump_lines, "bytes": self.__jump_bytes}[mode]
@@ -225,9 +235,34 @@ class File_Iterative_Reader:
 if __name__ == "__main__":
     import numpy as np
 
-    reader = File_Iterative_Reader(file_path="developing/test_data.txt", chunk_size=2, drop=True, loop_num=2,
+    print("使用 file_path")
+    reader = File_Iterative_Reader(file_path="test/test_data/test_data.txt", chunk_size=2, drop=True, loop_num=2,
                                    pre_jump_size=3, convert_func=lambda x: np.array(x))
     for i in reader:
         print(i)
+
+    del reader
+
+    print("使用 file_obj")
+    reader = File_Iterative_Reader(
+        file_obj=open("test/test_data/test_data.txt", "r"), chunk_size=2, drop=True, loop_num=2,
+        pre_jump_size=3, convert_func=lambda x: np.array(x))
+    for i in reader:
+        print(i)
+
+    del reader
+
+    print("从字符串构建文件对象作为 file_obj")
+    from io import StringIO
+
+    file_obj = StringIO(initial_value=open("test/test_data/test_data.txt", "r").read())
+    reader = File_Iterative_Reader(
+        file_obj=file_obj, chunk_size=2, drop=True, loop_num=2,
+        pre_jump_size=3, convert_func=lambda x: np.array(x))
+    for i in reader:
+        print(i)
+
+    print("证明不会修改外部对象")
+    print(file_obj.read())
 
     del reader

@@ -49,7 +49,7 @@ if __name__ == '__main__':
     print(reader.read([3, 3]).shape)
     print(reader.find(1))
 
-    reader = UReader(file_path="test_data.txt", chunk_size=2, folder_path="./temp/233")
+    reader = UReader(file_path="test/test_data/test_data.txt", chunk_size=2, folder_path="./temp/233")
 
     print(reader.read(2, 7))
     # del reader
@@ -67,7 +67,7 @@ if __name__ == '__main__':
 
     print(reader.find('data/6/horse_race_pan/2132020102319002000161_43_4.bmp'))
 
-    reader = Reader_for_files(file_path="test_data.txt", chunk_size=2, pre_jump_size=2, jump_size=2)
+    reader = Reader_for_files(file_path="test/test_data/test_data.txt", chunk_size=2, pre_jump_size=2, jump_size=2)
 
     for i in reader:
         print(2333, i)
