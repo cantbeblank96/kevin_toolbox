@@ -33,19 +33,19 @@ def test_convert_ndarray_to_list():
 
 
 def test_escape_and_unescape():
-    print("test converter.escape/unescape_non_str_dict_key and converter.escape/unescape_tuple")
+    print("test converter.escape/unescape_non_str_dict_key and converter.escape/unescape_tuple_and_set")
 
     # for write
-    content = [{123: 123, None: None, "<eval>233": 233, "foo": (2, 3, 4)}, 233]
+    content = [{123: 123, None: None, "<eval>233": 233, "foo": (2, 3, 4)}, 233, {1, (2, 3, 4), "5"}]
     file_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "test_data/temp/data_2.json")
     json_.write(
         content=content, file_path=file_path,
-        converters=[json_.converter.escape_non_str_dict_key, json_.converter.escape_tuple]
+        converters=[json_.converter.escape_non_str_dict_key, json_.converter.escape_tuple_and_set]
     )
 
     # for read
     content1 = json_.read(
         file_path=file_path,
-        converters=[json_.converter.unescape_non_str_dict_key, json_.converter.unescape_tuple]
+        converters=[json_.converter.unescape_non_str_dict_key, json_.converter.unescape_tuple_and_set]
     )
     check_consistency(content, content1)
