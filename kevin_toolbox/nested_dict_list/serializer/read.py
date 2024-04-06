@@ -29,13 +29,15 @@ def read(input_path, **kwargs):
 
     # 读取 var
     var = json_.read(file_path=os.path.join(input_path, "var.json"), b_use_suggested_converter=True)
+    # 读取 record
+    record_s = dict()
+    if os.path.isfile(os.path.join(input_path, "record.json")):
+        record_s = json_.read(file_path=os.path.join(input_path, "record.json"), b_use_suggested_converter=True)
 
     # 读取被处理的节点
     processed_nodes = []
-    if os.path.isfile(os.path.join(input_path, "record.json")):
-        for name, value in ndl.get_nodes(
-                var=json_.read(file_path=os.path.join(input_path, "record.json"),
-                               b_use_suggested_converter=True)["processed"], level=-1, b_strict=True):
+    if record_s:
+        for name, value in ndl.get_nodes(var=record_s["processed"], level=-1, b_strict=True):
             if value:
                 processed_nodes.append(name)
     else:
@@ -55,6 +57,11 @@ def read(input_path, **kwargs):
         if isinstance(value, (dict,)) and "backend" in value and "name" in value:
             bk = SERIALIZER_BACKEND.get(name=value.pop("backend"))(folder=os.path.join(input_path, "nodes"))
             ndl.set_value(var=var, name=name, value=bk.read(**value))
+
+    #
+    if record_s.get("b_keep_identical_relations", False):
+        from kevin_toolbox.nested_dict_list import value_parser
+        var = value_parser.replace_identical_with_reference(var=var, flag="same", b_reverse=True)
 
     #
     if temp_dir is not None:

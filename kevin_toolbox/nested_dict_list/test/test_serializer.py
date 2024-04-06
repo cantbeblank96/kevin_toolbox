@@ -234,3 +234,31 @@ def test_write_and_read_4():
         res = serializer.read(input_path=os.path.join(temp_folder, "var_1.tar"))
         # check
         check_consistency(res, deep_update(stem=ndl.copy_(var=var_, b_deepcopy=True), patch={None: None}))
+
+
+def test_write_and_read_keep_identical():
+    print("test serializer.read() and write() at b_keep_identical_relations=True")
+
+    a = np.array([1, 2, 3])
+    b = np.ones((2, 3))
+    c = [a, b]
+    d = {"a": a, "b": b}
+    e = {"c1": c, "c2": c}
+    x = [e, a, d, c, "<same>{@1}", "<same><same>{@1}"]
+
+    #
+    serializer.write(var=x, output_dir=os.path.join(temp_folder, "var_identical"), traversal_mode="bfs",
+                     b_pack_into_tar=True, b_keep_identical_relations=True)
+    y = serializer.read(input_path=os.path.join(temp_folder, "var_identical.tar"))
+
+    #
+    check_consistency(x, y)
+    # 检查 id 是否一致
+    a_name_set, b_name_set = set(), set()
+    for name, value in ndl.get_nodes(var=x, level=-1, b_strict=True):
+        if value is a:
+            a_name_set.add(name)
+        elif value is b:
+            b_name_set.add(name)
+    check_consistency(*[id(ndl.get_value(var=y, name=n)) for n in a_name_set])
+    check_consistency(*[id(ndl.get_value(var=y, name=n)) for n in b_name_set])

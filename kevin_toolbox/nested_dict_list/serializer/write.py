@@ -7,10 +7,12 @@ from kevin_toolbox.patches import for_os
 import kevin_toolbox.nested_dict_list as ndl
 from kevin_toolbox.nested_dict_list.traverse import Traversal_Mode
 from .enum_variable import Strictness_Level
+from .saved_node_name_builder import Saved_Node_Name_Builder
 
 
 def write(var, output_dir, settings=None, traversal_mode=Traversal_Mode.BFS, b_pack_into_tar=True,
           strictness_level=Strictness_Level.COMPATIBLE, saved_node_name_format='{count}_{hash_name}',
+          b_keep_identical_relations=False, **kwargs):
     """
         将输入的嵌套字典列表 var 的结构和节点值保存到文件中
             遍历 var，匹配并使用 settings 中设置的保存方式来对各部分结构/节点进行序列化
@@ -98,6 +100,11 @@ def write(var, output_dir, settings=None, traversal_mode=Traversal_Mode.BFS, b_p
                                             建议使用 "hash_name" 和 "count" 的组合。
                                         默认值为：
                                             '{count}_{hash_name}'
+            b_keep_identical_relations: <boolean> 是否保留不同节点之间的 id 相等关系。
+                                        具体而言，就是使用 value_parser.replace_identical_with_reference() 函数将具有相同 id 的多个节点，
+                                            替换为单个节点和其多个引用的形式。
+                                        对于 ndl 中存在大量具有相同 id 的重复节点的情况，使用该操作可以额外达到压缩的效果。
+                                        默认为 False
     """
     from kevin_toolbox.nested_dict_list.serializer.variable import SERIALIZER_BACKEND
 
@@ -106,6 +113,9 @@ def write(var, output_dir, settings=None, traversal_mode=Traversal_Mode.BFS, b_p
     strictness_level = Strictness_Level(strictness_level)
     os.makedirs(output_dir, exist_ok=True)
     var = ndl.copy_(var=var, b_deepcopy=False)
+    if b_keep_identical_relations:
+        from kevin_toolbox.nested_dict_list import value_parser
+        var = value_parser.replace_identical_with_reference(var=var, flag="same", b_reverse=False)
     if settings is None:
         settings = [{"match_cond": "<level>-1", "backend": (":skip:simple", ":numpy:npy", ":torch:tensor", ":pickle")}]
     snn_builder = Saved_Node_Name_Builder(format_=saved_node_name_format)
@@ -182,7 +192,8 @@ def write(var, output_dir, settings=None, traversal_mode=Traversal_Mode.BFS, b_p
     json_.write(content=var, file_path=os.path.join(output_dir, "var.json"), b_use_suggested_converter=True)
     # 保存处理结果（非必要）
     json_.write(content=dict(processed=processed_s, raw_structure=processed_s_bak, timestamp=time.time(),
-                             kt_version=kevin_toolbox.__version__),
+                             kt_version=kevin_toolbox.__version__,
+                             b_keep_identical_relations=b_keep_identical_relations),
                 file_path=os.path.join(output_dir, "record.json"), b_use_suggested_converter=True)
 
     # 打包成 .tar 文件
