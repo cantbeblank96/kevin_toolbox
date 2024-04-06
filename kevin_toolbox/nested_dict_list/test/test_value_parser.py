@@ -3,6 +3,7 @@ import pytest
 import numpy as np
 from kevin_toolbox.patches.for_test import check_consistency
 from kevin_toolbox.nested_dict_list import value_parser as vp
+from kevin_toolbox.nested_dict_list import get_nodes, get_value, copy_
 
 
 def test_all_0():
@@ -124,3 +125,51 @@ def test_all_1():
                                  'upstream_node': set(), 'downstream_node': set()}},
         node_s
     )
+
+
+def test_replace_identical_with_reference():
+    flag = "same"
+
+    a = np.array([1, 2, 3])
+    b = np.ones((2, 3))
+    c = [a, b]
+    d = {"a": a, "b": b}
+    e = {"c1": c, "c2": c}
+    x = [e, a, d, c, "<same>{@1}", "<same><same>{@1}"]
+
+    # 经过替换后，整个结构中仅有一个 a\b 和若干个引用
+    y = vp.replace_identical_with_reference(var=copy_(x, b_deepcopy=False), flag=flag)
+    #
+    a_name_set, b_name_set = set(), set()
+    for name, value in get_nodes(var=y, level=-1, b_strict=True):
+        if value is a:
+            a_name_set.add(name)
+        elif value is b:
+            b_name_set.add(name)
+    assert len(a_name_set) == 1 and len(b_name_set) == 1
+    a_name = a_name_set.pop()
+    b_name = b_name_set.pop()
+    #
+    for name, value in get_nodes(var=y, level=-1, b_strict=True):
+        if isinstance(value, str):
+            if value == f'<{flag}>{{{a_name}}}':
+                check_consistency(get_value(var=x, name=name), a)
+            elif value == f'<{flag}>{{{b_name}}}':
+                check_consistency(get_value(var=x, name=name), b)
+
+    # 恢复原状 1
+    x1 = vp.replace_identical_with_reference(var=copy_(y, b_deepcopy=False), flag=flag, b_reverse=True)
+
+    # 恢复原状 2
+    x2 = vp.replace_identical_with_reference(
+        var=[{'c1': [a, '<same>{@2:b}'], 'c2': '<same>{@0:c1}'}, '<same>{@0:c1@0}',
+             {'a': '<same>{@0:c1@0}', 'b': b}, '<same>{@0:c1}', '<same><same>{@1}', '<same><same><same>{@1}'],
+        flag=flag, b_reverse=True
+    )
+
+    # 检查 id 是否一致
+    check_consistency(x, x1, x2)
+    for name, value in get_nodes(var=x, level=-1, b_strict=True):
+        if value is a or value is b:
+            check_consistency(id(a if value is a else b), id(get_value(var=x1, name=name)),
+                              id(get_value(var=x2, name=name)))
