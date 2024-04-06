@@ -3,7 +3,7 @@
         "layer_nums": 3,
         "input_shape": {
             "backend": ":numpy:npy",
-            "name": ":paras:input_shape",
+            "name": "_paras_input_shape",
             "details": {
                 "shape": [
                     2,

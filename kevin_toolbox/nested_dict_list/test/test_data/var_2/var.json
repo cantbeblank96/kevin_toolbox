@@ -1,7 +1,7 @@
 {
     "a": {
         "backend": ":numpy:npy",
-        "name": ":a",
+        "name": "_a",
         "details": {
             "shape": [
                 2,
@@ -13,7 +13,7 @@
     "b": [
         {
             "backend": ":torch:tensor",
-            "name": ":b@0",
+            "name": "_b_0",
             "details": {
                 "shape": [
                     5
@@ -24,7 +24,7 @@
         },
         {
             "backend": ":torch:tensor",
-            "name": ":b@1",
+            "name": "_b_1",
             "details": {
                 "shape": [
                     3
@@ -37,6 +37,6 @@
     "<eval>(1, 2, 3)": "<eval>(1, 2, 3)",
     "model": {
         "backend": ":ndl",
-        "name": ":model"
+        "name": "_model"
     }
 }

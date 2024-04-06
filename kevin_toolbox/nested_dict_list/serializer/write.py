@@ -10,13 +10,13 @@ from .enum_variable import Strictness_Level
 
 
 def write(var, output_dir, settings=None, traversal_mode=Traversal_Mode.BFS, b_pack_into_tar=True,
-          strictness_level=Strictness_Level.COMPATIBLE, **kwargs):
+          strictness_level=Strictness_Level.COMPATIBLE, saved_node_name_format='{count}_{hash_name}',
     """
         将输入的嵌套字典列表 var 的结构和节点值保存到文件中
             遍历 var，匹配并使用 settings 中设置的保存方式来对各部分结构/节点进行序列化
             将会生成一个文件夹或者 .tar 文件，其中包含：
                 - var.json：     用于保存结构、简单节点值、复杂节点值/结构的序列化方式
-                - nodes/目录：    其中包含一系列 <name>.<suffix> 文件或者 <name> 文件夹，其中包含复杂节点值/结构的序列化结果
+                - nodes/：       该目录中包含一系列 <name>.<suffix> 文件或者 <name> 文件夹，其中包含复杂节点值/结构的序列化结果
                 - record.json：   其中记录了：
                                         {
                                             "processed": ... # 对哪些节点/部分进行了处理
@@ -82,25 +82,42 @@ def write(var, output_dir, settings=None, traversal_mode=Traversal_Mode.BFS, b_p
                                             - "low" / Strictness_Level.IGNORE_FAILURE   匹配不完整，或者某些节点尝试过所有匹配到
                                                                                             的 backend 之后仍然无法写入
                                         默认是 "normal"
+            saved_node_name_format: <str> nodes/目录下节点文件/文件夹的命名方式。
+                                        基本结构为：  '{<part_0>}...{<part_1>}...'
+                                        其中 {} 内将根据 part 指定的类型进行自动填充。目前支持以下几种选项：
+                                            - "raw_name"        该节点对应位置的 name。
+                                            - "id"              该节点在当前内存中的 id。
+                                            - "hash_name"       该节点位置 name 的 hash 值。
+                                            - "count"           累加计算，表示是保存的第几个节点。
+                                        ！！注意：
+                                            "raw_name" 该选项在 v1.3.3 前被使用，但是由于其可能含有 : 和 / 等特殊符号，当以其作为文件夹名时，
+                                                可能会引发错误。因此对于 windows 用户，禁止使用该选项，对于 mac 和 linux 用户，同样也不建议使用该选项。
+                                            "id" 虽然具有唯一性，但是其值对于每次运行是随机的。
+                                            "hash_name" 有极低的可能会发生 hash 碰撞。
+                                        综合而言：
+                                            建议使用 "hash_name" 和 "count" 的组合。
+                                        默认值为：
+                                            '{count}_{hash_name}'
     """
     from kevin_toolbox.nested_dict_list.serializer.variable import SERIALIZER_BACKEND
 
-    #
+    # 检查参数
     traversal_mode = Traversal_Mode(traversal_mode)
     strictness_level = Strictness_Level(strictness_level)
     os.makedirs(output_dir, exist_ok=True)
     var = ndl.copy_(var=var, b_deepcopy=False)
     if settings is None:
         settings = [{"match_cond": "<level>-1", "backend": (":skip:simple", ":numpy:npy", ":torch:tensor", ":pickle")}]
+    snn_builder = Saved_Node_Name_Builder(format_=saved_node_name_format)
 
     # 构建 processed_s
     #     为了避免重复处理节点/结构，首先构建与 var 具有相似结构的 processed_s 来记录处理处理进度。
     #     对于 processed_s，其节点值为 True 时表示该节点已经被处理，当节点值为 False 或者 list/dict 类型时表示该节点或者节点下面的结构中仍然
     #       存在未处理的部分。
     #     对于中间节点，只有其下所有叶节点都未处理时才会被匹配。
-    processed_s = dict()
+    processed_s = ndl.copy_(var=var, b_deepcopy=False, b_keep_internal_references=False)
     for n, _ in ndl.get_nodes(var=var, level=-1, b_strict=True):
-        ndl.set_value(var=processed_s, name=n, value=False, b_force=True)
+        ndl.set_value(var=processed_s, name=n, value=False, b_force=False)
     # processed_s_bak 用于记录 var 的原始结构
     processed_s_bak = ndl.copy_(var=processed_s, b_deepcopy=True)
     if "_hook_for_debug" in kwargs:
@@ -126,27 +143,21 @@ def write(var, output_dir, settings=None, traversal_mode=Traversal_Mode.BFS, b_p
                 _process = _process_from_top_to_down
             else:
                 _process = _process_from_down_to_top
-            paras = dict(
-                var=var, processed_s=processed_s, match_cond=setting["match_cond"],
-                traversal_mode=t_mode, strictness_level=strictness_level
-            )
+            paras = dict(var=var, match_cond=setting["match_cond"], traversal_mode=t_mode)
         elif setting["match_cond"].startswith("<level>"):
             _process = _process_for_level
-            paras = dict(
-                var=var, processed_s=processed_s, processed_s_bak=processed_s_bak,
-                level=int(setting["match_cond"][7:]), strictness_level=strictness_level
-            )
+            paras = dict(var=var, processed_s_bak=processed_s_bak, level=int(setting["match_cond"][7:]))
         elif setting["match_cond"].startswith("<node>"):
             _process = _process_for_name
-            paras = dict(var=var, processed_s=processed_s, name=setting["match_cond"][6:],
-                         strictness_level=strictness_level)
+            paras = dict(var=var, name=setting["match_cond"][6:])
         else:
             raise ValueError(f'invalid match_cond: {setting["match_cond"]}')
         # 执行
         for i in backend_name_ls:
             # print(processed_s)
             # print(f'backend: {i}')
-            _process(backend=backend_s[i], **paras)
+            _process(backend=backend_s[i], strictness_level=strictness_level, processed_s=processed_s,
+                     snn_builder=snn_builder, **paras)
             if "_hook_for_debug" in kwargs:
                 kwargs["_hook_for_debug"]["processed"].append([i, ndl.copy_(var=processed_s, b_deepcopy=True)])
 
@@ -196,13 +207,13 @@ def _judge_processed_or_not(processed_s, name):
     return b_processed
 
 
-def _process_for_level(var, processed_s, processed_s_bak, level, backend, strictness_level):
+def _process_for_level(var, processed_s, processed_s_bak, level, backend, strictness_level, snn_builder):
     for name, _ in ndl.get_nodes(var=processed_s_bak, level=level, b_strict=True):
         _process_for_name(var=var, processed_s=processed_s, name=name, backend=backend,
-                          strictness_level=strictness_level)
+                          strictness_level=strictness_level, snn_builder=snn_builder)
 
 
-def _process_for_name(var, processed_s, name, backend, strictness_level):
+def _process_for_name(var, processed_s, name, backend, strictness_level, snn_builder):
     if _judge_processed_or_not(processed_s=processed_s, name=name) is True:
         # has been processed
         return
@@ -212,8 +223,9 @@ def _process_for_name(var, processed_s, name, backend, strictness_level):
         return
 
     # write by backend
+    snn_name = snn_builder(name=name, value=value)
     try:
-        res = backend.write(name=name, var=value)
+        res = backend.write(name=snn_name, var=value)
     except:
         assert strictness_level in (Strictness_Level.IGNORE_FAILURE, Strictness_Level.COMPATIBLE), \
             f'An error occurred when node {name} was saved using the first matched backend {backend}'
@@ -222,7 +234,7 @@ def _process_for_name(var, processed_s, name, backend, strictness_level):
     ndl.set_value(var=var, name=name, value=res, b_force=False)
 
 
-def _process_from_top_to_down(var, processed_s, match_cond, backend, traversal_mode, strictness_level):
+def _process_from_top_to_down(var, processed_s, match_cond, backend, traversal_mode, strictness_level, snn_builder):
     def match_cond_(parent_type, idx, value):
         nonlocal match_cond, processed_s
 
@@ -237,8 +249,9 @@ def _process_from_top_to_down(var, processed_s, match_cond, backend, traversal_m
         nonlocal processed_s, backend, strictness_level
 
         # write by backend
+        snn_name = snn_builder(name=idx, value=value)
         try:
-            res = backend.write(name=idx, var=value)
+            res = backend.write(name=snn_name, var=value)
         except:
             assert strictness_level in (Strictness_Level.IGNORE_FAILURE, Strictness_Level.COMPATIBLE), \
                 f'An error occurred when node {name} was saved using the first matched backend {backend}'
@@ -250,7 +263,7 @@ def _process_from_top_to_down(var, processed_s, match_cond, backend, traversal_m
                  b_use_name_as_idx=True, traversal_mode=traversal_mode, b_traverse_matched_element=False)
 
 
-def _process_from_down_to_top(var, processed_s, match_cond, backend, traversal_mode, strictness_level):
+def _process_from_down_to_top(var, processed_s, match_cond, backend, traversal_mode, strictness_level, snn_builder):
     processed_s_raw, processed_s = processed_s, ndl.copy_(var=processed_s, b_deepcopy=True)
 
     def match_cond_(parent_type, idx, value):
@@ -268,8 +281,9 @@ def _process_from_down_to_top(var, processed_s, match_cond, backend, traversal_m
         nonlocal processed_s, backend, processed_s_raw, strictness_level
 
         # write by backend
+        snn_name = snn_builder(name=idx, value=value)
         try:
-            res = backend.write(name=idx, var=value)
+            res = backend.write(name=snn_name, var=value)
         except:
             assert strictness_level in (Strictness_Level.IGNORE_FAILURE, Strictness_Level.COMPATIBLE), \
                 f'An error occurred when node {name} was saved using the first matched backend {backend}'
@@ -305,7 +319,7 @@ if __name__ == '__main__':
         {"match_cond": lambda _, __, value: not isinstance(value, (list, dict)),
          "backend": (":skip:simple",)},
     ]
-    write(var=var_, output_dir=os.path.join(os.path.dirname(__file__), "temp3"), traversal_mode="bfs",
+    write(var=var_, output_dir=os.path.join(os.path.dirname(__file__), "temp"), traversal_mode="bfs",
           b_pack_into_tar=True, settings=settings_, _hook_for_debug=_hook_for_debug)
 
     for bk_name, p in _hook_for_debug["processed"]:
