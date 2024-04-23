@@ -38,4 +38,9 @@ pip install kevin-toolbox  --no-dependencies
       - fix：使用 ndl.copy_() 来创建结构与 var 一致的 processed_s。
     - 【new feature】add b_keep_identical_relations to write()，增加该参数用于决定是否保留不同节点之间的 id 相等关系。
     - 添加了对应的测试用例。
+- v 1.3.5 （）【bug fix】【new feature】
+  - patches.for_os
+    - 【new feature】add copy()，无论是文件/目录/软连接都可以使用该函数进行复制。
+      - 同时支持follow_symlinks参数用于决定是否跟随符号链接复制其指向的内容，支持remove_dst_if_exists用于决定当目标存在时是否尝试进行移除。
+      - 添加了对应的测试用例。
 

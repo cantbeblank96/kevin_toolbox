@@ -6,11 +6,12 @@ from kevin_toolbox.patches import for_os
 from kevin_toolbox.patches.for_test import check_consistency
 from kevin_toolbox.data_flow.file import json_
 
+data_dir = os.path.join(os.path.dirname(__file__), "test_data")
+temp_dir = os.path.join(os.path.dirname(__file__), "temp")
+
 
 def test_remove():
     print("test for_os.remove()")
-
-    temp_dir = os.path.join(os.path.dirname(__file__), "temp")
 
     # 测试移除文件
     file_path = os.path.join(temp_dir, "test")
@@ -26,10 +27,53 @@ def test_remove():
     assert not os.path.exists(temp_dir)
 
 
+def test_copy():
+    print("test for_os.copy()")
+
+    os.system('cd ./test_data; bash build_data_0.sh')
+
+    for folder in ["data_0", "data_0/folder_b", "data_0/folder_b/link_to_fuck.json"]:
+        for follow_symlinks in [True, False]:
+            out_folder = folder.replace("/", "-") + "-" + str(follow_symlinks)
+            src = os.path.join(data_dir, folder)
+            dst = os.path.join(temp_dir, out_folder)
+            #
+            for_os.copy(src=src, dst=dst, follow_symlinks=follow_symlinks, remove_dst_if_exists=True)
+
+            # 检查
+            if not follow_symlinks:
+                # 当 follow_symlinks=False 时
+                if os.path.islink(src):
+                    # 如果 src 是链接，目录其指向的是文件还是目录，都只复制该链接
+                    assert os.path.islink(dst)
+                elif os.path.isdir(src):
+                    # 如果 src 是目录，则其下的链接部分都只复制链接自身
+                    for root, dirs, files in os.walk(src):
+                        for f in files + dirs:
+                            f_ = os.path.join(dst, os.path.relpath(os.path.join(root, f), src))
+                            assert os.path.islink(os.path.join(root, f)) == os.path.islink(f_)
+                            assert os.path.isdir(os.path.join(root, f)) == os.path.isdir(f_)
+                            assert os.path.isfile(os.path.join(root, f)) == os.path.isfile(f_)
+                else:
+                    # 如果 src 是文件，复制自身
+                    assert os.path.isfile(dst)
+            else:
+                # 当 follow_symlinks=True 时
+                # 无论 src 是链接，包含链接的目录，都复制其指向的内容
+                if os.path.isfile(src):
+                    assert os.path.isfile(dst) and not os.path.islink(dst)
+                else:
+                    for root, dirs, files in os.walk(src):
+                        for f in files + dirs:
+                            f_ = os.path.join(dst, os.path.relpath(os.path.join(root, f), src))
+                            assert not os.path.islink(f_)
+                            assert os.path.isdir(os.path.join(root, f)) == os.path.isdir(f_)
+                            assert os.path.isfile(os.path.join(root, f)) == os.path.isfile(f_)
+
+
 def test_pack_and_unpack():
     print("test for_os.pack() and for_os.unpack()")
 
-    temp_dir = os.path.join(os.path.dirname(__file__), "temp")
     for_os.remove(path=temp_dir, ignore_errors=True)
     os.makedirs(temp_dir, exist_ok=True)
 
@@ -104,7 +148,6 @@ class Test_walk:
                         ├── 444.jpg
                         └── 555.txt
         """
-        temp_dir = os.path.join(os.path.dirname(__file__), "test_data", "test_data", "temp")
         for_os.remove(path=temp_dir, ignore_errors=True)
         os.makedirs(temp_dir, exist_ok=True)
         # 
