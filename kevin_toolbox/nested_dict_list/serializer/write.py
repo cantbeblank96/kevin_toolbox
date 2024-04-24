@@ -1,6 +1,7 @@
 import os
 import time
 import warnings
+import tempfile
 import kevin_toolbox
 from kevin_toolbox.data_flow.file import json_
 from kevin_toolbox.patches import for_os
@@ -111,7 +112,13 @@ def write(var, output_dir, settings=None, traversal_mode=Traversal_Mode.BFS, b_p
     # 检查参数
     traversal_mode = Traversal_Mode(traversal_mode)
     strictness_level = Strictness_Level(strictness_level)
-    os.makedirs(output_dir, exist_ok=True)
+    #
+    assert not os.path.exists(output_dir + ".tar" if b_pack_into_tar else output_dir), f'target already exists'
+    os.makedirs(os.path.dirname(output_dir), exist_ok=True)
+    temp_dir = tempfile.TemporaryDirectory(dir=os.path.dirname(output_dir))
+    temp_output_dir = os.path.join(temp_dir.name, os.path.basename(output_dir))
+    os.makedirs(temp_output_dir, exist_ok=True)
+    #
     var = ndl.copy_(var=var, b_deepcopy=False)
     if b_keep_identical_relations:
         from kevin_toolbox.nested_dict_list import value_parser
@@ -144,7 +151,7 @@ def write(var, output_dir, settings=None, traversal_mode=Traversal_Mode.BFS, b_p
         backend_name_ls = setting["backend"] if isinstance(setting["backend"], (list, tuple)) else [setting["backend"]]
         for i in backend_name_ls:
             if i not in backend_s:
-                backend_s[i] = SERIALIZER_BACKEND.get(name=i)(folder=os.path.join(output_dir, "nodes"))
+                backend_s[i] = SERIALIZER_BACKEND.get(name=i)(folder=os.path.join(temp_output_dir, "nodes"))
         #
         t_mode = Traversal_Mode(setting.get("traversal_mode", traversal_mode))
         # _process and  paras
@@ -189,17 +196,19 @@ def write(var, output_dir, settings=None, traversal_mode=Traversal_Mode.BFS, b_p
             f'please check settings to make sure all nodes have been covered and can be deal with backend'
 
     # 保存 var 的结构
-    json_.write(content=var, file_path=os.path.join(output_dir, "var.json"), b_use_suggested_converter=True)
+    json_.write(content=var, file_path=os.path.join(temp_output_dir, "var.json"), b_use_suggested_converter=True)
     # 保存处理结果（非必要）
     json_.write(content=dict(processed=processed_s, raw_structure=processed_s_bak, timestamp=time.time(),
                              kt_version=kevin_toolbox.__version__,
                              b_keep_identical_relations=b_keep_identical_relations),
-                file_path=os.path.join(output_dir, "record.json"), b_use_suggested_converter=True)
+                file_path=os.path.join(temp_output_dir, "record.json"), b_use_suggested_converter=True)
 
     # 打包成 .tar 文件
     if b_pack_into_tar:
-        for_os.pack(source=output_dir)
-        for_os.remove(path=output_dir, ignore_errors=True)
+        for_os.pack(source=temp_output_dir)
+        os.rename(temp_output_dir + ".tar", output_dir + ".tar")
+    else:
+        os.rename(temp_output_dir, output_dir)
 
 
 def _judge_processed_or_not(processed_s, name):

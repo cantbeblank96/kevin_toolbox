@@ -8,6 +8,7 @@ import kevin_toolbox.nested_dict_list as ndl
 from kevin_toolbox.nested_dict_list import name_handler, serializer
 from kevin_toolbox.nested_dict_list.serializer import Strictness_Level
 from kevin_toolbox.computer_science.algorithm.for_dict import deep_update
+from kevin_toolbox.patches.for_os import remove
 
 temp_folder = os.path.join(os.path.dirname(__file__), "temp")
 data_folder = os.path.join(os.path.dirname(__file__), "test_data")
@@ -87,6 +88,7 @@ def test_write_and_read_0():
     ]
 
     _hook_for_debug = dict()
+    remove(temp_folder, ignore_errors=True)
     serializer.write(var=var_, output_dir=os.path.join(temp_folder, "var_"), traversal_mode="bfs",
                      b_pack_into_tar=True, settings=settings, _hook_for_debug=_hook_for_debug)
     # check
@@ -121,7 +123,7 @@ def test_write_and_read_1():
          "backend": (":ndl",)},
         {"match_cond": "<level>-1", "backend": (":skip:simple", ":numpy:npy", ":torch:tensor", ":pickle")},
     ]
-
+    remove(temp_folder, ignore_errors=True)
     serializer.write(var=var_, output_dir=os.path.join(temp_folder, "var_1"), traversal_mode="bfs",
                      b_pack_into_tar=True, settings=settings)
     # check
@@ -176,10 +178,12 @@ def test_write_and_read_3():
 
     for level in (Strictness_Level.COMPLETE, Strictness_Level.COMPATIBLE):
         with pytest.raises(AssertionError):
+            remove(temp_folder, ignore_errors=True)
             serializer.write(var=var_, output_dir=os.path.join(temp_folder, "var_1"), traversal_mode="bfs",
                              b_pack_into_tar=True, settings=settings, strictness_level=level)
 
     for level in (Strictness_Level.IGNORE_FAILURE,):
+        remove(temp_folder, ignore_errors=True)
         serializer.write(var=var_, output_dir=os.path.join(temp_folder, "var_1"), traversal_mode="bfs",
                          b_pack_into_tar=True, settings=settings, strictness_level=level)
         # check
@@ -221,10 +225,12 @@ def test_write_and_read_4():
 
     for level in (Strictness_Level.COMPLETE, Strictness_Level.COMPATIBLE):
         with pytest.raises(AssertionError):
+            remove(temp_folder, ignore_errors=True)
             serializer.write(var=var_, output_dir=os.path.join(temp_folder, "var_1"), traversal_mode="bfs",
                              b_pack_into_tar=True, settings=settings, strictness_level=level)
 
     for level in (Strictness_Level.IGNORE_FAILURE,):
+        remove(temp_folder, ignore_errors=True)
         serializer.write(var=var_, output_dir=os.path.join(temp_folder, "var_1"), traversal_mode="bfs",
                          b_pack_into_tar=True, settings=settings, strictness_level=level)
         # check
@@ -247,6 +253,7 @@ def test_write_and_read_keep_identical():
     x = [e, a, d, c, "<same>{@1}", "<same><same>{@1}"]
 
     #
+    remove(temp_folder, ignore_errors=True)
     serializer.write(var=x, output_dir=os.path.join(temp_folder, "var_identical"), traversal_mode="bfs",
                      b_pack_into_tar=True, b_keep_identical_relations=True)
     y = serializer.read(input_path=os.path.join(temp_folder, "var_identical.tar"))

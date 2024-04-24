@@ -3,6 +3,7 @@ import time
 from kevin_toolbox.patches import for_os
 from kevin_toolbox.data_flow.file import json_
 import kevin_toolbox.nested_dict_list as ndl
+import tempfile
 
 
 def read(input_path, **kwargs):
@@ -16,19 +17,26 @@ def read(input_path, **kwargs):
 
     assert os.path.exists(input_path)
 
-    # 解压
-    temp_dir = None
-    if os.path.isfile(input_path) and input_path.endswith(".tar"):
-        while True:
-            temp_dir = os.path.join(os.path.dirname(input_path), f'temp{time.time()}')
-            if not os.path.isdir(temp_dir):
-                os.makedirs(temp_dir)
-                break
-        for_os.unpack(source=input_path, target=temp_dir)
-        input_path = os.path.join(temp_dir, os.listdir(temp_dir)[0])
+    with tempfile.TemporaryDirectory(dir=os.path.dirname(input_path)) as temp_dir:
+        if os.path.isfile(input_path) and input_path.endswith(".tar"): # 解压
+            for_os.unpack(source=input_path, target=temp_dir)
+            input_path = os.path.join(temp_dir, os.listdir(temp_dir)[0])
+        var = _read_unpacked_ndl(input_path, **kwargs)
+
+    return var
+
+
+def _read_unpacked_ndl(input_path, **kwargs):
+    """
+        读取 input_path 中保存的嵌套字典列表
+    """
+    from kevin_toolbox.nested_dict_list.serializer.variable import SERIALIZER_BACKEND
+
+    assert os.path.exists(input_path)
 
     # 读取 var
     var = json_.read(file_path=os.path.join(input_path, "var.json"), b_use_suggested_converter=True)
+
     # 读取 record
     record_s = dict()
     if os.path.isfile(os.path.join(input_path, "record.json")):
@@ -62,10 +70,6 @@ def read(input_path, **kwargs):
     if record_s.get("b_keep_identical_relations", False):
         from kevin_toolbox.nested_dict_list import value_parser
         var = value_parser.replace_identical_with_reference(var=var, flag="same", b_reverse=True)
-
-    #
-    if temp_dir is not None:
-        for_os.remove(path=temp_dir, ignore_errors=True)
 
     return var
 

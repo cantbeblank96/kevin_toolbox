@@ -5,6 +5,7 @@ import torch
 import numpy as np
 from kevin_toolbox.patches.for_test import check_consistency
 from kevin_toolbox.nested_dict_list.serializer.variable import SERIALIZER_BACKEND
+from kevin_toolbox.patches.for_os import remove
 
 temp_folder = os.path.join(os.path.dirname(__file__), "temp")
 
@@ -192,6 +193,7 @@ def test_ndl():
 
     # 测试
     bk_name, node = ":ndl", ":1:ndl"
+    remove(temp_folder, ignore_errors=True)
     bk = SERIALIZER_BACKEND.get(name=bk_name)(folder=temp_folder)
 
     x = {"tensor": torch.randn([2, 3, 4], device=torch.device("cpu")),

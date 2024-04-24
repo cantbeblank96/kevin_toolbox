@@ -27,7 +27,10 @@ class NDL(Backend_Base):
         """
             是否可以写
         """
-        return True
+        if "name" in kwargs:
+            return not os.path.exists(os.path.join(self.paras["folder"], f'{kwargs["name"]}'))
+        else:
+            return True
 
     def readable(self, name, **kwargs):
         """
