@@ -51,4 +51,8 @@ pip install kevin-toolbox  --no-dependencies
     - 添加了对应的测试用例。
   - nested_dict_list
     - 【bug fix】modify temporary file management in write() and read()，加强对写入和读取时创建的临时文件的管理，保证异常退出时能够自动清理临时文件夹。
+  - data_flow.file
+    - json_
+      - 【new feature】modify read()，新增了 file_obj 参数，支持直接从 BytesIO 和 StringIO 中读取json文件。
+    - 添加了对应的测试用例。
 

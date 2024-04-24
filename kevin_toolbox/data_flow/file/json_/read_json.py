@@ -1,15 +1,17 @@
 import os
 import json
+from io import BytesIO, StringIO
 from kevin_toolbox.data_flow.file.json_.converter import integrate, unescape_tuple_and_set, unescape_non_str_dict_key
 from kevin_toolbox.nested_dict_list import traverse
 
 
-def read_json(file_path, converters=None, b_use_suggested_converter=False):
+def read_json(file_path=None, file_obj=None, converters=None, b_use_suggested_converter=False):
     """
         读取 json file
 
         参数：
             file_path
+            file_obj
             converters:                 <list of converters> 对读取内容中每个节点的处理方式
                                             转换器 converter 应该是一个形如 def(x): ... ; return x 的函数，具体可以参考
                                             json_.converter 中已实现的转换器
@@ -19,12 +21,16 @@ def read_json(file_path, converters=None, b_use_suggested_converter=False):
                                             默认为 False。
                     注意：当 converters 非 None，此参数失效，以 converters 中的具体设置为准
     """
-    assert os.path.isfile(file_path), f'file {file_path} not found'
+    assert file_path is not None or file_obj is not None
+    if file_path is not None:
+        assert os.path.isfile(file_path), f'file {file_path} not found'
+        file_obj = open(file_path, 'r')
+    elif isinstance(file_obj, (BytesIO,)):
+        file_obj = StringIO(file_obj.read().decode('utf-8'))
+    content = json.load(file_obj)
+
     if converters is None and b_use_suggested_converter:
         converters = [unescape_tuple_and_set, unescape_non_str_dict_key]
-
-    with open(file_path, 'r') as f:
-        content = json.load(f)
 
     if converters is not None:
         converter = integrate(converters)
