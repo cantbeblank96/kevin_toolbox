@@ -69,7 +69,7 @@ def _check_item(*args, tolerance, require_same_shape):
                                     注意：仅在原始 args 中含有 np.array 或者 tensor 的情况会采取 broadcast，亦即此时该参数才会起效。
                                     当设置为 False 时，不同形状的变量可能因为 broadcast 机制而在比较前自动 reshape 为相同维度，进而通过比较。
     """
-    np.warnings.filterwarnings('ignore', category=np.VisibleDeprecationWarning)
+    warnings.filterwarnings('ignore', category=np.VisibleDeprecationWarning)
     warnings.filterwarnings("ignore", category=DeprecationWarning)
 
     assert len(args) >= 2

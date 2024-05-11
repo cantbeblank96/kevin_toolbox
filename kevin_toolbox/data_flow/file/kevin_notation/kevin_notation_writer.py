@@ -5,7 +5,7 @@ import warnings
 from kevin_toolbox.data_flow.file.kevin_notation.converter import Converter, CONVERTER_FOR_WRITER
 from kevin_toolbox.data_flow.file import kevin_notation
 
-np.warnings.filterwarnings('ignore', category=np.VisibleDeprecationWarning)
+warnings.filterwarnings('ignore', category=np.VisibleDeprecationWarning)
 
 
 class Kevin_Notation_Writer:
