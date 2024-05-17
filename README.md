@@ -27,7 +27,7 @@ pip install kevin-toolbox  --no-dependencies
 
 [版本更新记录](./notes/Release_Record.md)：
 
-- v 1.3.5 （）【bug fix】【new feature】
+- v 1.3.5 （2024-05-18）【bug fix】【new feature】
   - patches
     - for_os
       - 【new feature】add copy()，无论是文件/目录/软连接都可以使用该函数进行复制。
