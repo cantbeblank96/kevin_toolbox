@@ -53,4 +53,9 @@ pip install kevin-toolbox  --no-dependencies
       - 【new feature】add find_illegal_chars()，找出给定的文件名/路径中出现了哪些非法符号。
       - 【new feature】add replace_illegal_chars()，将给定的文件名/路径中的非法符号替换为合法形式。
     - 添加了测试用例。
-    - 
+  - data_flow.file
+    - markdown
+      - 【new feature】add save_images_in_ndl()，将ndl结构叶节点下的图片对象保存到 plot_dir 中，并替换为该图片的markdown链接。
+        - 便于对表格中的图片或者列表中的图片进行保存和替换。
+      - 【new feature】add find_tables()，用于从文本中找出markdown格式的表格，并以二维数组的列表形式返回。
+      - 【new feature】add parse_table()，将二维数组形式的表格（比如find_tables()的返回列表的元素），解析成指定的格式。

@@ -1,0 +1,17 @@
+{
+    "read by": [
+        "image"
+    ],
+    "cv2": [
+        "![：cv2@0_.jpg](plots/：cv2@0_.jpg)"
+    ],
+    "torch": [
+        "![：torch@0_.jpg](plots/：torch@0_.jpg)"
+    ],
+    "pil": [
+        "![：pil@0_.png](plots/：pil@0_.png)"
+    ],
+    "else": [
+        "/"
+    ]
+}

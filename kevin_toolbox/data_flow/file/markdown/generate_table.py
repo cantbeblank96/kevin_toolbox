@@ -8,7 +8,7 @@ def generate_table(content_s, orientation="vertical", chunk_nums=None, chunk_siz
 
         参数：
             content_s:              <dict> 内容
-                                        支持两种输入模式：
+                                        目前支持 Table_Format 中的两种输入模式：
                                             1.简易模式：
                                                 content_s = {<title>: <list of value>, ...}
                                                 此时键作为标题，值作为标题下的一系列值。
@@ -24,7 +24,7 @@ def generate_table(content_s, orientation="vertical", chunk_nums=None, chunk_siz
             chunk_nums:             <int> 将表格平均分割为多少份进行并列显示。
             chunk_size:             <int> 将表格按照最大长度进行分割，然后并列显示。
                 注意：以上两个参数只能设置一个，同时设置时将报错
-            b_allow_misaligned_values   <boolean> 允许不对齐的 values
+            b_allow_misaligned_values:  <boolean> 允许不对齐的 values
                                         默认为 False，此时当不同标题下的 values 的长度不相等时，将会直接报错。
                                         当设置为 True 时，对于短于最大长度的 values 将直接补充 ""。
             f_gen_order_of_values:  <callable> 生成values排序顺序的函数
@@ -34,6 +34,7 @@ def generate_table(content_s, orientation="vertical", chunk_nums=None, chunk_siz
     assert chunk_nums is None or 1 <= chunk_nums
     assert chunk_size is None or 1 <= chunk_size
     assert orientation in ["vertical", "horizontal", "h", "v"]
+    assert isinstance(content_s, (dict,))
 
     # 将简易模式转换为完整模式
     if len(content_s.values()) > 0 and not isinstance(list(content_s.values())[0], (dict,)):
@@ -49,6 +50,10 @@ def generate_table(content_s, orientation="vertical", chunk_nums=None, chunk_siz
             v["values"].extend([""] * (max_length - len(v["values"])))
     # 对值进行排序
     if callable(f_gen_order_of_values):
+        # 检查是否有重复的 title
+        temp = [v["title"] for v in content_s.values()]
+        assert len(set(temp)) == len(temp), \
+            f'table has duplicate titles, thus cannot be sorted using f_gen_order_of_values'
         idx_ls = list(range(max_length))
         idx_ls.sort(key=lambda x: f_gen_order_of_values({v["title"]: v["values"][x] for v in content_s.values()}))
         for v in content_s.values():
@@ -108,9 +113,9 @@ def _show_table(content_s, orientation="vertical"):
 
 
 if __name__ == '__main__':
-    content_s = {0: dict(title="a", values=[1, 2, 3]), 2: dict(title="b", values=[4, 5, 6])}
-    doc = generate_table(content_s=content_s, orientation="h")
-    print(doc)
+    # content_s = {0: dict(title="a", values=[1, 2, 3]), 2: dict(title="b", values=[4, 5, 6])}
+    # doc = generate_table(content_s=content_s, orientation="h")
+    # print(doc)
 
     # from collections import OrderedDict
     #
@@ -128,3 +133,12 @@ if __name__ == '__main__':
     #         "/home/SENSETIME/xukaiming/Desktop/my_repos/python_projects/kevin_toolbox/kevin_toolbox/data_flow/file/markdown/test/test_data/for_generate_table",
     #         f"data_5.md"), "w") as f:
     #     f.write(doc)
+
+    doc = generate_table(
+        content_s={'y/n': ['False', 'False', 'False', 'False', 'False', 'True', 'True', 'True', 'True', 'True'],
+                   'a': ['5', '8', '7', '6', '9', '2', '1', '4', '0', '3'],
+                   'b': ['', '', '', '', '', '6', '4', ':', '2', '8']},
+        orientation="v", chunk_size=4, b_allow_misaligned_values=True,
+        f_gen_order_of_values=lambda x: (-int(eval(x["y/n"]) is False), -(int(x["a"]) % 3))
+    )
+    print(doc)
