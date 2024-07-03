@@ -27,24 +27,6 @@ pip install kevin-toolbox  --no-dependencies
 
 [版本更新记录](./notes/Release_Record.md)：
 
-- v 1.3.5 （2024-05-18）【bug fix】【new feature】
-  - patches
-    - for_os
-      - 【new feature】add copy()，无论是文件/目录/软连接都可以使用该函数进行复制。
-        - 同时支持follow_symlinks参数用于决定是否跟随符号链接复制其指向的内容，支持remove_dst_if_exists用于决定当目标存在时是否尝试进行移除。
-    - for_test
-      - 【bug fix】fix bug in check_consistency()，解决了以下问题：
-        - 对于含有 np.nan 值的array错误地一律都判断为不相等，修改后将相同位置的 np.nan 值视为相等。
-        - require_same_shape=False 时无法正常为不对齐的 可变长度类型 报错。
-        - 对于包含 requires_grad=True 的 tensor 的复杂 tuple 异常报错。
-    - 添加了对应的测试用例。
-  - nested_dict_list
-    - 【bug fix】modify temporary file management in write() and read()，加强对写入和读取时创建的临时文件的管理，保证异常退出时能够自动清理临时文件夹。
-  - data_flow.file
-    - json_
-      - 【new feature】modify read()，新增了 file_obj 参数，支持直接从 BytesIO 和 StringIO 中读取json文件。
-    - 添加了对应的测试用例。
-  - 在更高版本的numpy中已经没有 np.warnings 了，因此将所有 np.warnings 替换为 warnings。
 - v 1.3.6 （）【new feature】
   - patches
     - for_os
@@ -62,3 +44,5 @@ pip install kevin-toolbox  --no-dependencies
     - kevin_notation
       - 【bug fix】fix bug in Kevin_Notation_Writer，增加检验写入的列的元素数量是否一致，不一致时进行报错。
       - 【bug fix】fix bug in write()，避免对输入参数 metadata 中的内容进行意料之外的改动。
+  - nested_dict_list
+    - add para b_allow_override to serializer.write to allow overwriting，增加参数用于允许强制覆盖已有文件。

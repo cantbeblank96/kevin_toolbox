@@ -13,7 +13,7 @@ from .saved_node_name_builder import Saved_Node_Name_Builder
 
 def write(var, output_dir, settings=None, traversal_mode=Traversal_Mode.BFS, b_pack_into_tar=True,
           strictness_level=Strictness_Level.COMPATIBLE, saved_node_name_format='{count}_{hash_name}',
-          b_keep_identical_relations=False, **kwargs):
+          b_keep_identical_relations=False, b_allow_overwrite=False, **kwargs):
     """
         将输入的嵌套字典列表 var 的结构和节点值保存到文件中
             遍历 var，匹配并使用 settings 中设置的保存方式来对各部分结构/节点进行序列化
@@ -106,6 +106,8 @@ def write(var, output_dir, settings=None, traversal_mode=Traversal_Mode.BFS, b_p
                                             替换为单个节点和其多个引用的形式。
                                         对于 ndl 中存在大量具有相同 id 的重复节点的情况，使用该操作可以额外达到压缩的效果。
                                         默认为 False
+            b_allow_overwrite:          <boolean> 是否允许强制覆盖已有文件
+                                        默认为 False，此时若目标文件已存在则报错
     """
     from kevin_toolbox.nested_dict_list.serializer.variable import SERIALIZER_BACKEND
 
@@ -113,7 +115,12 @@ def write(var, output_dir, settings=None, traversal_mode=Traversal_Mode.BFS, b_p
     traversal_mode = Traversal_Mode(traversal_mode)
     strictness_level = Strictness_Level(strictness_level)
     #
-    assert not os.path.exists(output_dir + ".tar" if b_pack_into_tar else output_dir), f'target already exists'
+    tgt_path = output_dir + ".tar" if b_pack_into_tar else output_dir
+    if os.path.exists(tgt_path):
+        if b_allow_overwrite:
+            for_os.remove(path=tgt_path, ignore_errors=True)
+        else:
+            raise FileExistsError(f"target {tgt_path} already exists")
     os.makedirs(os.path.dirname(output_dir), exist_ok=True)
     temp_dir = tempfile.TemporaryDirectory(dir=os.path.dirname(output_dir))
     temp_output_dir = os.path.join(temp_dir.name, os.path.basename(output_dir))
