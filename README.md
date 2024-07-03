@@ -45,4 +45,12 @@ pip install kevin-toolbox  --no-dependencies
       - 【new feature】modify read()，新增了 file_obj 参数，支持直接从 BytesIO 和 StringIO 中读取json文件。
     - 添加了对应的测试用例。
   - 在更高版本的numpy中已经没有 np.warnings 了，因此将所有 np.warnings 替换为 warnings。
-
+- v 1.3.6 （）【new feature】
+  - patches
+    - for_os
+      - 【new feature】add find_files_in_dir()，找出目录下带有给定后缀的所有文件的生成器。
+    - for_os.path
+      - 【new feature】add find_illegal_chars()，找出给定的文件名/路径中出现了哪些非法符号。
+      - 【new feature】add replace_illegal_chars()，将给定的文件名/路径中的非法符号替换为合法形式。
+    - 添加了测试用例。
+    - 

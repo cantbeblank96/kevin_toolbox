@@ -243,3 +243,24 @@ class Test_walk:
             if not followlinks:
                 gt_.pop(os.path.join(temp_dir, "a", "d_link"))
             check_consistency(gt_, res)
+
+
+@pytest.mark.parametrize("suffix_ls, b_ignore_case, res_ls",
+                         [
+                             [(".md",), True, ["a/readme.MD", "readme.md"]],
+                             [(".md",), False, ["readme.md", ]],
+                             [(".png",), True, ["bb/image_0.png", ]],
+                             [(".png",), False, ["bb/image_0.png", ]],
+                             [(".md", ".png"), True, ["a/readme.MD","readme.md", "bb/image_0.png", ]],
+                             [(".md", ".png"), False, ["readme.md", "bb/image_0.png"]],
+                         ])
+def test_find_files_in_dir(suffix_ls, b_ignore_case, res_ls):
+    print("test for_os.find_files_in_dir()")
+    #
+    out_ls = list(for_os.find_files_in_dir(input_dir=os.path.join(data_dir, "data_1"), suffix_ls=suffix_ls,
+                                           b_relative_path=True, b_ignore_case=b_ignore_case))
+    assert set(out_ls) == set(res_ls)
+    #
+    out_ls = list(for_os.find_files_in_dir(input_dir=os.path.join(data_dir, "data_1"), suffix_ls=suffix_ls,
+                                           b_relative_path=False, b_ignore_case=b_ignore_case))
+    assert set(out_ls) == set([os.path.join(data_dir, "data_1", i) for i in res_ls])
