@@ -58,18 +58,11 @@ class Exponential_Moving_Average(Accumulator_Base):
         #
         super(Exponential_Moving_Average, self).__init__(**paras)
 
-    def add_sequence(self, var_ls, weight_ls=None):
-        if weight_ls is not None:
-            if isinstance(weight_ls, (int, float,)):
-                weight_ls = [weight_ls] * len(var_ls)
-            assert len(weight_ls) == len(var_ls)
-            for var, weight in enumerate(var_ls, weight_ls):
-                self.add(var, weight)
-        else:
-            for var in var_ls:
-                self.add(var)
+    def add_sequence(self, var_ls, **kwargs):
+        for var in var_ls:
+            self.add(var, **kwargs)
 
-    def add(self, var, weight=1):
+    def add(self, var, weight=1, **kwargs):
         """
             添加单个数据
 
@@ -88,7 +81,7 @@ class Exponential_Moving_Average(Accumulator_Base):
         self.state["total_nums"] += 1
         self.state["bias_fix"] *= keep_ratio
 
-    def get(self, bias_correction=None):
+    def get(self, bias_correction=None, **kwargs):
         """
             获取当前累加值
                 当未初始化时，返回 None

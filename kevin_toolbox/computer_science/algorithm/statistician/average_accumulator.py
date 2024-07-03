@@ -31,20 +31,22 @@ class Average_Accumulator(Accumulator_Base):
 
     def add_sequence(self, var_ls, **kwargs):
         for var in var_ls:
-            self.add(var)
+            self.add(var, **kwargs)
 
-    def add(self, var, **kwargs):
+    def add(self, var, weight=1, **kwargs):
         """
             添加单个数据
 
             参数:
                 var:                数据
+                weight:             权重
         """
         if self.var is None:
             self.var = self._init_var(like=var)
         # 累积
-        self.var += var
+        self.var = self.var + var * weight
         self.state["total_nums"] += 1
+        self.state["total_weights"] += weight
 
     def get(self, **kwargs):
         """
@@ -53,7 +55,17 @@ class Average_Accumulator(Accumulator_Base):
         """
         if len(self) == 0:
             return None
-        return self.var / len(self)
+        return self.var / self.state["total_weights"]
+
+    @staticmethod
+    def _init_state():
+        """
+            初始化状态
+        """
+        return dict(
+            total_nums=0,
+            total_weights=0,
+        )
 
 
 if __name__ == '__main__':

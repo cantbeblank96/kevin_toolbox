@@ -71,7 +71,7 @@ class Accumulator_Base(object):
 
     def add_sequence(self, var_ls, **kwargs):
         # for var in var_ls:
-        #     self.add(var)
+        #     self.add(var, **kwargs)
         raise NotImplementedError
 
     def add(self, var, **kwargs):
@@ -112,7 +112,7 @@ class Accumulator_Base(object):
         if like is not None:
             var = init_var.by_like(var=like)
         elif data_format is not None:
-            var = init_var.by_data_format(**kwargs)
+            var = init_var.by_data_format(**data_format)
         else:
             var = None
         return var

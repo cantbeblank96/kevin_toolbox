@@ -53,4 +53,9 @@ pip install kevin-toolbox  --no-dependencies
         - 同时支持监控以下行为，并触发设定的执行器，详见参数 trigger_for_new 和 trigger_for_out。
                               - 新加值是一个新的帕累托最优值
                               - 抛弃一个不再是最优的旧的最优值
+    - statistician
+      - 【new feature】add Accumulator_for_Ndl，适用于 ndl 结构的统计器。
+      - 【bug fix】fix bug in Accumulator_Base._init_var()
+      - 【new feature】modify Average_Accumulator，在 add() 中新增了 weight 参数用于计算带权重的平均值
+      - modify Exponential_Moving_Average，add_sequence() 不再支持 weight_ls 参数，让该接口与其他类更加一致。
     - 添加了测试用例。
