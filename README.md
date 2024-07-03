@@ -34,6 +34,14 @@ pip install kevin-toolbox  --no-dependencies
     - for_os.path
       - 【new feature】add find_illegal_chars()，找出给定的文件名/路径中出现了哪些非法符号。
       - 【new feature】add replace_illegal_chars()，将给定的文件名/路径中的非法符号替换为合法形式。
+    - for_matplotlib
+      - 【new feature】add module common_charts，新增模块——常用图表，该模块下包含以下函数：
+        - plot_bars()，绘制柱状图
+        - plot_scatters()，绘制散点图
+        - plot_lines()，绘制折线图
+        - plot_distribution()，绘制分布图
+        - plot_scatters_matrix()，绘制散点图矩阵（常用于多变量关系分析）
+        - plot_confusion_matrix()，绘制混淆矩阵（常用于混淆矩阵、相关性矩阵、特征图可视化）
     - 添加了测试用例。
   - data_flow.file
     - markdown
