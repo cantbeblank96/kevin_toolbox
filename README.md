@@ -27,7 +27,7 @@ pip install kevin-toolbox  --no-dependencies
 
 [版本更新记录](./notes/Release_Record.md)：
 
-- v 1.3.6 （）【new feature】
+- v 1.3.6 （2024-07-03）【new feature】
   - patches
     - for_os
       - 【new feature】add find_files_in_dir()，找出目录下带有给定后缀的所有文件的生成器。
