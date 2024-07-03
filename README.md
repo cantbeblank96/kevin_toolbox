@@ -46,3 +46,11 @@ pip install kevin-toolbox  --no-dependencies
       - 【bug fix】fix bug in write()，避免对输入参数 metadata 中的内容进行意料之外的改动。
   - nested_dict_list
     - add para b_allow_override to serializer.write to allow overwriting，增加参数用于允许强制覆盖已有文件。
+  - computer_science.algorithm
+    - pareto_front
+      - 【new feature】add Optimum_Picker，帕累托最优值选取器。
+        - 记录并更新帕累托最优值
+        - 同时支持监控以下行为，并触发设定的执行器，详见参数 trigger_for_new 和 trigger_for_out。
+                              - 新加值是一个新的帕累托最优值
+                              - 抛弃一个不再是最优的旧的最优值
+    - 添加了测试用例。
