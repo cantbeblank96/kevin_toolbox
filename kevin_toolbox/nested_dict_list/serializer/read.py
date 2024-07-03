@@ -18,7 +18,7 @@ def read(input_path, **kwargs):
     assert os.path.exists(input_path)
 
     with tempfile.TemporaryDirectory(dir=os.path.dirname(input_path)) as temp_dir:
-        if os.path.isfile(input_path) and input_path.endswith(".tar"): # 解压
+        if os.path.isfile(input_path) and input_path.endswith(".tar"):  # 解压
             for_os.unpack(source=input_path, target=temp_dir)
             input_path = os.path.join(temp_dir, os.listdir(temp_dir)[0])
         var = _read_unpacked_ndl(input_path, **kwargs)

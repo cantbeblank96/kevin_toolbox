@@ -313,6 +313,9 @@ class Kevin_Notation_Writer:
             try:
                 # 解释为多行
                 assert paras.get("b_single_line", None) in (None, False)
+                temp = [len(paras["column_dict"][k]) for k in self.metadata["column_name"]]
+                if temp:
+                    assert max(temp) == min(temp), f"Error: the length of each column is not equal!"
                 row_ls = list(zip(*[paras["column_dict"][k] for k in self.metadata["column_name"]]))
             except:
                 # 解释为单行

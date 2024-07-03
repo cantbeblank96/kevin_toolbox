@@ -5,6 +5,9 @@ def write(metadata, content, file_path):
     """
         写入整个文件的快捷接口
     """
+    if "column_num" in metadata:
+        metadata=metadata.copy()
+        metadata.pop("column_num")
     with kevin_notation.Writer(file_path=file_path, mode="w", sep=metadata.get("sep", "\t")) as writer:
         writer.write_metadata(metadata=metadata)
         if isinstance(content, (dict,)):

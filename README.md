@@ -59,3 +59,6 @@ pip install kevin-toolbox  --no-dependencies
         - 便于对表格中的图片或者列表中的图片进行保存和替换。
       - 【new feature】add find_tables()，用于从文本中找出markdown格式的表格，并以二维数组的列表形式返回。
       - 【new feature】add parse_table()，将二维数组形式的表格（比如find_tables()的返回列表的元素），解析成指定的格式。
+    - kevin_notation
+      - 【bug fix】fix bug in Kevin_Notation_Writer，增加检验写入的列的元素数量是否一致，不一致时进行报错。
+      - 【bug fix】fix bug in write()，避免对输入参数 metadata 中的内容进行意料之外的改动。
