@@ -1,7 +1,7 @@
 import os
 import matplotlib.pyplot as plt
 from kevin_toolbox.patches.for_os.path import replace_illegal_chars
-from kevin_toolbox.patches.for_matplotlib import generate_color_list
+from kevin_toolbox.patches.for_matplotlib.color import generate_color_list
 
 
 def plot_lines(data_s, title, x_name, output_dir=None, **kwargs):
