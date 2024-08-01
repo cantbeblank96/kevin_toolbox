@@ -24,7 +24,7 @@ def build_study(output_dir=None, feasible_domain_path=None, **kwargs):
     if "storage" in kwargs:
         if isinstance(kwargs["storage"], (str,)) and kwargs["storage"].startswith("mysql:"):
             temp_ls = list(kwargs["storage"].split(":", 1))
-            temp[0] = "mysql+pymysql"
+            temp_ls[0] = "mysql+pymysql"
             kwargs["storage"] = ":".join(temp_ls)
         elif isinstance(kwargs["storage"], (dict,)):
             kwargs["storage"] = build_storage(output_dir=output_dir, **kwargs["storage"]).url

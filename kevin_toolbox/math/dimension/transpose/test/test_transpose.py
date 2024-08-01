@@ -16,6 +16,6 @@ def test_transpose_inside_axis_and_get_inverse_index_ls(x_shape, axis):
     index_ls = np.random.permutation(x_shape[axis])
     # 同时测试对 np.array 和 torch.tensor 的兼容性
     for x in x_ls:
-        y = transpose.inside_axis(x=x, axis=axis, index_ls=index_ls)
+        y = transpose.inside_axis(x=x, axis=axis, index_ls=index_ls, reverse=False)
         x1 = transpose.inside_axis(x=y, axis=axis, index_ls=index_ls, reverse=True)
         check_consistency(x, x1)
