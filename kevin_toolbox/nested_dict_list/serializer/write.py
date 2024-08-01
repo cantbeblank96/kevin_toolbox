@@ -211,6 +211,7 @@ def write(var, output_dir, settings=None, traversal_mode=Traversal_Mode.BFS, b_p
                 file_path=os.path.join(temp_output_dir, "record.json"), b_use_suggested_converter=True)
 
     # 打包成 .tar 文件
+    for_os.remove(path=tgt_path, ignore_errors=True)
     if b_pack_into_tar:
         for_os.pack(source=temp_output_dir)
         os.rename(temp_output_dir + ".tar", output_dir + ".tar")
