@@ -196,8 +196,9 @@
       - 【bug fix】build_study()，fix bug in line 27，"temp" ==> "temp_ls"
   - nested_dict_list.serializer
     - 【bug fix】write()，fix bug in line 214，新增操作：在保存打包文件前尝试先对目标位置进行清空。
-
-
+- v 1.3.8 （2024-08-13）【bug fix】【temporary version】
+  - computer_science.algorithm.registration
+    - modify Registry.collect_from_paths() for python>=3.12，在更高版本的python的importlib中 find_module() 方法已被废弃和移除，因此需要替换为 find_spec() 方法。
 
 
 
