@@ -321,7 +321,9 @@ class Registry:
                         f'such as {{"func": lambda _, __, path: path == "{path}", "scope": ["files",]}}'
                     )
             # 加载模块
-            module = loader.find_module(module_name).load_module(module_name)
+            # module = loader.find_module(module_name).load_module(module_name)
+            module = module_spec.loader.load_module(module_name)
+
             # 选择遍历过程中第一次找到的 Registry 实例
             if temp is None:
                 for name, obj in inspect.getmembers(module):
