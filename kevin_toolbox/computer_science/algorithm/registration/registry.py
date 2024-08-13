@@ -283,17 +283,25 @@ class Registry:
             #   （快速判断）判断该模块所在目录是否在 path_set 中
             if loader.path not in path_set:
                 continue
+
+            # 使用 find_spec 代替 find_module
+            module_spec = loader.find_spec(module_name)
+            if module_spec is None:
+                continue
+            path = module_spec.origin  # 获取模块的路径
+
             # is_pkg:
             #   - 为 True 时表示当前遍历到的模块是一个包（即一个包含其他模块或子包的目录）
             #   - 为 False 时表示当前模块是一个普通的 Python 模块（文件），不包含其他模块或子包。
             if is_pkg:
                 #   若是目录形式的 package，判断是否满足 Path_Ignorer 中的 dirs 对应的规则
-                path = os.path.dirname(loader.find_module(module_name).path)
+                # path = os.path.dirname(loader.find_module(module_name).path)
+                path = os.path.dirname(path)
                 if path_ignorer(Ignore_Scope.DIRS, True, os.path.islink(path), path):
                     continue
             else:
                 #   若该模块是 module，判断该模块的文件路径是否满足 Path_Ignorer 中的 files 对应的规则
-                path = loader.find_module(module_name).path
+                # path = loader.find_module(module_name).path
                 if path_ignorer(Ignore_Scope.FILES, False, os.path.islink(path), path):
                     continue
                 #   若该模块与调用的文件相同，则报错。
