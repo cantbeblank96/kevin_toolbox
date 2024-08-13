@@ -199,6 +199,9 @@
 - v 1.3.8 （2024-08-13）【bug fix】【temporary version】
   - computer_science.algorithm.registration
     - modify Registry.collect_from_paths() for python>=3.12，在更高版本的python的importlib中 find_module() 方法已被废弃和移除，因此需要替换为 find_spec() 方法。
+- v 1.3.9 （2024-08-13）【bug fix】【temporary version】
+  - computer_science.algorithm.registration
+    - modify Registry.collect_from_paths() for python>=3.12，在更高版本的python的importlib中 find_module() 方法已被废弃和移除，因此需要替换为 find_spec() 方法。
 
 
 
