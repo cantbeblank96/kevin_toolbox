@@ -15,9 +15,11 @@ def plot_confusion_matrix(data_s, title, gt_name, pd_name, label_to_value_s=None
 
     value_set = set(data_s[gt_name]).union(set(data_s[pd_name]))
     if label_to_value_s is None:
-        label_to_value_s = {f'{i}': i for i in value_set}
-    else:
-        assert all(i in value_set for i in label_to_value_s.values())
+        label_to_value_s = dict()
+    for i in value_set.difference(set(label_to_value_s.values())):
+        label_to_value_s[f'{i}'] = i
+
+    assert set(label_to_value_s.values()).issuperset(value_set)
     # 计算混淆矩阵
     cfm = confusion_matrix(y_true=data_s[gt_name], y_pred=data_s[pd_name], labels=list(label_to_value_s.values()),
                            normalize=paras["normalize"])
