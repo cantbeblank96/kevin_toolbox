@@ -1,4 +1,5 @@
-from kevin_toolbox.math.utils import split_integer_most_evenly
+from kevin_toolbox.data_flow.file.markdown.table import convert_format, Table_Format, padding_misaligned_values
+from kevin_toolbox.data_flow.file.markdown.table.convert import complete_to_matrix
 
 
 def generate_table(content_s, orientation="vertical", chunk_nums=None, chunk_size=None, b_allow_misaligned_values=False,
@@ -36,9 +37,8 @@ def generate_table(content_s, orientation="vertical", chunk_nums=None, chunk_siz
     assert orientation in ["vertical", "horizontal", "h", "v"]
     assert isinstance(content_s, (dict,))
 
-    # 将简易模式转换为完整模式
-    if len(content_s.values()) > 0 and not isinstance(list(content_s.values())[0], (dict,)):
-        content_s = {i: {"title": k, "values": v} for i, (k, v) in enumerate(content_s.items())}
+    # 首先转换为完整模式
+    content_s = convert_format(content_s=content_s, output_format=Table_Format.COMPLETE_DICT)
     # 对齐 values
     len_ls = [len(v["values"]) for v in content_s.values()]
     max_length = max(len_ls)
@@ -46,8 +46,7 @@ def generate_table(content_s, orientation="vertical", chunk_nums=None, chunk_siz
         assert b_allow_misaligned_values, \
             f'The lengths of the values under each title are not aligned. ' \
             f'The maximum length is {max_length}, but each length is {len_ls}'
-        for v in content_s.values():
-            v["values"].extend([""] * (max_length - len(v["values"])))
+        content_s = padding_misaligned_values(content_s=content_s, padding_value="")
     # 对值进行排序
     if callable(f_gen_order_of_values):
         # 检查是否有重复的 title
@@ -58,57 +57,17 @@ def generate_table(content_s, orientation="vertical", chunk_nums=None, chunk_siz
         idx_ls.sort(key=lambda x: f_gen_order_of_values({v["title"]: v["values"][x] for v in content_s.values()}))
         for v in content_s.values():
             v["values"] = [v["values"][i] for i in idx_ls]
-    # 补充缺省的 title
-    for i in range(max(content_s.keys()) + 1):
-        if i not in content_s:
-            content_s[i] = {"title": "", "values": [""] * max_length}
-    # 按照 chunk_nums 或者 chunk_size 对表格进行分割
-    if chunk_nums is not None or chunk_size is not None:
-        if chunk_nums is not None:
-            split_len_ls = split_integer_most_evenly(x=max_length, group_nums=chunk_nums)
-        else:
-            split_len_ls = [chunk_size] * (max_length // chunk_size)
-            if max_length % chunk_size != 0:
-                split_len_ls += [max_length % chunk_size]
-        max_length = max(split_len_ls)
-        temp = dict()
-        beg = 0
-        for i, new_length in enumerate(split_len_ls):
-            end = beg + new_length
-            temp.update({k + i * len(content_s): {"title": v["title"],
-                                                  "values": v["values"][beg:end] + [""] * (max_length - new_length)} for
-                         k, v in content_s.items()})
-            beg = end
-        content_s = temp
+
+    # 转换为 matrix 格式
+    content_s = complete_to_matrix(content_s=content_s, orientation=orientation, chunk_size=chunk_size,
+                                   chunk_nums=chunk_nums)
     # 构建表格
-    return _show_table(content_s=content_s, orientation=orientation)
-
-
-def _show_table(content_s, orientation="vertical"):
-    """
-        生成表格
-
-        参数：
-            content_s:              <dict> 内容
-                                        content_s = {<index>: {"title": <title>,"values":<list of value>}, ...}
-                                        此时将取第 <index> 个 "title" 的值来作为第 <index> 个标题的值。values 同理。
-            orientation:            <str> 表格的方向
-                                        支持以下值：
-                                            "vertical" / "v":       纵向排列，亦即标题在第一行
-                                            "horizontal" / "h":     横向排列，亦即标题在第一列
-    """
     table = ""
-    if orientation in ["vertical", "v"]:
-        table += "| " + " | ".join([f'{content_s[i]["title"]}' for i in range(len(content_s))]) + " |\n"
-        table += "| " + " | ".join(["---"] * len(content_s)) + " |\n"
-        for row in zip(*[content_s[i]["values"] for i in range(len(content_s))]):
-            table += "| " + " | ".join([f'{i}' for i in row]) + " |\n"
-    else:
-        for i in range(len(content_s)):
-            row = [f'{content_s[i]["title"]}'] + [f'{i}' for i in content_s[i]["values"]]
-            table += "| " + " | ".join(row) + " |\n"
-            if i == 0:
-                table += "| " + " | ".join(["---"] * len(row)) + " |\n"
+    for idx, row in enumerate(content_s["matrix"]):
+        row = [f'{i}' for i in row]
+        table += "| " + " | ".join(row) + " |\n"
+        if idx == 0:
+            table += "| " + " | ".join(["---"] * len(row)) + " |\n"
     return table
 
 

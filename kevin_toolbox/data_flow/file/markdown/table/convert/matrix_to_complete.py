@@ -1,17 +1,9 @@
-import re
-from typing import Union
-from kevin_toolbox.data_flow.file.markdown.variable import Table_Format
-
-
-def parse_table(raw_table, output_format: Union[Table_Format, str] = Table_Format.COMPLETE_DICT, orientation="vertical",
-                chunk_size=None, chunk_nums=None, b_remove_empty_lines=False, f_gen_order_of_values=None):
+def matrix_to_complete(matrix, orientation, chunk_size=None, chunk_nums=None, b_remove_empty_lines=False):
     """
-        将二维数组形式的表格（比如find_tables()的返回列表的元素），解析成指定的格式
+        将二维数组形式的 MATRIX 格式（比如find_tables()的返回列表的元素），转换成 COMPLETE_DICT 格式
 
         参数：
-            raw_table:                  <list of list> 二维数组形式的表格
-            output_format:              <Table_Format or str> 目标格式
-                                            具体可以参考 Table_Format 的介绍
+            matrix:                     <list of row> 二维数组形式的表格
             orientation:                <str> 解释表格时取哪个方向
                                             支持以下值：
                                             "vertical" / "v":       将第一行作为标题
@@ -22,35 +14,37 @@ def parse_table(raw_table, output_format: Union[Table_Format, str] = Table_Forma
                 对解释表格无作用。但是当指定该参数时，将视为表格有可能是多个表格并列的情况，因此将尝试根据标题的重复规律，
                 推断出对应的 chunk_nums，并最终将其拆分成多个表格。
             b_remove_empty_lines:       <boolean> 移除空的行、列
-            f_gen_order_of_values:      <callable> 生成values排序顺序的函数
-                                            具体参考 generate_table() 中的对应参数
     """
-    assert isinstance(raw_table, (list, tuple,))
+    # 检验参数
+    assert chunk_nums is None or 1 <= chunk_nums
+    assert chunk_size is None or 1 <= chunk_size
+    assert isinstance(matrix, (list, tuple,))
+    assert orientation in ["vertical", "horizontal", "h", "v"]
 
     # 转换为字典形式
     if orientation not in ["vertical", "v"]:
         # 需要转为垂直方向
-        raw_table = list(zip(*raw_table))
-    r_nums, c_nums = len(raw_table), len(raw_table[0])
+        matrix = list(zip(*matrix))
+    r_nums, c_nums = len(matrix), len(matrix[0])
     if chunk_size is not None:
         assert chunk_size == r_nums - 1, \
             (f'The number of values {r_nums - 1} actually contained in the table '
              f'does not match the specified chunk_size {chunk_size}')
-        chunk_nums = c_nums // _find_shortest_repeating_pattern_size(arr=raw_table[0])
+        chunk_nums = c_nums // _find_shortest_repeating_pattern_size(arr=matrix[0])
     chunk_nums = 1 if chunk_nums is None else chunk_nums
     assert c_nums % chunk_nums == 0, \
         f'The number of headers actually contained in the table does not match the specified chunk_nums, ' \
         f'Expected n*{chunk_nums}, but got {c_nums}'
     # 解释出标题
-    keys = raw_table[0][0:c_nums // chunk_nums]
+    keys = matrix[0][0:c_nums // chunk_nums]
     # 解释出值
     if chunk_nums == 1:
-        values = raw_table[1:]
+        values = matrix[1:]
     else:
         values = []
         for i in range(chunk_nums):
             for j in range(1, r_nums):
-                values.append(raw_table[j][i * len(keys):(i + 1) * len(keys)])
+                values.append(matrix[j][i * len(keys):(i + 1) * len(keys)])
     # 去除空行
     if b_remove_empty_lines:
         values = [line for line in values if any(i != '' for i in line)]
@@ -58,26 +52,6 @@ def parse_table(raw_table, output_format: Union[Table_Format, str] = Table_Forma
     # 去除空列
     if b_remove_empty_lines:
         table_s = {k: v_s for k, v_s in table_s.items() if v_s["title"] != '' and any(i != '' for i in v_s["values"])}
-    # 对值进行排序
-    if callable(f_gen_order_of_values):
-        breakpoint()
-        # 检查是否有重复的 title
-        temp = [v["title"] for v in table_s.values()]
-        assert len(set(temp)) == len(temp), \
-            f'table has duplicate titles, thus cannot be sorted using f_gen_order_of_values'
-        idx_ls = list(range(len(values)))
-        idx_ls.sort(key=lambda x: f_gen_order_of_values({v["title"]: v["values"][x] for v in table_s.values()}))
-        for v in table_s.values():
-            v["values"] = [v["values"][i] for i in idx_ls]
-
-    #
-    if output_format is Table_Format.SIMPLE_DICT:
-        temp = {v_s["title"] for v_s in table_s.values()}
-        if len(temp) != len(set(temp)):
-            raise AssertionError(
-                f'There are columns with the same title in the table, '
-                f'please check the orientation of the table or use output_format="complete_dict"')
-        table_s = {v_s["title"]: v_s["values"] for v_s in table_s.values()}
 
     return table_s
 
@@ -105,6 +79,7 @@ def _find_shortest_repeating_pattern_size(arr):
 
 if __name__ == '__main__':
     from kevin_toolbox.data_flow.file.markdown import find_tables
+
     # # 示例Markdown表格文本
     # file_path = ""
     # with open(file_path, 'r') as f:
@@ -131,5 +106,5 @@ if __name__ == '__main__':
     table_ls = find_tables(text=markdown_text)
 
     # 调用函数并打印结果
-    tables = parse_table(raw_table=table_ls[0], output_format="complete_dict", chunk_nums=3, b_remove_empty_lines=True)
+    tables = matrix_to_complete(matrix=table_ls[0], orientation="v", chunk_nums=3, b_remove_empty_lines=True)
     print(tables)
