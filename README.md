@@ -33,7 +33,11 @@ pip install kevin-toolbox  --no-dependencies
       - 【bug fix】fix bug in plot_confusion_matrix() for paras label_to_value_s，删除了对参数 label_to_value_s 的不合理的检验，并且支持更加自由的 label_to_value_s 设置，比如允许 label_to_value_s 中缺少 data_s 中已有的 label_idx，或者含有部分 data_s 中未见的 label_idx。
       - 【bug fix】fix bug in plot_lines()，对接受的输入 data_s 进行 copy，避免后续操作引起输入意外改变。
       - 增加测试用例。
-    - f
+    - for_streamlit.markdown
+      - 【new feature】add show_image()，对 st.markdown 中图片显示部分的改进，能够正确显示本地的图片。
+      - 【new feature】add show_table()，对 st.markdown 中表格显示部分的改进，支持以下多种方式来显示表格。
+      - 【new feature】add show()，st.markdown 的改进版。
+      - 增加测试用例。
   - data_flow.file
     - markdown【incompatible change】【new feature】
       - 【refactor and modify】
