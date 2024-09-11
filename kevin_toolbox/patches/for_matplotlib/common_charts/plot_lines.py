@@ -1,10 +1,12 @@
 import os
+import copy
 import matplotlib.pyplot as plt
 from kevin_toolbox.patches.for_os.path import replace_illegal_chars
 from kevin_toolbox.patches.for_matplotlib.color import generate_color_list
 
 
 def plot_lines(data_s, title, x_name, output_dir=None, **kwargs):
+    data_s = copy.copy(data_s)
     line_nums = len(data_s) - 1
     paras = {
         "dpi": 200,
