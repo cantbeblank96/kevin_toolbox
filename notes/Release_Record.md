@@ -41,6 +41,9 @@
     - for_matplotlib.common_charts
       - 【new feature】 add para replace_zero_division_with to plot_confusion_matrix()，新增参数 replace_zero_division_with 用于指定在normalize时引发除0错误的矩阵元素要使用何种值进行替代。
       - 增加了测试用例。
+- v 1.4.2 （2024-09-23）【bug fix】
+  - patches.for_streamlit.markdown
+    - 【bug fix】fix bug in show_table()，line 56 typo。
 
 
 
