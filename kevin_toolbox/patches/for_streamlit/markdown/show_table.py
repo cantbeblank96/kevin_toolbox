@@ -53,7 +53,7 @@ def show_table(text, doc_dir=None, display_mode_s=None):
             method(text=part, matrix=table_s["matrix"], doc_dir=doc_dir, table_name=f'Table {idx}')
         else:
             # 是表格，且内部无图片，则直接显示
-            show_image(text=part, doc_dir=None)
+            show_image(text=part, doc_dir=doc_dir)
 
 # 另一种显示表格的方式是通过 data_editor 来显示，但是对图片的显示效果不好
 # TODO 可以选择是通过 data_editor 还是 columns，或者原始格式（对本地图片不处理或者使用 base64 代替）来显示表格
