@@ -52,7 +52,7 @@ def test_plot_confusion_matrix_1():
 
     doc = "# 演示\n\n"
 
-    for i,label_to_value_s in enumerate([
+    for i, label_to_value_s in enumerate([
         {"A": 0, "B": 1, "C": 2, "D": 3, "E": 4, "F": 5},  # label_to_value_s 中含有部分 data_s 中未见的 label_idx
         {"A": 0, "C": 2},  # label_to_value_s 中缺少 data_s 中已有的 label_idx
         {"C": 2, "D": 3, "E": 4, "F": 5}  # label_to_value_s 中缺少 data_s 中已有的 label_idx，同时中含有部分 data_s 中未见的 label_idx
@@ -71,4 +71,38 @@ def test_plot_confusion_matrix_1():
         doc += f'label_to_value_s:\n\n```\n{label_to_value_s}\n```\n\n'
 
     with open(os.path.join(output_dir, "demo_1.md"), "w", encoding="utf-8") as f:
+        f.write(doc)
+
+
+def test_plot_confusion_matrix_2():
+    """
+        测试 replace_zero_division_with 参数
+    """
+    y_true = np.array([0, 1, 2, 0, 1, 2, 0, 1, 2, 5])
+    y_pred = np.array([0, 2, 1, 0, 2, 1, 0, 1, 1, 5])
+
+    doc = "# 演示\n\n"
+
+    for replace_zero_division_with in [0, -1, np.nan, float("nan")]:
+        doc += f"## replace_zero_division_with={replace_zero_division_with}\n\n"
+
+        for normalize in [None, "true", "pred", "all"]:
+            doc += f"### normalize={normalize}\n\n"
+
+            out_file, cfm = plot_confusion_matrix(
+                data_s={'a': y_true, 'b': y_pred},
+                title=f'test replace_zero_division_with={replace_zero_division_with} normalize={normalize}',
+                gt_name='a', pd_name='b',
+                label_to_value_s={"A": 5, "B": 0, "C": 1, "D": 2, "E": 3},
+                replace_zero_division_with=replace_zero_division_with,
+                output_dir=os.path.join(output_dir, "plots_2"),
+                normalize=normalize, b_return_cfm=True
+            )
+
+            doc += markdown.generate_link(name=os.path.basename(out_file),
+                                          target=os.path.relpath(out_file, start=output_dir),
+                                          type_="image") + "\n\n"
+            doc += f'```\n{cfm}\n```\n\n'
+
+    with open(os.path.join(output_dir, "demo_2.md"), "w", encoding="utf-8") as f:
         f.write(doc)
