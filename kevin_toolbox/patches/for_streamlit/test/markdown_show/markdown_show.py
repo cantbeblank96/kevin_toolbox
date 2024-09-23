@@ -2,7 +2,7 @@ import os
 import streamlit as st
 import sys
 
-root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))))
+root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))))
 sys.path.insert(0, root_dir)
 print(root_dir)
 from kevin_toolbox.patches.for_streamlit import markdown

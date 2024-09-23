@@ -11,7 +11,8 @@ DEFAULT_DISPLAY_MODE_S = {
 
 
 def _show_table_by_columns(matrix, doc_dir, table_name, **kwargs):
-    with st.expander(label=table_name, expanded=True):
+    tab, _ = st.tabs([table_name, "[click to hide table]"])
+    with tab:
         for row in matrix:
             col_ls = st.columns(len(row))
             for col, i in zip(col_ls, row):
@@ -21,7 +22,7 @@ def _show_table_by_columns(matrix, doc_dir, table_name, **kwargs):
 
 METHOD_S = {
     "by_columns": _show_table_by_columns,
-    "by_markdown": lambda text, **kwargs: st.markdown(text=text)
+    "by_markdown": lambda text, **kwargs: st.markdown(text)
 }
 
 
@@ -52,7 +53,7 @@ def show_table(text, doc_dir=None, display_mode_s=None):
             method(text=part, matrix=table_s["matrix"], doc_dir=doc_dir, table_name=f'Table {idx}')
         else:
             # 是表格，且内部无图片，则直接显示
-            show_image(part)
+            show_image(text=part, doc_dir=None)
 
 # 另一种显示表格的方式是通过 data_editor 来显示，但是对图片的显示效果不好
 # TODO 可以选择是通过 data_editor 还是 columns，或者原始格式（对本地图片不处理或者使用 base64 代替）来显示表格

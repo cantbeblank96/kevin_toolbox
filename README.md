@@ -59,4 +59,9 @@ pip install kevin-toolbox  --no-dependencies
       - link
         - 【new feature】add find_links()，查找文本中的链接。与find_tables()类似，也支持 b_compact_format 参数。
       - 增加测试用例。
+- v 1.4.1 （2024-09-23）【bug fix】
+  - patches
+    - for_streamlit.markdown
+      - 【bug fix】fix bug in show_table()，将原来的使用 st.expander 去包裹表格，改为使用 st.tabs 去包裹表格，避免在 streamlit<=1.38.0 下（截止2024-09-23最新版本），因为 st.expander 嵌套使用而造成的报错。具体参看：https://docs.streamlit.io/develop/api-reference/layout/st.expander
+
 
