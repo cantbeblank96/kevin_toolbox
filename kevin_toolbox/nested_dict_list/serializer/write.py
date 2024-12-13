@@ -210,13 +210,24 @@ def write(var, output_dir, settings=None, traversal_mode=Traversal_Mode.BFS, b_p
                              b_keep_identical_relations=b_keep_identical_relations),
                 file_path=os.path.join(temp_output_dir, "record.json"), b_use_suggested_converter=True)
 
-    # 打包成 .tar 文件
+    #
     for_os.remove(path=tgt_path, ignore_errors=True)
+    # 打包成 .tar 文件
+    src_path = temp_output_dir
     if b_pack_into_tar:
         for_os.pack(source=temp_output_dir)
-        os.rename(temp_output_dir + ".tar", output_dir + ".tar")
-    else:
-        os.rename(temp_output_dir, output_dir)
+        src_path = temp_output_dir + ".tar"
+    # 整理目录结构
+    count = 0
+    while count < 3:
+        try:
+            os.rename(src_path, tgt_path)
+            break
+        except:
+            count += 1
+            time.sleep(0.5)
+    if not os.path.isfile(tgt_path):
+        for_os.copy(src=src_path, dst=tgt_path, remove_dst_if_exists=True)
 
 
 def _judge_processed_or_not(processed_s, name):
