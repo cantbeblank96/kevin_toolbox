@@ -26,6 +26,24 @@ def test_get_rng():
     check_consistency(rng_0.normal(size=100), rng_1.normal(size=100))
 
 
+def test_get_and_set_rng_state():
+    print("test random.get/set_rng_state()")
+
+    a = random.get_rng(seed=114)
+    b = random.get_rng(seed=114)
+
+    for _ in range(10):
+        a.randn(2, 3)
+
+    rng_state = random.get_rng_state(rng=a)
+    random.get_rng_state(rng=a)
+    # print(rng_state)
+    b = random.set_rng_state(rng=b, state=rng_state)
+    # print(a.randn(2, 3))
+    # print(b.randn(2, 3))
+    check_consistency(a.randn(2, 3), b.randn(2, 3))
+
+
 def test_truncated_normal():
     print("test random.truncated_normal()")
 
