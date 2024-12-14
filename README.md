@@ -27,9 +27,9 @@ pip install kevin-toolbox  --no-dependencies
 
 [版本更新记录](./notes/Release_Record.md)：
 
-- v 1.4.2 （2024-09-23）【bug fix】
-  - patches.for_streamlit.markdown
-    - 【bug fix】fix bug in show_table()，line 56 typo。
-- v 1.4.3 （）【bug fix】
+- v 1.4.3 （2024-12-14）【new feature】
   - nested_dict_list.serializer
     - modify write()，使用 while(detect) try it except wait 的结构包裹原来的 os.rename 操作，多次尝试，避免因为突发的文件系统阻塞（OSError: [Errno 5] Input/output error）导致保存失败。
+  - patches.for_numpy.random
+    - add get/set_rng_state()，用于获取/加载随机生成器的状态。
+    - 添加了对应的测试用例
