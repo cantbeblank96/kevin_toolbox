@@ -27,9 +27,6 @@ pip install kevin-toolbox  --no-dependencies
 
 [版本更新记录](./notes/Release_Record.md)：
 
-- v 1.4.3 （2024-12-14）【new feature】
+- v 1.4.4 （2024-12-15）【bug fix】
   - nested_dict_list.serializer
-    - modify write()，使用 while(detect) try it except wait 的结构包裹原来的 os.rename 操作，多次尝试，避免因为突发的文件系统阻塞（OSError: [Errno 5] Input/output error）导致保存失败。
-  - patches.for_numpy.random
-    - add get/set_rng_state()，用于获取/加载随机生成器的状态。
-    - 添加了对应的测试用例
+    - fix bug in write() line 229，将判断目标是否存在时使用的 os.path.isfile 改为 os.path.exists 以支持目标是文件夹的情况。

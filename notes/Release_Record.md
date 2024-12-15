@@ -50,6 +50,9 @@
   - patches.for_numpy.random
     - add get/set_rng_state()，用于获取/加载随机生成器的状态。
     - 添加了对应的测试用例
+- v 1.4.4 （2024-12-15）【bug fix】
+  - nested_dict_list.serializer
+    - fix bug in write() line 229，将判断目标是否存在时使用的 os.path.isfile 改为 os.path.exists 以支持目标是文件夹的情况。
 
 
 

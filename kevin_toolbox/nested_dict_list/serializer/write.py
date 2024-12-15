@@ -226,7 +226,7 @@ def write(var, output_dir, settings=None, traversal_mode=Traversal_Mode.BFS, b_p
         except:
             count += 1
             time.sleep(0.5)
-    if not os.path.isfile(tgt_path):
+    if not os.path.exists(tgt_path):
         for_os.copy(src=src_path, dst=tgt_path, remove_dst_if_exists=True)
 
 
