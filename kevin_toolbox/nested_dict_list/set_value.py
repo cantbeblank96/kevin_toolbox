@@ -1,5 +1,5 @@
 from kevin_toolbox.nested_dict_list import get_value
-from kevin_toolbox.nested_dict_list.name_handler import parse_name, escape_node
+from kevin_toolbox.nested_dict_list.name_handler import parse_name
 
 
 def set_value(var, name, value, b_force=False):
@@ -8,7 +8,7 @@ def set_value(var, name, value, b_force=False):
 
         参数：
             var:            任意支持索引赋值的变量
-            name:           <string> 名字
+            name:           <string/parsed_name> 名字
                                 名字 name 的具体介绍参见函数 name_handler.parse_name()
                                 假设 var=dict(acc=[0.66,0.78,0.99])，如果你想将 var["acc"][1] 设置为 100，那么可以将 name 写成：
                                     ":acc@1" 或者 "|acc|1" 等。
@@ -25,14 +25,18 @@ def set_value(var, name, value, b_force=False):
                     若 b_force 为 True 有可能不会在 var 的基础上进行改变，而是返回一个新的ndl结构，
                     因此建议使用赋值 var = ndl.set_value(var) 来避免可能的错误。
     """
-    _, method_ls, node_ls = parse_name(name=name, b_de_escape_node=False)
+    if isinstance(name, (tuple, list,)):
+        assert len(name) == 3, f'invalid parsed name {name}'
+        _, method_ls, node_ls = name
+    else:
+        _, method_ls, node_ls = parse_name(name=name, b_de_escape_node=True)
     if len(node_ls) == 0:
         return value
 
-    raw_key = escape_node(node=node_ls[-1], b_reversed=True, times=1)
+    raw_key = node_ls[-1]
 
     try:
-        item = get_value(var=var, name=name[:-1 - len(node_ls[-1])])
+        item = get_value(var=var, name=('', method_ls[:-1], node_ls[:-1]))
         if method_ls[-1] == "@":
             key = eval(raw_key)
         elif method_ls[-1] == "|":
@@ -63,6 +67,12 @@ def set_value(var, name, value, b_force=False):
                 else:
                     # 其他，比如当 key 为元组、浮点数等等时，则使用 dict 构建
                     value = {key: value}
-            var = set_value(var=var, name=name[:-1 - len(node_ls[-1])], value=value, b_force=b_force)
+            var = set_value(var=var, name=('', method_ls[:-1], node_ls[:-1]), value=value, b_force=b_force)
 
     return var
+
+
+if __name__ == "__main__":
+    var_ = []
+    set_value(var=var_, name="@2:data", value=1, b_force=True)
+    print(var_)

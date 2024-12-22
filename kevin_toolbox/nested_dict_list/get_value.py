@@ -7,7 +7,7 @@ def get_value(var, name, b_pop=False, **kwargs):
 
         参数：
             var:            任意支持索引取值的变量
-            name:           <str> 名字
+            name:           <str/parsed_name> 名字
                                 名字 name 的具体介绍参见函数 name_handler.parse_name()
                                 假设 var=dict(acc=[0.66,0.78,0.99])，如果你想读取 var["acc"][1] => 0.78，那么可以将 name 写成：
                                     ":acc@1" 或者 "|acc|1" 等。
@@ -19,7 +19,11 @@ def get_value(var, name, b_pop=False, **kwargs):
                                 - 不设置（默认）。当取值失败时将报错。
                                 - 设置为任意值。取值失败时将返回该值。
     """
-    _, method_ls, node_ls = parse_name(name=name, b_de_escape_node=True)
+    if isinstance(name, (tuple, list,)):
+        assert len(name) == 3, f'invalid parsed name {name}'
+        _, method_ls, node_ls = name
+    else:
+        _, method_ls, node_ls = parse_name(name=name, b_de_escape_node=True)
 
     try:
         pre, cur = None, var
@@ -46,3 +50,9 @@ def get_value(var, name, b_pop=False, **kwargs):
             raise IndexError(f'invalid name {name}')
 
     return cur
+
+
+if __name__ == "__main__":
+    var_ = dict(acc=[0.66, 0.78, 0.99])
+    print(get_value(var_, ''))
+    print(get_value(var_, ['', [], []]))
