@@ -38,9 +38,9 @@ def write_json(content, file_path, sort_keys=False, converters=None, b_use_sugge
     content = json.dumps(content, indent=4, ensure_ascii=False, sort_keys=sort_keys)
 
     if file_path is not None:
-        file_path = os.path.abspath(file_path)
+        file_path = os.path.abspath(os.path.expanduser(file_path))
         os.makedirs(os.path.dirname(file_path), exist_ok=True)
-        with open(file_path, 'w') as f:
+        with open(file_path, 'w', encoding="utf-8") as f:
             f.write(content)
     else:
         return content
