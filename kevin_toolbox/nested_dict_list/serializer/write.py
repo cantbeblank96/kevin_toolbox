@@ -7,6 +7,7 @@ from kevin_toolbox.data_flow.file import json_
 from kevin_toolbox.patches import for_os
 import kevin_toolbox.nested_dict_list as ndl
 from kevin_toolbox.nested_dict_list.traverse import Traversal_Mode
+from kevin_toolbox.env_info.variable_ import env_vars_parser
 from .enum_variable import Strictness_Level
 from .saved_node_name_builder import Saved_Node_Name_Builder
 
@@ -32,7 +33,17 @@ def write(var, output_dir, settings=None, traversal_mode=Traversal_Mode.BFS, b_p
             var:                    <nested dict list>
             settings:               <list of dict> 指定对于不同节点or部分的处理模式
                                         其结构为：
-                                            [{"match_cond": <匹配模式>, "backend": <序列化方式>, "traversal_mode": <遍历方式>}, ...]
+                                            [
+                                                {
+                                                    "match_cond": <匹配模式>,
+                                                    "backend": <序列化方式>,
+                                                    "traversal_mode": <遍历方式>,
+                                                    ("nodes_dir": <节点保存目录>,
+                                                     "saved_node_name_format": <nodes目录下节点文件/文件夹的命名方式>)
+                                                },
+                                                ...
+                                            ]
+                                        允许专门指定某个处理模式下所使用的 nodes_dir 和 saved_node_name_format，若不指定，则使用后面的默认值。
                                         <匹配模式>支持以下4种：
                                             - "<level>..."  匹配指定层的节点，比如"<level>0"表示根节点，"<level>-1"表示所有叶节点
                                             - "<node>name"  匹配指定name的节点
@@ -85,7 +96,9 @@ def write(var, output_dir, settings=None, traversal_mode=Traversal_Mode.BFS, b_p
                                             - "low" / Strictness_Level.IGNORE_FAILURE   匹配不完整，或者某些节点尝试过所有匹配到
                                                                                             的 backend 之后仍然无法写入
                                         默认是 "normal"
-            saved_node_name_format: <str> nodes/目录下节点文件/文件夹的命名方式。
+            nodes_dir:              <path> 节点内容保存目录
+                                        默认为保存在 <output_dir>/nodes 下
+            saved_node_name_format: <str> nodes目录下节点文件/文件夹的命名方式。
                                         基本结构为：  '{<part_0>}...{<part_1>}...'
                                         其中 {} 内将根据 part 指定的类型进行自动填充。目前支持以下几种选项：
                                             - "raw_name"        该节点对应位置的 name。
@@ -132,7 +145,8 @@ def write(var, output_dir, settings=None, traversal_mode=Traversal_Mode.BFS, b_p
         var = value_parser.replace_identical_with_reference(var=var, flag="same", b_reverse=False)
     if settings is None:
         settings = [{"match_cond": "<level>-1", "backend": (":skip:simple", ":numpy:npy", ":torch:tensor", ":pickle")}]
-    snn_builder = Saved_Node_Name_Builder(format_=saved_node_name_format)
+    default_snn_builder = Saved_Node_Name_Builder(format_=saved_node_name_format)
+    default_nodes_dir = os.path.join(temp_output_dir, "nodes")
 
     # 构建 processed_s
     #     为了避免重复处理节点/结构，首先构建与 var 具有相似结构的 processed_s 来记录处理处理进度。
@@ -154,13 +168,20 @@ def write(var, output_dir, settings=None, traversal_mode=Traversal_Mode.BFS, b_p
         if isinstance(setting["match_cond"], str) and setting["match_cond"].startswith("<eval>"):
             setting["match_cond"] = eval(setting["match_cond"][6:])
         assert callable(setting["match_cond"]) or isinstance(setting["match_cond"], str)
+        # nodes_dir = env_vars_parser(value.pop("nodes_dir")) if "nodes_dir" in value else os.path.join(input_path,
+        #                                                                                               "nodes")
+        # assert os.path.exists(nodes_dir), f"nodes_dir {nodes_dir} does not exist"
         # backend
         backend_name_ls = setting["backend"] if isinstance(setting["backend"], (list, tuple)) else [setting["backend"]]
+        nodes_dir = env_vars_parser(setting["nodes_dir"]) if "nodes_dir" in setting else default_nodes_dir
         for i in backend_name_ls:
             if i not in backend_s:
-                backend_s[i] = SERIALIZER_BACKEND.get(name=i)(folder=os.path.join(temp_output_dir, "nodes"))
+                backend_s[i] = SERIALIZER_BACKEND.get(name=i)(folder=nodes_dir)
         #
         t_mode = Traversal_Mode(setting.get("traversal_mode", traversal_mode))
+        # snn_builder
+        snn_builder = Saved_Node_Name_Builder(
+            format_=setting["saved_node_name_format"]) if "saved_node_name_format" in setting else default_snn_builder
         # _process and  paras
         if callable(setting["match_cond"]):
             if t_mode in (Traversal_Mode.DFS_PRE_ORDER, Traversal_Mode.BFS):
@@ -181,7 +202,7 @@ def write(var, output_dir, settings=None, traversal_mode=Traversal_Mode.BFS, b_p
             # print(processed_s)
             # print(f'backend: {i}')
             _process(backend=backend_s[i], strictness_level=strictness_level, processed_s=processed_s,
-                     snn_builder=snn_builder, **paras)
+                     snn_builder=snn_builder, b_record_nodes_dir=nodes_dir != default_nodes_dir, **paras)
             if "_hook_for_debug" in kwargs:
                 kwargs["_hook_for_debug"]["processed"].append([i, ndl.copy_(var=processed_s, b_deepcopy=True)])
 
@@ -246,13 +267,29 @@ def _judge_processed_or_not(processed_s, name):
     return b_processed
 
 
-def _process_for_level(var, processed_s, processed_s_bak, level, backend, strictness_level, snn_builder):
+def _process_for_level(var, processed_s, processed_s_bak, level, backend, strictness_level, snn_builder,
+                       b_record_nodes_dir):
     for name, _ in ndl.get_nodes(var=processed_s_bak, level=level, b_strict=True):
         _process_for_name(var=var, processed_s=processed_s, name=name, backend=backend,
-                          strictness_level=strictness_level, snn_builder=snn_builder)
+                          strictness_level=strictness_level, snn_builder=snn_builder,
+                          b_record_nodes_dir=b_record_nodes_dir)
 
 
-def _process_for_name(var, processed_s, name, backend, strictness_level, snn_builder):
+def _write_by_backend(backend, snn_builder, raw_name, value, strictness_level, b_record_nodes_dir):
+    snn_name = snn_builder(name=raw_name, value=value)
+    try:
+        res = backend.write(name=snn_name, var=value)
+    except:
+        assert strictness_level in (Strictness_Level.IGNORE_FAILURE, Strictness_Level.COMPATIBLE), \
+            f'An error occurred when node {snn_name} was saved using the first matched backend {backend}'
+        return False, None  # b_success, res
+    if b_record_nodes_dir and isinstance(res, (dict,)) and res is not value:
+        # 记录节点位置
+        res["nodes_dir"] = backend.paras["folder"]
+    return True, res
+
+
+def _process_for_name(var, processed_s, name, backend, strictness_level, snn_builder, b_record_nodes_dir):
     if _judge_processed_or_not(processed_s=processed_s, name=name) is True:
         # has been processed
         return
@@ -262,18 +299,15 @@ def _process_for_name(var, processed_s, name, backend, strictness_level, snn_bui
         return
 
     # write by backend
-    snn_name = snn_builder(name=name, value=value)
-    try:
-        res = backend.write(name=snn_name, var=value)
-    except:
-        assert strictness_level in (Strictness_Level.IGNORE_FAILURE, Strictness_Level.COMPATIBLE), \
-            f'An error occurred when node {name} was saved using the first matched backend {backend}'
+    b_success, res = _write_by_backend(backend, snn_builder, name, value, strictness_level, b_record_nodes_dir)
+    if not b_success:
         return
     ndl.set_value(var=processed_s, name=name, value=True, b_force=False)
     ndl.set_value(var=var, name=name, value=res, b_force=False)
 
 
-def _process_from_top_to_down(var, processed_s, match_cond, backend, traversal_mode, strictness_level, snn_builder):
+def _process_from_top_to_down(var, processed_s, match_cond, backend, traversal_mode, strictness_level, snn_builder,
+                              b_record_nodes_dir):
     def match_cond_(parent_type, idx, value):
         nonlocal match_cond, processed_s
 
@@ -288,12 +322,8 @@ def _process_from_top_to_down(var, processed_s, match_cond, backend, traversal_m
         nonlocal processed_s, backend, strictness_level
 
         # write by backend
-        snn_name = snn_builder(name=idx, value=value)
-        try:
-            res = backend.write(name=snn_name, var=value)
-        except:
-            assert strictness_level in (Strictness_Level.IGNORE_FAILURE, Strictness_Level.COMPATIBLE), \
-                f'An error occurred when node {name} was saved using the first matched backend {backend}'
+        b_success, res = _write_by_backend(backend, snn_builder, idx, value, strictness_level, b_record_nodes_dir)
+        if not b_success:
             return value
         ndl.set_value(var=processed_s, name=idx, value=True, b_force=True)
         return res
@@ -302,7 +332,8 @@ def _process_from_top_to_down(var, processed_s, match_cond, backend, traversal_m
                  b_use_name_as_idx=True, traversal_mode=traversal_mode, b_traverse_matched_element=False)
 
 
-def _process_from_down_to_top(var, processed_s, match_cond, backend, traversal_mode, strictness_level, snn_builder):
+def _process_from_down_to_top(var, processed_s, match_cond, backend, traversal_mode, strictness_level, snn_builder,
+                              b_record_nodes_dir):
     processed_s_raw, processed_s = processed_s, ndl.copy_(var=processed_s, b_deepcopy=True)
 
     def match_cond_(parent_type, idx, value):
@@ -320,12 +351,8 @@ def _process_from_down_to_top(var, processed_s, match_cond, backend, traversal_m
         nonlocal processed_s, backend, processed_s_raw, strictness_level
 
         # write by backend
-        snn_name = snn_builder(name=idx, value=value)
-        try:
-            res = backend.write(name=snn_name, var=value)
-        except:
-            assert strictness_level in (Strictness_Level.IGNORE_FAILURE, Strictness_Level.COMPATIBLE), \
-                f'An error occurred when node {name} was saved using the first matched backend {backend}'
+        b_success, res = _write_by_backend(backend, snn_builder, idx, value, strictness_level, b_record_nodes_dir)
+        if not b_success:
             return value
         ndl.set_value(var=processed_s, name=idx, value=True, b_force=True)
         ndl.set_value(var=processed_s_raw, name=idx, value=True, b_force=True)

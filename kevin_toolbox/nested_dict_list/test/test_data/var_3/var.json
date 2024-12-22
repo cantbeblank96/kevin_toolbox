@@ -1,0 +1,44 @@
+{
+  "a": {
+    "backend": ":numpy:npy",
+    "name": "_a",
+    "nodes_dir": "${KVT_TEMP:kvt_dir}/kevin_toolbox/nested_dict_list/test/test_data/var_2/nodes",
+    "details": {
+      "shape": [
+        2,
+        5
+      ],
+      "dtype": "float64"
+    }
+  },
+  "b": [
+    {
+      "backend": ":torch:tensor",
+      "name": "_b_0",
+      "details": {
+        "shape": [
+          5
+        ],
+        "device": "cpu",
+        "dtype": "torch.float32"
+      }
+    },
+    {
+      "backend": ":torch:tensor",
+      "name": "_b_1",
+      "details": {
+        "shape": [
+          3
+        ],
+        "device": "cpu",
+        "dtype": "torch.float32"
+      }
+    }
+  ],
+  "<eval>(1, 2, 3)": "<eval>(1, 2, 3)",
+  "model": {
+    "backend": ":ndl",
+    "name": "_model",
+    "nodes_dir": "${KVT_TEMP:kvt_dir}/kevin_toolbox/nested_dict_list/test/test_data/var_2/nodes"
+  }
+}

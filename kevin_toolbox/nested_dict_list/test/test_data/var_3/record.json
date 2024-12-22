@@ -1,0 +1,30 @@
+{
+    "processed": {
+        "<eval>(1, 2, 3)": true,
+        "a": true,
+        "model": true,
+        "b": [
+            true,
+            true
+        ]
+    },
+    "raw_structure": {
+        "<eval>(1, 2, 3)": false,
+        "a": false,
+        "model": {
+            "name@1": false,
+            "paras": {
+                "paras": {
+                    "input_shape": false,
+                    "layer_nums": false
+                }
+            }
+        },
+        "b": [
+            false,
+            false
+        ]
+    },
+    "timestamp": 1691644326.3852553,
+    "kt_version": "1.2.1"
+}

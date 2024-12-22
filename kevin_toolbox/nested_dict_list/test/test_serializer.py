@@ -4,6 +4,8 @@ import pytest
 import torch
 import numpy as np
 from kevin_toolbox.patches.for_test import check_consistency
+from kevin_toolbox.data_flow.file import json_
+from kevin_toolbox.utils.variable import root_dir
 import kevin_toolbox.nested_dict_list as ndl
 from kevin_toolbox.nested_dict_list import name_handler, serializer
 from kevin_toolbox.nested_dict_list.serializer import Strictness_Level
@@ -240,6 +242,40 @@ def test_write_and_read_4():
         res = serializer.read(input_path=os.path.join(temp_folder, "var_1.tar"))
         # check
         check_consistency(res, deep_update(stem=ndl.copy_(var=var_, b_deepcopy=True), patch={None: None}))
+
+
+def test_write_and_read_5():
+    print("test serializer.read() and write()")
+
+    # 测试额外指定 nodes_dir 时的写入和读取
+
+    var_ = {
+        "a": np.ones([2, 5]),
+        "b": [torch.as_tensor([1, 2, 3, 4]), torch.as_tensor([1, 2])],
+        (1, 2, 3): (1, 2, 3),
+        "model": {"name@1": "m", "paras": dict(paras=dict(layer_nums=3, input_shape=np.ones([2, 5])))}
+    }
+
+    # for read
+    json_.write(content={"kvt_dir": root_dir}, file_path="~/.kvt_cfg/.temp.json")
+    res = serializer.read(input_path=os.path.join(data_folder, "var_3"))
+    # check
+    check_consistency(res, var_)
+
+    # for write
+    settings = [
+        {"match_cond": "<node>:model", "backend": (":ndl",), "nodes_dir": f'{temp_folder}/var_2/nodes',
+         "saved_node_name_format": '{hash_name}'},
+        {"match_cond": "<level>-1", "backend": (":skip:simple", ":numpy:npy", ":torch:tensor", ":pickle")},
+    ]
+    remove(temp_folder, ignore_errors=True)
+    serializer.write(var=var_, output_dir=os.path.join(temp_folder, "var_3"), traversal_mode="bfs",
+                     b_pack_into_tar=False, settings=settings, strictness_level=Strictness_Level.COMPLETE)
+    check_consistency(serializer.read(input_path=os.path.join(temp_folder, "var_3")), var_)
+    check_consistency(
+        serializer.read(input_path=os.path.join(temp_folder, "var_2", "nodes", "407c66dac7a1")),
+        serializer.read(input_path=os.path.join(data_folder, "var_2", "nodes", "_model"))
+    )
 
 
 def test_write_and_read_keep_identical():

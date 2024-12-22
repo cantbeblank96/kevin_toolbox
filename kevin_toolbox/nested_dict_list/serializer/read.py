@@ -1,9 +1,9 @@
 import os
-import time
+import tempfile
 from kevin_toolbox.patches import for_os
 from kevin_toolbox.data_flow.file import json_
 import kevin_toolbox.nested_dict_list as ndl
-import tempfile
+from kevin_toolbox.env_info.variable_ import env_vars_parser
 
 
 def read(input_path, **kwargs):
@@ -13,8 +13,6 @@ def read(input_path, **kwargs):
         参数：
             input_path:             <path> 文件夹或者 .tar 文件，具体结构参考 write()
     """
-    from kevin_toolbox.nested_dict_list.serializer.variable import SERIALIZER_BACKEND
-
     assert os.path.exists(input_path)
 
     with tempfile.TemporaryDirectory(dir=os.path.dirname(input_path)) as temp_dir:
@@ -63,7 +61,10 @@ def _read_unpacked_ndl(input_path, **kwargs):
     for name in processed_nodes:
         value = ndl.get_value(var=var, name=name)
         if isinstance(value, (dict,)) and "backend" in value and "name" in value:
-            bk = SERIALIZER_BACKEND.get(name=value.pop("backend"))(folder=os.path.join(input_path, "nodes"))
+            nodes_dir = env_vars_parser(value.pop("nodes_dir")) if "nodes_dir" in value else os.path.join(input_path,
+                                                                                                          "nodes")
+            assert os.path.exists(nodes_dir), f"nodes_dir {nodes_dir} does not exist"
+            bk = SERIALIZER_BACKEND.get(name=value.pop("backend"))(folder=nodes_dir)
             ndl.set_value(var=var, name=name, value=bk.read(**value))
 
     #
