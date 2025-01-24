@@ -27,21 +27,24 @@ pip install kevin-toolbox  --no-dependencies
 
 [版本更新记录](./notes/Release_Record.md)：
 
-- v 1.4.5 （2024-12-22）【bug fix】【new feature】
-  - data_flow.file.json_
-    - modify write()，支持输入路径使用 ~ 表示家目录。
+- v 1.4.6 （2025-01-24）【new feature】
+
+  - data_flow.file
+    - modify json_.read()，支持输入路径使用 ~ 表示家目录。
+    - 【new feature】add excel，该模块用于 excel 表格处理。
+      - write_with_matrix()：将矩阵写入到 excel 文件中
+
+  - patches.for_os
+    - modify find_files_in_dir()，支持 suffix_ls 设定 None 以表示不进行任何过滤。
+    - 【new feature】add organize，该模块用于文件整理。
+      - group_files_by_timestamp()：将 input_dir 中的文件按照时间戳信息进行分组，输出到 output_dir 中。
+    - 添加了对应的测试用例。
   - env_info
-    - 【new feature】add variable_，该模块主要包含于处理环境变量相关的函数和类。
-      - Env_Vars_Parser：解释并替换字符串中${}形式指定的环境变量，支持以下几种方式：
-        - "${HOME}"                 家目录
-        -  "${SYS:<var_name>}"       其他系统环境变量
-        - "${KVT_XXX<ndl_name>}"   读取配置文件 ~/.kvt_cfg/.xxx.json 中的变量（xxx将被自动转为小写）
-        - "${/xxx.../xxx.json<ndl_name>}"  读取指定路径下的配置文件 /xxx.../xxx.json 中的变量
-      - env_vars_parser：类 Env_Vars_Parser 的默认实例
-    - 添加了对应的测试用例。
-  - nested_dict_list
-    - 【new feature】modify get_value() and set_value() for parsed_name input，在字符串name的基础上，进一步支持使用结构化的(root_node, method_ls, node_ls)形式的name作为输入。
-      - 相较于字符串形式的name，结构化的name因不用解释而效率更高，推荐使用。
-    - 【new feature】modify serializer.read() and write()，支持通过 nodes_dir 指定节点内容保存在哪个目录下，同时支持在 settings 中为每个处理模式单独指定其使用的 nodes_dir 和 saved_node_name_format。
-      - 有了该功能，允许多个ndl文件共享多个节点内容，形式更加自由。
-    - 添加了对应的测试用例。
+    - 【new feature】add check_validity_and_uninstall()，检查当前机器时间是否超过 expiration_timestamp 指定的有效期，若超过则卸载 package_name 对应的库。
+    - 【new feature】add check_version_and_update()，检查当前库的版本，并尝试更新。
+    - 以上函数均系从同名脚本中抽取出来。
+  - 以上修改，均已添加了对应的测试用例。
+  - developing
+    - 【new feature】add photo_album_organization，该模块包含一系列整理相册相关的脚本。
+      -  0_group_by_timestamp.py ：按照时间戳分组
+      -  1_merge_folders.py ：将文件数量较少的目录合并
