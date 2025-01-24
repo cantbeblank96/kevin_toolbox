@@ -23,6 +23,7 @@ def read_json(file_path=None, file_obj=None, converters=None, b_use_suggested_co
     """
     assert file_path is not None or file_obj is not None
     if file_path is not None:
+        file_path = os.path.abspath(os.path.expanduser(file_path))
         assert os.path.isfile(file_path), f'file {file_path} not found'
         file_obj = open(file_path, 'r')
     elif isinstance(file_obj, (BytesIO,)):
