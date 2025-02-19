@@ -59,4 +59,6 @@ pip install kevin-toolbox  --no-dependencies
   - computer_science.algorithm.parallel_and_concurrent
     - 【bug fix】【incompatible change】fix bug in multi_thread_execute()，修正了参数timeout无法对每个任务起效的bug，将参数thread_nums更名为worker_nums。
     - 【new feature】add multi_process_execute()，用于多进程执行任务。同样支持timeout设定和进度条显示。
+  - patches.for_matplotlib.common_charts
+    - modify plot_lines()，添加了 x_ticklabels_name 参数用于自定义x轴的坐标值
   - 以上修改，均已添加了对应的测试用例。

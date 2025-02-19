@@ -5,7 +5,7 @@ from kevin_toolbox.patches.for_os.path import replace_illegal_chars
 from kevin_toolbox.patches.for_matplotlib.color import generate_color_list
 
 
-def plot_lines(data_s, title, x_name, output_dir=None, **kwargs):
+def plot_lines(data_s, title, x_name, x_ticklabels_name=None, output_dir=None, **kwargs):
     data_s = copy.copy(data_s)
     line_nums = len(data_s) - 1
     paras = {
@@ -23,6 +23,10 @@ def plot_lines(data_s, title, x_name, output_dir=None, **kwargs):
     plt.clf()
     #
     x_all_ls = data_s.pop(x_name)
+    if x_ticklabels_name is not None:
+        x_ticklabels = data_s.pop(x_ticklabels_name)
+        assert len(x_all_ls) == len(x_ticklabels)
+        plt.xticks(x_all_ls, x_ticklabels)
     data_s, temp = dict(), data_s
     for k, v_ls in temp.items():
         y_ls, x_ls = [], []
