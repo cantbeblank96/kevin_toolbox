@@ -48,3 +48,12 @@ pip install kevin-toolbox  --no-dependencies
     - 【new feature】add photo_album_organization，该模块包含一系列整理相册相关的脚本。
       -  0_group_by_timestamp.py ：按照时间戳分组
       -  1_merge_folders.py ：将文件数量较少的目录合并
+- v 1.4.7 （）【new feature】【incompatible change】
+
+  - data_flow.file
+    - 【new feature】【incompatible change】modify json_.write()，支持使用参数 output_format 设置更复杂的输出格式。同时废弃原来的sort_keys参数。
+      - output_format 支持以下输入：
+        - "pretty_printed":     通过添加大量的空格和换行符来格式化输出，使输出更易读
+        - "minified":           删除所有空格和换行符，使输出更紧凑
+        - `<dict/tuple>`：     更加细致的格式设定，比如 `{"indent": 2, ensure_ascii=True}`，如果需要基于已有格式进行微调可以使用以下方式:`("pretty_printed", {"indent": 2, ensure_ascii=True})`
+  - 以上修改，均已添加了对应的测试用例。

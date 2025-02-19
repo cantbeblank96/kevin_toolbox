@@ -35,8 +35,8 @@ class Json_(Backend_Base):
         """
         if id(var) != self.w_cache_s["id_"]:
             try:
-                self.w_cache_s["content"] = json_.write(content=var, file_path=None, sort_keys=False,
-                                                        b_use_suggested_converter=True)
+                self.w_cache_s["content"] = json_.write(content=var, file_path=None, b_use_suggested_converter=True,
+                                                        output_format=kwargs.get("output_format", "pretty_printed"))
             except:
                 self.w_cache_s["content"], self.w_cache_s["id_"] = None, None
                 self.w_cache_s["able"] = False
