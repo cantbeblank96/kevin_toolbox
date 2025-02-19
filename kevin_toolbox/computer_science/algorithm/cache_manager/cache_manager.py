@@ -44,6 +44,12 @@ class Cache_Manager:
                                             当设置为 float 时表示占 upper_bound 的比例
                                             默认为 0.5
                 strategy:               <str/dict/Strategy_Base> 管理策略
+                                            目前支持以下策略：
+                                                - ":by_initial_time:FIFO"     删除最后一次访问时间最久远的部分
+                                                - ":by_counts:LFU"            删除访问频率最低的部分
+                                                - ":by_last_time:LRU"          删除最后一次访问时间最久远的部分
+                                                - ":by_survival_time:LST"      删除访问频率最低的部分
+                                            默认使用 LRU 策略
                 cache:                  <str/dict/Cache_Base> 缓存种类
         """
         # 默认参数

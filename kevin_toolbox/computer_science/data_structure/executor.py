@@ -83,7 +83,7 @@ class Executor:
         # 校验参数
         # func
         assert paras["func"] is None or callable(paras["func"]), \
-            f"func should be callable, but get a {type(func)}"
+            f'func should be callable, but get a {type(paras["func"])}'
         # args
         assert isinstance(paras["args"], (list, tuple,)) and isinstance(paras["f_args"], (list, tuple,))
         for i, f in enumerate(paras["f_args"]):
@@ -93,7 +93,7 @@ class Executor:
         assert isinstance(paras["kwargs"], (dict,)) and isinstance(paras["f_kwargs"], (dict,))
         for k, v in paras["f_kwargs"].items():
             assert callable(v) and isinstance(k, (str,)), \
-                f"item {key} in f_kwargs should be (str, callable) pairs, but get a ({type(key)}, {type(v)})"
+                f"item {k} in f_kwargs should be (str, callable) pairs, but get a ({type(k)}, {type(v)})"
 
         # update paras
         self.paras = paras
