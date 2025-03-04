@@ -26,10 +26,24 @@ class Env_Vars_Parser:
     def __call__(self, *args, **kwargs):
         return self.parse(*args, **kwargs)
 
-    def parse(self, text):
+    def parse(self, text, **kwargs):
         """
             解释并替换
+
+            参数：
+                default:        默认之。
+                                    当有设定时，若无法解释则返回该值。
+                                    否则，若无法解释将报错。
         """
+        if "default" in kwargs:
+            try:
+                return self.__parse(text=text)
+            except:
+                return kwargs["default"]
+        else:
+            return self.__parse(text=text)
+
+    def __parse(self, text):
         temp_ls = []
         for it in self.split_string(text=text):
             if isinstance(it, str):
@@ -85,4 +99,5 @@ class Env_Vars_Parser:
 
 if __name__ == '__main__':
     env_vars_parser = Env_Vars_Parser()
-    print(env_vars_parser.split_string("666/123${:VAR}/afasf/${/xxx.../xxx.json:111:222}336"))
+    # print(env_vars_parser.split_string("666/123${:VAR}/afasf/${/xxx.../xxx.json:111:222}336"))
+    print(env_vars_parser.parse("${KVT_PATCHES:for_matplotlib:common_charts:font_settings:for_non-windows-platform}"))
