@@ -41,3 +41,11 @@ pip install kevin-toolbox  --no-dependencies
   - patches.for_matplotlib.common_charts
     - modify plot_lines()，添加了 x_ticklabels_name 参数用于自定义x轴的坐标值
   - 以上修改，均已添加了对应的测试用例。
+- v 1.4.8 （）
+
+  - 【new feature】network，新增网络模块。
+    - 该模块包含网络访问相关的函数：
+      - get_response()，获取 url 的响应。
+      - fetch_metadata()，从 URL/response 中获取文件名、后缀（扩展名）、大小等元信息。
+      - fetch_content()，从 URL/response 中获取内容。
+      - download_file()，下载文件。
