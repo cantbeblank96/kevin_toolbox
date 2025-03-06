@@ -49,7 +49,7 @@ def build_logger(name, handler_ls, level=logging.DEBUG,
             # 输出到控制台
             handler = logging.StreamHandler()
         else:
-            raise ValueError(f'unexpected target {target}')
+            raise ValueError(f'unexpected target {details["target"]}')
         handler.setLevel(details.get("level", level))
         handler.setFormatter(logging.Formatter(details.get("formatter", formatter)))
         # 添加到logger中
