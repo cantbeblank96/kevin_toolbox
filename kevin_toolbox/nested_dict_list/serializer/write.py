@@ -250,6 +250,8 @@ def write(var, output_dir, settings=None, traversal_mode=Traversal_Mode.BFS, b_p
     if not os.path.exists(tgt_path):
         for_os.copy(src=src_path, dst=tgt_path, remove_dst_if_exists=True)
 
+    return tgt_path
+
 
 def _judge_processed_or_not(processed_s, name):
     """
