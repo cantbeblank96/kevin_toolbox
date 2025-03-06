@@ -1,7 +1,7 @@
 import os
 import time
 import importlib.util
-from kevin_toolbox.developing.decorator import restore_original_work_path
+from kevin_toolbox.computer_science.algorithm.decorator import restore_original_work_path
 from kevin_toolbox.computer_science.algorithm.cache_manager import Cache_Manager
 
 if importlib.util.find_spec("cPickle") is not None:
