@@ -30,7 +30,7 @@ def softmax(x, axis=-1, temperature=None, b_use_log_over_x=False):
     else:
         # softmax(x)
         # 为了数值稳定，减去最大值
-        x = x - np.max(x)
+        x = x - np.max(x, axis=axis, keepdims=True)
         #
         if temperature is not None:
             assert temperature > 0
@@ -46,3 +46,6 @@ if __name__ == '__main__':
     print(softmax(np.asarray([[[0], [0.1]]]), temperature=0.00001, axis=1))
     print(softmax(np.asarray([[[0], [0.1]]]), temperature=0, axis=1))
     print(softmax([0, 1, 2], temperature=0.1))
+    print(softmax([[5.0000e-01, 5.0000e-01],
+                   [7.0000e-01, 3.0000e-01],
+                   [0.0000e+00, 1.0000e+03]], axis=-1, temperature=None))
