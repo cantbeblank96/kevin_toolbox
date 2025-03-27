@@ -15,7 +15,8 @@ class Traversal_Mode(Enum):
 
 
 def traverse(var, match_cond, action_mode="remove", converter=None,
-             b_use_name_as_idx=False, traversal_mode="dfs_pre_order", b_traverse_matched_element=False):
+             b_use_name_as_idx=False, traversal_mode="dfs_pre_order", b_traverse_matched_element=False,
+             b_skip_repeated_non_leaf_node=None, cond_for_repeated_leaf_to_skip=None, **kwargs):
     """
         遍历 var 找到符合 match_cond 的元素，将其按照 action_mode 指定的操作进行处理
 
@@ -48,46 +49,86 @@ def traverse(var, match_cond, action_mode="remove", converter=None,
                                     默认为 "dfs_pre_order"
             b_use_name_as_idx:  <boolean> 对于 match_cond/converter 中的 idx 参数，是传入整体的 name 还是父节点的 index 或 key。
                                     默认为 False
-            b_traverse_matched_element  <boolean> 对于匹配上的元素，经过处理后，是否继续遍历该元素的内容
+            b_traverse_matched_element: <boolean> 对于匹配上的元素，经过处理后，是否继续遍历该元素的内容
                                     默认为 False
+            b_skip_repeated_non_leaf_node:  <boolean> 是否跳过重复的非叶节点。
+                                    何为重复？
+                                        在内存中的id相同。
+                                    默认为 None，此时将根据 action_mode 的来决定：
+                                        - 对于会对节点进行修改的模式，比如 "remove" 和 "replace"，将设为 True，以避免预期外的重复转换和替换。
+                                        - 对于不会修改节点内容的模式，比如 "skip"，将设为 False。
+            cond_for_repeated_leaf_to_skip: <list/tuple of callable> 在叶节点位置上，遇到满足其中某个条件的重复的元素时需要跳过。
+                                    要求函数接受 叶节点的值，并返回一个 boolean，表示是否匹配成功。
+                                    默认为 None
     """
     assert callable(match_cond)
     action_mode = Action_Mode(action_mode)
     if action_mode is Action_Mode.REPLACE:
         assert callable(converter)
     traversal_mode = Traversal_Mode(traversal_mode)
+    if b_skip_repeated_non_leaf_node is None:
+        if action_mode is Action_Mode.SKIP:
+            b_skip_repeated_non_leaf_node = False
+        else:  # action_mode in (Action_Mode.REMOVE, Action_Mode.REPLACE)
+            b_skip_repeated_non_leaf_node = True
+    cond_for_repeated_leaf_to_skip = [] if cond_for_repeated_leaf_to_skip is None else cond_for_repeated_leaf_to_skip
+
+    passed_node_ids = {"leaf": set(), "non_leaf": set()}
 
     if traversal_mode is Traversal_Mode.BFS:
-        return _bfs(var, match_cond, action_mode, converter, b_use_name_as_idx, b_traverse_matched_element)
+        return _bfs(var, match_cond, action_mode, converter, b_use_name_as_idx, b_traverse_matched_element,
+                    b_skip_repeated_non_leaf_node=b_skip_repeated_non_leaf_node,
+                    cond_for_repeated_leaf_to_skip=cond_for_repeated_leaf_to_skip,
+                    passed_node_ids=passed_node_ids)
     else:
         return _dfs(var, match_cond, action_mode, converter, b_use_name_as_idx, traversal_mode,
-                    b_traverse_matched_element, "")
+                    b_traverse_matched_element, pre_name="",
+                    b_skip_repeated_non_leaf_node=b_skip_repeated_non_leaf_node,
+                    cond_for_repeated_leaf_to_skip=cond_for_repeated_leaf_to_skip,
+                    passed_node_ids=passed_node_ids)
 
 
-def _bfs(var, match_cond, action_mode, converter, b_use_name_as_idx, b_traverse_matched_element):
+def _bfs(var, match_cond, action_mode, converter, b_use_name_as_idx, b_traverse_matched_element,
+         b_skip_repeated_non_leaf_node, cond_for_repeated_leaf_to_skip, passed_node_ids):
     temp = [("", var)]
 
     while len(temp):
-        pre_name, i = temp.pop(0)
-        if isinstance(i, (list, dict)):
-            keys = list(range(len(i)) if isinstance(i, list) else i.keys())
+        pre_name, it = temp.pop(0)
+        if isinstance(it, (list, dict)):
+            #
+            if b_skip_repeated_non_leaf_node:
+                if id(it) in passed_node_ids["non_leaf"]:
+                    continue
+                else:
+                    passed_node_ids["non_leaf"].add(id(it))
+            #
+            keys = list(range(len(it)) if isinstance(it, list) else it.keys())
             keys.reverse()  # 反过来便于 列表 弹出元素
-            idx_ls = _gen_idx(i, keys, b_use_name_as_idx, pre_name)
+            idx_ls = _gen_idx(it, keys, b_use_name_as_idx, pre_name)
 
             # 匹配&处理
             for k, idx in zip(keys, idx_ls):
-                b_matched, b_popped = _deal(i, k, idx, match_cond, converter, action_mode)
-                if b_popped or (b_matched and not b_traverse_matched_element):
+                b_matched, b_popped, b_skip = _deal(it, k, idx, match_cond, converter, action_mode,
+                                                    cond_for_repeated_leaf_to_skip, passed_node_ids)
+                if b_skip or b_popped or (b_matched and not b_traverse_matched_element):
                     continue
                 # 添加到队尾
-                temp.append((idx, i[k]))
+                temp.append((idx, it[k]))
 
     return var
 
 
 def _dfs(var, match_cond, action_mode, converter,
-         b_use_name_as_idx, traversal_mode, b_traverse_matched_element, pre_name):
+         b_use_name_as_idx, traversal_mode, b_traverse_matched_element, pre_name,
+         b_skip_repeated_non_leaf_node, cond_for_repeated_leaf_to_skip, passed_node_ids):
     if isinstance(var, (list, dict)):
+        #
+        if b_skip_repeated_non_leaf_node:
+            if id(var) in passed_node_ids["non_leaf"]:
+                return var
+            else:
+                passed_node_ids["non_leaf"].add(id(var))
+        #
         keys = list(range(len(var)) if isinstance(var, list) else var.keys())
         keys.reverse()  # 反过来便于 列表 弹出元素
         idx_ls = _gen_idx(var, keys, b_use_name_as_idx, pre_name)
@@ -98,29 +139,42 @@ def _dfs(var, match_cond, action_mode, converter,
             # 匹配&处理
             deal_res_ls = []
             for k, idx in zip(keys, idx_ls):
-                deal_res_ls.append(_deal(var, k, idx, match_cond, converter, action_mode))
+                deal_res_ls.append(_deal(var, k, idx, match_cond, converter, action_mode,
+                                         cond_for_repeated_leaf_to_skip, passed_node_ids))
             # 递归遍历
-            for (b_matched, b_popped), k, idx in zip(deal_res_ls, keys, idx_ls):
-                if b_popped or (b_matched and not b_traverse_matched_element):
+            for (b_matched, b_popped, b_skip), k, idx in zip(deal_res_ls, keys, idx_ls):
+                if b_skip or b_popped or (b_matched and not b_traverse_matched_element):
                     continue
                 var[k] = _dfs(var[k], match_cond, action_mode, converter, b_use_name_as_idx, traversal_mode,
-                              b_traverse_matched_element, idx)
+                              b_traverse_matched_element, idx,
+                              b_skip_repeated_non_leaf_node, cond_for_repeated_leaf_to_skip, passed_node_ids)
         else:
             # 后序
             # 递归遍历
             for k, idx in zip(keys, idx_ls):
                 var[k] = _dfs(var[k], match_cond, action_mode, converter, b_use_name_as_idx, traversal_mode,
-                              b_traverse_matched_element, idx)
+                              b_traverse_matched_element, idx,
+                              b_skip_repeated_non_leaf_node, cond_for_repeated_leaf_to_skip, passed_node_ids)
             # 匹配&处理
             for k, idx in zip(keys, idx_ls):
-                _deal(var, k, idx, match_cond, converter, action_mode)
+                _deal(var, k, idx, match_cond, converter, action_mode,
+                      cond_for_repeated_leaf_to_skip, passed_node_ids)
     else:
         pass
     return var
 
 
-def _deal(var, k, idx, match_cond, converter, action_mode):
+def _deal(var, k, idx, match_cond, converter, action_mode,
+          cond_for_repeated_leaf_to_skip, passed_node_ids):
     """处理节点"""
+    b_skip = False
+
+    if cond_for_repeated_leaf_to_skip and not isinstance(var[k], (dict, list,)) and any(
+            [i(var[k]) for i in cond_for_repeated_leaf_to_skip]):
+        if id(var[k]) in passed_node_ids["leaf"]:
+            return None, None, True
+        else:
+            passed_node_ids["leaf"].add(id(var[k]))
     # 匹配
     b_matched = match_cond(type(var), idx, var[k])
     b_popped = False
@@ -133,7 +187,7 @@ def _deal(var, k, idx, match_cond, converter, action_mode):
             var[k] = converter(idx, var[k])
         else:
             pass
-    return b_matched, b_popped
+    return b_matched, b_popped, b_skip
 
 
 def _gen_idx(var, keys, b_use_name_as_idx, pre_name):

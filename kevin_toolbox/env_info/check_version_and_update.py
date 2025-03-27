@@ -16,7 +16,6 @@ def check_version_and_update(package_name, cur_version=None, available_versions=
         ex = subprocess.Popen(f'pip list | grep "{package_name} "', shell=True, stdout=subprocess.PIPE)
         out, _ = ex.communicate()
         out = out.decode().strip()
-        # breakpoint()
         cur_version = out.split(package_name)[-1].strip()
 
     # try to read available versions

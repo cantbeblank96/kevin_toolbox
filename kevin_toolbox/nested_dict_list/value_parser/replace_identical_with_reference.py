@@ -70,10 +70,7 @@ def _forward(var, flag, match_cond):
         # 任选其一进行保留，其余改为引用
         keep_name = unprocessed_name_set.pop()
         for name in unprocessed_name_set:
-            try:
-                var = set_value(var=var, name=name, value=f'<{flag}>{{{keep_name}}}', b_force=False)
-            except:
-                breakpoint()
+            var = set_value(var=var, name=name, value=f'<{flag}>{{{keep_name}}}', b_force=False)
         processed_name_set.update(unprocessed_name_set)
 
     # 将叶节点中，未被处理过，且是 str，且以 flag 开头的字符串，添加多一个 flag，以示区分

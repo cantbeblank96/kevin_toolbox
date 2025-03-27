@@ -6,8 +6,6 @@ def hex_to_rgba(hex_color):
     assert len(hex_color) in (6, 8), \
         f'hex_color should be 6 or 8 characters long (not including #). but got {len(hex_color)}'
     res = list(int(hex_color[i * 2:i * 2 + 2], 16) for i in range(len(hex_color) // 2))
-    if len(res) not in (3, 4):
-        breakpoint()
     if len(res) == 4:
         res[3] /= 255
     return tuple(res)

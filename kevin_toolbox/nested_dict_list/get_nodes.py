@@ -2,7 +2,7 @@ from kevin_toolbox.nested_dict_list import traverse, get_value
 from kevin_toolbox.nested_dict_list.name_handler import parse_name
 
 
-def get_nodes(var, level=-1, b_strict=True):
+def get_nodes(var, level=-1, b_strict=True, **kwargs):
     """
         获取嵌套字典列表 var 中所有叶节点
             以列表 [(name,value), ...] 形式返回，其中名字 name 的解释方式参考 name_handler.parse_name() 介绍
@@ -23,6 +23,8 @@ def get_nodes(var, level=-1, b_strict=True):
                                     默认为 True，不添加。
     """
     assert isinstance(level, (int,))
+    kwargs.setdefault("b_skip_repeated_non_leaf_node", False)
+
     if level == 0:
         return [("", var)]
 
@@ -38,7 +40,7 @@ def get_nodes(var, level=-1, b_strict=True):
             res_empty.add(idx + "@None")  # 添加哨兵，表示空节点，并不会被实际解释
         return False
 
-    traverse(var=var, match_cond=func, action_mode="skip", b_use_name_as_idx=True)
+    traverse(var=var, match_cond=func, action_mode="skip", b_use_name_as_idx=True, **kwargs)
 
     if level != -1:
         names = set()

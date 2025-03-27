@@ -64,3 +64,13 @@ pip install kevin-toolbox  --no-dependencies
     - 【bug fix】fix bug in softmax()，修改 33 行，从减去全局最大值改为减去各个分组内部的最大值，避免全局最大值过大导致某些分组全体数值过小导致计算溢出。
   - patches.for_matplotlib.common_charts.utils
     - modify save_plot()，在最后增加 plt.close() 用于及时销毁已使用完的画布，避免不必要的内存占用。
+  - nested_dict_list
+    - 【new feature】modify traverse()，增加以下参数以更加精确地控制遍历时的行为：
+      - b_skip_repeated_non_leaf_node:  是否跳过重复的非叶节点。
+        - 何为重复？在内存中的id相同。
+        - 默认为 None，此时将根据 action_mode 的来决定：
+          - 对于会对节点进行修改的模式，比如 "remove" 和 "replace"，将设为 True，以避免预期外的重复转换和替换。
+          - 对于不会修改节点内容的模式，比如 "skip"，将设为 False。
+      - cond_for_repeated_leaf_to_skip：函数列表。在叶节点位置上，遇到满足其中某个条件的重复的元素时需要跳过。
+    - 同步修改内部使用了 traverse() 的 get_nodes() 和 copy_() 等函数。
+    - 新增了对应的测试用例。

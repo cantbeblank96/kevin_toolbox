@@ -525,6 +525,7 @@ def test_copy_2():
         }
     """
     x_new = ndl.copy_(var=x, b_deepcopy=False, b_keep_internal_references=True)
+
     # 叶节点相同（不改变引用关系）
     check_consistency(
         _judge_node_ids_consistent(var_0=x, var_1=x_new, part="leaf"),
