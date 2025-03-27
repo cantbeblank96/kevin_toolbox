@@ -56,7 +56,8 @@ def write_json(content, file_path, converters=None, b_use_suggested_converter=Fa
         content = traverse(var=[copy.deepcopy(content)],
                            match_cond=lambda _, __, ___: True, action_mode="replace",
                            converter=lambda _, x: converter(x),
-                           b_traverse_matched_element=True)[0]
+                           b_traverse_matched_element=True,
+                           b_skip_repeated_non_leaf_node=True)[0]
 
     content = json.dumps(content, **output_format)
 

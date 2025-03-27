@@ -74,3 +74,7 @@ pip install kevin-toolbox  --no-dependencies
       - cond_for_repeated_leaf_to_skip：函数列表。在叶节点位置上，遇到满足其中某个条件的重复的元素时需要跳过。
     - 同步修改内部使用了 traverse() 的 get_nodes() 和 copy_() 等函数。
     - 新增了对应的测试用例。
+  - data_flow.file.json_
+    - 【bug fix】fix bug in write()。
+      - bug 归因：在 json_.write() 中通过使用 ndl.traverse() 来找出待转换的元素并进行转换，但是在 v1.4.8 前，该函数默认不会跳过重复（在内存中的id相同）出现的内容。由于该内容的不同引用实际上指向的是同一个，因此对这些引用的分别多次操作实际上就是对该内容进行了多次操作。
+      - bug 解决：在后续 v1.4.9 中为 ndl.traverse() 新增了 b_skip_repeated_non_leaf_node 用于控制是否需要跳过重复的引用。我们只需要在使用该函数时，令参数 b_skip_repeated_non_leaf_node=True即可。
