@@ -9,3 +9,4 @@ def save_plot(plt, output_path, dpi=200, suffix=".png", **kwargs):
     else:
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
         plt.savefig(output_path, dpi=dpi)
+    plt.close()

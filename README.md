@@ -58,3 +58,9 @@ pip install kevin-toolbox  --no-dependencies
         - output_path：图片输出路径。
           - 支持直接指定图片要保存的路径，在原有的通过 output_dir 和 title 自动生成路径的方式之外，提供了另一个指定的方式。
       - 【new feature】add plot_from_record，从保存的档案 .record.tar 文件中恢复并绘制图像。
+- v 1.4.9 （2025-03-27）【new feature】【bug fix】
+
+  - patches.for_numpy.linalg
+    - 【bug fix】fix bug in softmax()，修改 33 行，从减去全局最大值改为减去各个分组内部的最大值，避免全局最大值过大导致某些分组全体数值过小导致计算溢出。
+  - patches.for_matplotlib.common_charts.utils
+    - modify save_plot()，在最后增加 plt.close() 用于及时销毁已使用完的画布，避免不必要的内存占用。
