@@ -50,7 +50,9 @@ def build_logger(name, handler_ls, level=logging.DEBUG,
             handler = logging.StreamHandler()
         else:
             raise ValueError(f'unexpected target {details["target"]}')
-        handler.setLevel(details.get("level", level))
+        temp = details.get("level", level)
+        temp = getattr(logging, temp) if isinstance(temp, (str,)) else temp
+        handler.setLevel(temp)
         handler.setFormatter(logging.Formatter(details.get("formatter", formatter)))
         # 添加到logger中
         logger.addHandler(handler)
