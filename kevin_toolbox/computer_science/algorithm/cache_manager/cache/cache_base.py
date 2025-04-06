@@ -12,6 +12,7 @@ class Cache_Base(ABC):
             - 判断是否命中 has()
             - 获取缓存已占空间 len()
             - 清空所有内容 clear()
+            - 加载和保存状态 load_state_dict(), state_dict()
         等方法。
 
         对外提供：
@@ -21,6 +22,7 @@ class Cache_Base(ABC):
             - 判断是否命中 has()
             - 获取缓存已占空间 len()
             - 清空所有内容 clear()
+            - 加载和保存状态 load_state_dict(), state_dict()
         等接口。
     """
 
@@ -67,6 +69,14 @@ class Cache_Base(ABC):
 
     @abstractmethod
     def clear(self):
+        pass
+
+    @abstractmethod
+    def load_state_dict(self, state_dict):
+        pass
+
+    @abstractmethod
+    def state_dict(self, b_deepcopy=True):
         pass
 
     def __getitem__(self, key):

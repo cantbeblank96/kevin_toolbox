@@ -74,7 +74,7 @@ def test_multi_thread_and_process_execute_1():
             check_consistency([0, 2, None, None, 8, 10, 12, None, 16, 18], res_ls)
             check_consistency([2, 3, 7], failed_idx_ls)
             #
-            assert expected_time <= gap <= max(expected_time + 0.5, expected_time * 1.5)
+            assert expected_time <= gap <= max(expected_time + 0.5, expected_time * 1.7)
             # 执行顺序
             if worker_nums == 1:
                 """

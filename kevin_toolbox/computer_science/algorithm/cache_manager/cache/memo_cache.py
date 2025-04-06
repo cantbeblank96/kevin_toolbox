@@ -30,6 +30,23 @@ class Memo_Cache(Cache_Base):
     def clear(self):
         self.cache_s.clear()
 
+    def load_state_dict(self, state_dict):
+        """
+            加载状态
+        """
+        self.clear()
+        self.cache_s.update(state_dict["cache_s"])
+
+    def state_dict(self, b_deepcopy=True):
+        """
+            获取状态
+        """
+        temp = {"cache_s": self.cache_s}
+        if b_deepcopy:
+            import kevin_toolbox.nested_dict_list as ndl
+            temp = ndl.copy_(var=temp, b_deepcopy=True, b_keep_internal_references=True)
+        return temp
+
 
 # 添加其他别名
 for name in [":in_memory:Memo", ":in_memory:MC", ":in_memory:memory"]:
