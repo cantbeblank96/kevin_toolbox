@@ -31,7 +31,9 @@ class Kevin_Notation_Writer:
                                             用于根据指定数据类型选取适当的函数来处理输入数据。
                 sep：                <string> 默认的分隔符
                                             默认使用 \t
-
+                comment_flag：       <string> 默认的注释标志符
+                                            默认为 None，表示不支持使用注释。
+                                            建议使用 \\ 作为注释标志符
 
             工作流程：
                                                __init__(mode="w") ──► stage=0 ──► metadata_begin()
@@ -60,6 +62,7 @@ class Kevin_Notation_Writer:
             # 可选参数
             "converter": CONVERTER_FOR_WRITER,
             "sep": "\t",
+            "comment_flag": None
         }
 
         # 获取参数
@@ -77,6 +80,7 @@ class Kevin_Notation_Writer:
         #
         assert isinstance(paras["converter"], (Converter, dict,))
         assert isinstance(paras["sep"], (str,))
+        assert isinstance(paras["comment_flag"], (str, type(None)))
 
         self.paras = paras
 
@@ -104,6 +108,7 @@ class Kevin_Notation_Writer:
         else:
             # 采用覆盖写模式
             self.metadata["sep"] = self.paras["sep"]
+            self.metadata["comment_flag"] = self.paras["comment_flag"]
             # 获取文件对象
             self.file = open(self.paras["file_path"], **self.paras["paras_for_open"])
             # 写入文件标记
@@ -128,6 +133,8 @@ class Kevin_Notation_Writer:
 
         self.file.write(f"# --metadata--\n")
         self._write_metadata("sep", self.paras["sep"])
+        if self.paras["comment_flag"] is not None:
+            self._write_metadata("comment_flag", self.paras["comment_flag"])
         self.file.flush()
 
     def _write_metadata(self, key, value):

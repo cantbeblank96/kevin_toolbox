@@ -3,6 +3,12 @@ from kevin_toolbox.data_flow.core.reader import File_Iterative_Reader
 from kevin_toolbox.data_flow.file.kevin_notation.converter import Converter, CONVERTER_FOR_READER
 
 
+def set_comment_flag_to_reader(reader, comment_flag):
+    if comment_flag is not None and isinstance(comment_flag, str) and len(comment_flag) > 0:
+        reader.paras["filter_"] = lambda x: x != "\n" and not x.startswith(comment_flag)  # 去除注释
+        reader.paras["map_func"] = lambda x: x.rsplit("\n", 1)[0].split(comment_flag, 1)[0]
+
+
 class Kevin_Notation_Reader:
     """
         遵守 kevin_notation 格式的数据文本读取器（格式要求参见本模块下的 readme）
@@ -51,8 +57,8 @@ class Kevin_Notation_Reader:
         # 读取开头
         self.reader = File_Iterative_Reader(file_path=self.paras["file_path"], file_obj=self.paras["file_obj"],
                                             pre_jump_size=self.paras["beg"],
-                                            filter_=lambda x: x != "\n" and not x.startswith("//"),  # 去除注释
-                                            map_func=lambda x: x.rsplit("\n", 1)[0].split("//", 1)[0],
+                                            filter_=lambda x: x != "\n",  # 去除注释
+                                            map_func=lambda x: x.rsplit("\n", 1)[0],
                                             drop=False)
         # kevin_notation
         offset = self.read_head(reader=self.reader, head="# --kevin_notation--")
@@ -62,14 +68,16 @@ class Kevin_Notation_Reader:
         self.metadata, count = self.read_metadata(reader=self.reader, converter=self.paras["converter"])
         offset += count
 
+        temp = {k: v for k, v in self.reader.paras.items() if
+                k in ["file_path", "file_obj", "filter_", "map_func", "drop"]}
         del self.reader
 
         # 读取内容
-        self.reader = File_Iterative_Reader(file_path=self.paras["file_path"], file_obj=self.paras["file_obj"],
-                                            pre_jump_size=self.paras["beg"] + offset,
-                                            filter_=lambda x: x != "\n" and not x.startswith("//"),  # 去除注释
-                                            map_func=lambda x: x.rsplit("\n", 1)[0].split("//", 1)[0],
-                                            drop=False)
+        comment_flag = self.metadata.get("comment_flag", None)
+        temp["pre_jump_size"] = self.paras["beg"] + offset
+        if comment_flag is not None and isinstance(comment_flag, str) and len(comment_flag) > 0:
+            temp["pre_jump_size"] -= 1  # 将自动忽略注释那一行，因此需要减去1
+        self.reader = File_Iterative_Reader(**temp)
 
         # contents
         self.read_head(reader=self.reader, head="# --contents--")
@@ -130,6 +138,9 @@ class Kevin_Notation_Reader:
             value = value.split(sep, -1)
             if len(value) == 1 and key not in ["column_name", "column_type"]:
                 value = value[0]
+            #
+            if key == "comment_flag":
+                set_comment_flag_to_reader(reader=reader, comment_flag=value)
             #
             res[key] = value
 

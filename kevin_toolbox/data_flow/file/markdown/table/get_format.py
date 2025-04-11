@@ -1,3 +1,4 @@
+import warnings
 from kevin_toolbox.data_flow.file.markdown.table import Table_Format
 
 
@@ -12,4 +13,6 @@ def get_format(content_s):
                 res = Table_Format.COMPLETE_DICT
             elif isinstance(v, (list, tuple)):
                 res = Table_Format.SIMPLE_DICT
+    if res is None:
+        warnings.warn(f'failed to get format from given content_s: {content_s}')
     return res

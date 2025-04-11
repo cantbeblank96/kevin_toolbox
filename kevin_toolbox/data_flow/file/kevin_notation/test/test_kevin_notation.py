@@ -1,15 +1,13 @@
 import pytest
 from kevin_toolbox.patches.for_test import check_consistency
-
 import os
 import numpy as np
-
 from kevin_toolbox.data_flow.file import kevin_notation
 from kevin_toolbox.data_flow.file.kevin_notation.test.test_data.data_all import metadata_ls, content_ls, file_path_ls
 
 
 @pytest.mark.parametrize("expected_metadata, expected_content, file_path",
-                         zip(metadata_ls, content_ls, file_path_ls))
+                         zip(metadata_ls[:], content_ls[:], file_path_ls[:]))
 def test_reader(expected_metadata, expected_content, file_path):
     print("test Reader")
 
@@ -24,7 +22,6 @@ def test_reader(expected_metadata, expected_content, file_path):
         for chunk in reader:
             for key in content.keys():
                 content[key].extend(chunk[key])
-        # print(content)
         check_consistency(expected_content, content)
 
 

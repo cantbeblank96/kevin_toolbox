@@ -1,17 +1,14 @@
 # --kevin_notation--
-
+	
 # --metadata--
 # sep
 	
 # title
-this is the title
+dataset
 # column_name
-epoch
-# column_type (sep= )
-int
+image_path	label
+# column_type
+str	int
 
 # --contents--
-0
-1
-10
-11
+a//image1.jpg	0
