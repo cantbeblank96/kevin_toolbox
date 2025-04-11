@@ -37,7 +37,7 @@ class Accumulator_Base(object):
             add()               (*)添加单个数据
             add_sequence()      (*)添加一系列数据
             get()               (*)获取累积值
-            clear()             情况已有数据（self.var）和状态（self.state）
+            clear()             清空已有数据（self.var）和状态（self.state）
             state_dict()        返回当前实例的状态（返回一个包含 self.var 和 self.state 的字典）
             load_state_dict()   通过接受 state_dict 来更新当前实例的状态
 
