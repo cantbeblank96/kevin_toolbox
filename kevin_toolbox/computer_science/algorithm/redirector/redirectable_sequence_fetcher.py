@@ -1,16 +1,17 @@
 import random
 from kevin_toolbox.patches.for_logging import build_logger
+from kevin_toolbox.patches.for_numpy.random import get_rng, set_rng_state, get_rng_state
 from kevin_toolbox.computer_science.algorithm.cache_manager import Cache_Manager, Cache_Manager_wto_Strategy
 
 
-def _randomly_idx_redirector(idx, seq_len, *args):
+def _randomly_idx_redirector(idx, seq_len, attempts, rng, *args):
     if idx == 0:
-        return random.randint(1, seq_len - 1)
+        return rng.randint(1, seq_len - 1)
     elif idx == seq_len - 1:
-        return random.randint(0, seq_len - 2)
+        return rng.randint(0, seq_len - 2)
     else:
-        return random.choices([random.randint(0, idx - 1), random.randint(idx + 1, seq_len - 1)],
-                              weights=[idx, seq_len - idx - 1])[0]
+        return rng.choices([rng.randint(0, idx - 1), rng.randint(idx + 1, seq_len - 1)],
+                           weights=[idx, seq_len - idx - 1])[0]
 
 
 idx_redirector_s = {
@@ -57,7 +58,8 @@ class Redirectable_Sequence_Fetcher:
                 seq_len:          <int> 序列长度。
                                         默认不指定，将尝试通过 len(seq) 获取。
                 idx_redirector:     <str/callable> 对 idx 进行重定向的方式。
-                                        形如 func(idx, seq_len, attempts) ==> new_idx 的函数，其中 attempts 是已进行重定向的次数。
+                                        形如 func(idx, seq_len, attempts, rng) ==> new_idx 的函数，
+                                            其中 attempts 是已进行重定向的次数，rng是随机生成器。
                                         当设定为 str 时，则使用默认的函数。目前支持以下选项：
                                             - "decrease":       new_idx=idx-1
                                             - "increase":       new_idx=idx+1
@@ -82,6 +84,7 @@ class Redirectable_Sequence_Fetcher:
                                         若为 str，则会自动构建一个以该值为 target 的记录器。
                                             具体可以参见 for_logging.build_logger()
                                         默认为 None，表示不需要进行记录。
+                seed:               <int>  随机种子
         """
         # 默认参数
         paras = {
@@ -96,6 +99,7 @@ class Redirectable_Sequence_Fetcher:
             "use_memory_after_failures": 3,
             "memory_decay_rate": 0.1,
             "logger": None,
+            "seed": 114514
         }
 
         # 获取参数
@@ -133,6 +137,8 @@ class Redirectable_Sequence_Fetcher:
                 paras["logger"].setdefault("level", "INFO")
                 self.logger = build_logger(name=f':Redirectable_Sequence_Fetcher:{id(self)}',
                                            handler_ls=[paras["logger"]], )
+        #
+        self.rng = get_rng(seed=paras["seed"], rng=None)
 
         self.paras = paras
 
@@ -181,7 +187,7 @@ class Redirectable_Sequence_Fetcher:
                 break
             old_idx = new_idx
             if self.paras["seq_len"] > 1:
-                new_idx = self.idx_redirector(new_idx, self.paras["seq_len"], attempts)
+                new_idx = self.idx_redirector(new_idx, self.paras["seq_len"], attempts, self.rng)
                 new_idx = _round_idx(new_idx, st=0, ed=self.paras["seq_len"])
             #
             if self.memory is not None:
@@ -236,16 +242,17 @@ class Redirectable_Sequence_Fetcher:
             self.logger.info("invoked load_state_dict()")
         if self.memory is not None:
             self.memory.load_state_dict(state_dict=state_dict["memory"])
+        set_rng_state(state=state_dict["rng_state"], rng=self.rng)
 
     def state_dict(self, b_deepcopy=True):
         """
             获取状态
         """
-        if self.memory is not None:
-            temp = {"memory": self.memory.state_dict(b_deepcopy=False)}
-            if b_deepcopy:
-                import kevin_toolbox.nested_dict_list as ndl
-                temp = ndl.copy_(var=temp, b_deepcopy=True, b_keep_internal_references=True)
-        else:
-            temp = dict()
+        temp = {
+            "memory": self.memory.state_dict(b_deepcopy=False) if self.memory is not None else None,
+            "rng_state": get_rng_state(rng=self.rng),
+        }
+        if b_deepcopy:
+            import kevin_toolbox.nested_dict_list as ndl
+            temp = ndl.copy_(var=temp, b_deepcopy=True, b_keep_internal_references=True)
         return temp
