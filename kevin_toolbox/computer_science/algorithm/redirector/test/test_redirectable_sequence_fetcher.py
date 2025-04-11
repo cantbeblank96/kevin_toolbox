@@ -34,11 +34,9 @@ def test_redirect():
         #   同时在 memory 中进行记录
         check_consistency(
             {
-                'memory': {
-                    'cache': {'cache_s': {5: {'next': 6, 'failures': 1 + i, 'final': 7}, 6: {'next': 7}}}
-                }
+                'cache': {'cache_s': {5: {'next': 6, 'failures': 1 + i, 'final': 7}, 6: {'next': 7}}}
             },
-            fetcher.state_dict()
+            fetcher.state_dict()['memory']
         )
     #   之后10次访问时都是直接使用记忆
     for i in range(10):
@@ -52,13 +50,11 @@ def test_redirect():
         )
         check_consistency(
             {
-                'memory': {
-                    'cache': {
-                        'cache_s': {5: {'next': 6, 'failures': use_memory_after_failures - (i + 1) * 0.1, 'final': 7},
-                                    6: {'next': 7}}}
-                }
+                'cache': {
+                    'cache_s': {5: {'next': 6, 'failures': use_memory_after_failures - (i + 1) * 0.1, 'final': 7},
+                                6: {'next': 7}}}
             },
-            fetcher.state_dict()
+            fetcher.state_dict()['memory']
         )
     #   记忆衰减完毕之后，若再次获取时，会重新尝试访问原始索引
     fetcher.logger.clear()
@@ -66,12 +62,10 @@ def test_redirect():
     check_consistency(log_for_redirect, fetcher.logger.logs)
     check_consistency(
         {
-            'memory': {
-                'cache': {
-                    'cache_s': {5: {'next': 6, 'failures': use_memory_after_failures, 'final': 7}, 6: {'next': 7}}}
-            }
+            'cache': {
+                'cache_s': {5: {'next': 6, 'failures': use_memory_after_failures, 'final': 7}, 6: {'next': 7}}}
         },
-        fetcher.state_dict()
+        fetcher.state_dict()['memory']
     )
     #   之后10次访问时都是直接使用记忆
     for i in range(10):
@@ -82,19 +76,17 @@ def test_redirect():
     check_consistency(fetcher[5], 5)
     check_consistency(
         {
-            'memory': {
-                'cache': {
-                    'cache_s': {5: {'next': 6, 'failures': use_memory_after_failures - 2, 'final': 7}, 6: {'next': 7}}}
-            }
+            'cache': {
+                'cache_s': {5: {'next': 6, 'failures': use_memory_after_failures - 2, 'final': 7}, 6: {'next': 7}}}
         },
-        fetcher.state_dict()
+        fetcher.state_dict()['memory']
     )
     #   当failures计数归零时，移除该记忆
     fetcher.logger.clear()
     check_consistency(fetcher[5], 5)
     check_consistency(
-        {'memory': {'cache': {'cache_s': {6: {'next': 7}}}}},
-        fetcher.state_dict()
+        {'cache': {'cache_s': {6: {'next': 7}}}},
+        fetcher.state_dict()['memory']
     )
 
 

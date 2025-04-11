@@ -27,10 +27,11 @@ pip install kevin-toolbox  --no-dependencies
 
 [版本更新记录](./notes/Release_Record.md)：
 
-- v 1.4.10 （）【new feature】【bug fix】
+- v 1.4.10 （2025-04-11）【new feature】【bug fix】
 
   - patches.for_logging
     - modify build_logger() to allow parameter level to accept str input，允许参数 level 接受str输入，比如“DEBUG”或者“INFO”。
+    
   - computer_science.algorithm
     - cache_manager
       - 【new feature】add load_state_dict(), state_dict() to Cache_Base, Memo_Cache, Cache_Manager ，增加加载和保存状态的相关接口。
@@ -48,4 +49,32 @@ pip install kevin-toolbox  --no-dependencies
           3. 若递归次数达到上限，则进行报错或者返回给定的默认值。
              1. 若开启了跳转记忆功能，在重试过程中，一旦某次调用成功，记录原始索引与最终有效索引之间的映射关系。
       - 添加了对应的测试用例。
+    - for_seq
+      - 【new feature】add sample_subset_most_evenly()，对列表按给定比例or数量进行采样，并返回一个新的列表，同时保证列表中每个元素在新列表中的占比尽量相近。
+    - redirector
+      - 【new feature】modify Redirectable_Sequence_Fetcher，增加了 seed 参数并在 state_dict 中增加 rng_state 项，以便控制（保存和重现）随机行为。
+    - 【new feature】sampler
+      - 该新增模块包含采样相关的函数和类。
+      - add Reservoir_Sampler，水库采样器。
+    
+  - data_flow.file.kevin_notation
+  
+    - 【bug fix】fix bug in Kevin_Notation_Reader and Kevin_Notation_Writer
+  
+      - bug 原因：由于之前的版本默认启用"//"作为注释符号，因此导致无法正确读取带有"//"的值
+  
+      - 解决：在 Kevin_Notation_Reader 和 Kevin_Notation_Writer 取消默认使用注释，并限定只有在 metadata 中显式指定注释标志符才会启用
+  
+      - 注意：该修改可能导致原本带有注释的旧版本 .kvt 文件无法被正确读取，遇到该情况时，可以尝试将`# --metadata--`部分修改为：
+  
+        ```text
+        # --metadata--
+        # sep
+        	
+        # comment_flag
+        //
+        ...
+        ```
+  
+    - 添加了对应的测试用例。
 
