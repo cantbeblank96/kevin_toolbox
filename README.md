@@ -27,7 +27,7 @@ pip install kevin-toolbox  --no-dependencies
 
 [版本更新记录](./notes/Release_Record.md)：
 
-- v 1.4.11 （2025-04-16）【new feature】【bug fix】
+- v 1.4.11 （2025-04-16）【bug fix】
 
   - nested_dict_list
     - 【bug fix】fix bug in value_parser.replace_identical_with_reference()
@@ -35,5 +35,7 @@ pip install kevin-toolbox  --no-dependencies
       - 解决：
         - 修复了 replace_identical_with_reference() 中的 _forward 部分，仅记录每个节点的最大高度。
         - 去除了“具有相同 id 的节点所处的高度应该相同”的检验条件。
-    - 添加了对应的测试用例。
+  - computer_science.algorithm.redirector
+    - 【bug fix】fix bug in Redirectable_Sequence_Fetcher，将 _randomly_idx_redirector 中的 rng.choices 改为 rng.choice
+  - 添加了对应的测试用例。
 
