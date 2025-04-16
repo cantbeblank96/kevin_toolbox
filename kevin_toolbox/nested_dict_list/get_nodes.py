@@ -21,6 +21,15 @@ def get_nodes(var, level=-1, b_strict=True, **kwargs):
                                             对于 level=-10 返回的是 [('', {'d': {'c': 4}, 'c': 4}), ]
                                             对于 level=10 返回的是 [(':c', 4), (':d:c', 4)]
                                     默认为 True，不添加。
+
+        注意：
+            当 level 为负数（表示从叶节点往上计起）时，某些节点可能同时属于多个 level，比如对于：
+                {'d': {'c': [1, ], 'e': 4}},
+            其中：
+                level=-1:       :d:e, :d:c@0
+                level=-2:       :d, :d:c
+                level=-3:       "", :d
+            可以看到由于 :d 下面有两个不等长的到不同叶节点的路径，因此该节点属于 level -2 和 -3
     """
     assert isinstance(level, (int,))
     kwargs.setdefault("b_skip_repeated_non_leaf_node", False)

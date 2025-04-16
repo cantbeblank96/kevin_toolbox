@@ -159,7 +159,7 @@
       - bug 归因：在 json_.write() 中通过使用 ndl.traverse() 来找出待转换的元素并进行转换，但是在 v1.4.8 前，该函数默认不会跳过重复（在内存中的id相同）出现的内容。由于该内容的不同引用实际上指向的是同一个，因此对这些引用的分别多次操作实际上就是对该内容进行了多次操作。
       - bug 解决：在后续 v1.4.9 中为 ndl.traverse() 新增了 b_skip_repeated_non_leaf_node 用于控制是否需要跳过重复的引用。我们只需要在使用该函数时，令参数 b_skip_repeated_non_leaf_node=True即可。
   
-- v 1.4.10 （2025-04-11）【new feature】【bug fix】
+- v 1.4.10 （2025-04-11）【new feature】【bug fix】【incompatible change】
   
   - patches.for_logging
   
@@ -193,7 +193,7 @@
   
   - data_flow.file.kevin_notation
   
-    - 【bug fix】fix bug in Kevin_Notation_Reader and Kevin_Notation_Writer
+    - 【bug fix】【incompatible change】fix bug in Kevin_Notation_Reader and Kevin_Notation_Writer
   
       - bug 原因：由于之前的版本默认启用"//"作为注释符号，因此导致无法正确读取带有"//"的值
   

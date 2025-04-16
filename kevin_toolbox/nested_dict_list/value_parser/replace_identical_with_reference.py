@@ -44,7 +44,7 @@ def _forward(var, flag, match_cond):
             if not match_cond(name, value):
                 continue
             id_to_name_s[id(value)].add(name)
-            id_to_height_s[id(value)].add(height)
+            id_to_height_s[id(value)] = height
         height += 1
 
     #
@@ -54,10 +54,8 @@ def _forward(var, flag, match_cond):
             id_to_height_s.pop(k)
             id_to_name_s.pop(k)
             continue
-        # 具有相同 id 的节点所处的高度应该相同
-        assert len(v) == 1, f'nodes {id_to_name_s[k]} have different heights: {v}'
     # 按高度排序
-    id_vs_height = sorted([(k, v.pop()) for k, v in id_to_height_s.items()], key=lambda x: x[1], reverse=True)
+    id_vs_height = sorted([(k, v) for k, v in id_to_height_s.items()], key=lambda x: x[1], reverse=True)
 
     # 从高到低，依次将具有相同 id 的节点替换为 单个节点和多个引用 的形式
     temp = []
