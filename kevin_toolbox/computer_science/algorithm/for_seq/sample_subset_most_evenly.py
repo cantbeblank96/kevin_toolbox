@@ -26,7 +26,9 @@ def sample_subset_most_evenly(inputs, ratio=None, nums=None, seed=None, rng=None
                         仅在b_shuffle_the_tail=True时，以上两个参数起效，且仅需指定一个即可。
 
     """
-    nums = nums or math.ceil(len(inputs) * ratio)
+    if nums is None:
+        assert ratio is not None
+        nums = math.ceil(len(inputs) * ratio)
     assert nums >= 0
     if len(inputs) == 0 or nums == 0:
         return []

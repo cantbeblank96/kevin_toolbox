@@ -90,6 +90,24 @@ def test_redirect():
     )
 
 
+def test_redirect_2():
+    """
+        测试其他重定向策略
+    """
+    seq = Simple_Seq(data=list(range(10)), error_idx_ls=[3, 4, 5, 6])
+    use_memory_after_failures = 3
+    fetcher = Redirectable_Sequence_Fetcher(
+        seq=seq,
+        idx_redirector="randomly",
+        memory=-1,
+        use_memory_after_failures=use_memory_after_failures,
+        redirect_max_attempts=3,
+        logger=Dummy_Logger(),
+        seed=0
+    )
+    temp = fetcher[5]
+
+
 def test_redirect_failure_with_default_value():
     """
         测试重定向失败返回默认值

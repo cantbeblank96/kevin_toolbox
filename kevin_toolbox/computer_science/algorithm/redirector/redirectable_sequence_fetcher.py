@@ -10,8 +10,8 @@ def _randomly_idx_redirector(idx, seq_len, attempts, rng, *args):
     elif idx == seq_len - 1:
         return rng.randint(0, seq_len - 2)
     else:
-        return rng.choices([rng.randint(0, idx - 1), rng.randint(idx + 1, seq_len - 1)],
-                           weights=[idx, seq_len - idx - 1])[0]
+        return rng.choice([rng.randint(0, idx - 1), rng.randint(idx + 1, seq_len - 1)], size=1,
+                          p=[idx / (seq_len - 1), (seq_len - idx - 1) / (seq_len - 1)])[0]
 
 
 idx_redirector_s = {
