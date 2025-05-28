@@ -56,7 +56,7 @@ class Exponential_Moving_Average(Accumulator_Base):
         # 校验参数
         assert isinstance(paras["keep_ratio"], (int, float,)) and 0 <= paras["keep_ratio"] <= 1
         #
-        super(Exponential_Moving_Average, self).__init__(**paras)
+        super().__init__(**paras)
 
     def add_sequence(self, var_ls, **kwargs):
         for var in var_ls:

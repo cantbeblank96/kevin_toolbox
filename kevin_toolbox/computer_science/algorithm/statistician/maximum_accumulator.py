@@ -1,9 +1,11 @@
+import numpy as np
+import torch
 from kevin_toolbox.computer_science.algorithm.statistician import Accumulator_Base
 
 
-class Average_Accumulator(Accumulator_Base):
+class Maximum_Accumulator(Accumulator_Base):
     """
-        用于计算平均值的累积器
+        用于计算最大值的累积器
     """
 
     def __init__(self, **kwargs):
@@ -33,20 +35,22 @@ class Average_Accumulator(Accumulator_Base):
         for var in var_ls:
             self.add(var, **kwargs)
 
-    def add(self, var, weight=1, **kwargs):
+    def add(self, var, **kwargs):
         """
             添加单个数据
 
             参数:
                 var:                数据
-                weight:             权重
         """
         if self.var is None:
-            self.var = self._init_var(like=var)
-        # 累积
-        self.var = self.var + var * weight
+            self.var = var
+        else:
+            # 统计
+            if torch.is_tensor(var):
+                self.var = torch.maximum(self.var, var)
+            else:
+                self.var = np.maximum(self.var, var)
         self.state["total_nums"] += 1
-        self.state["total_weights"] += weight
 
     def get(self, **kwargs):
         """
@@ -55,7 +59,7 @@ class Average_Accumulator(Accumulator_Base):
         """
         if len(self) == 0:
             return None
-        return self.var / self.state["total_weights"]
+        return self.var
 
     @staticmethod
     def _init_state():
@@ -63,16 +67,14 @@ class Average_Accumulator(Accumulator_Base):
             初始化状态
         """
         return dict(
-            total_nums=0,
-            total_weights=0,
+            total_nums=0
         )
 
 
 if __name__ == '__main__':
-    import torch
 
-    seq = list(torch.tensor(range(1, 10)))
-    avg = Average_Accumulator()
+    seq = list(torch.tensor(range(1, 10))-5)
+    avg = Maximum_Accumulator()
     for i, v in enumerate(seq):
         avg.add(var=v)
         print(i, v, avg.get())
