@@ -223,6 +223,14 @@
   - computer_science.algorithm.redirector
     - 【bug fix】fix bug in Redirectable_Sequence_Fetcher，将 _randomly_idx_redirector 中的 rng.choices 改为 rng.choice
   - 添加了对应的测试用例。
+  
+- v 1.4.12 （2025-05-28）【bug fix】【new feature】
+  
+  - computer_science.algorithm.statistician
+    - 【new feature】add Maximum_Accumulator，用于计算最大值的累积器。
+    - 【new feature】add Minimum_Accumulator，用于计算最小值的累积器。
+  - patches.for_numpy.linalg
+    - 【bug fix】fix bug in softmax，修复了在 b_use_log_over_x=True 时 temperature 设为 None 导致计算失败的问题。
 
 
 
