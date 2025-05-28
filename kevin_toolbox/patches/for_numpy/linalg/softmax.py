@@ -26,7 +26,10 @@ def softmax(x, axis=-1, temperature=None, b_use_log_over_x=False):
         res = np.where(x == np.max(x, axis=axis), 1, res)
     elif b_use_log_over_x:
         # softmax(log(x))
-        res = x ** (1 / temperature)
+        if temperature is not None:
+            res = x ** (1 / temperature)
+        else:
+            res = x
     else:
         # softmax(x)
         # 为了数值稳定，减去最大值
