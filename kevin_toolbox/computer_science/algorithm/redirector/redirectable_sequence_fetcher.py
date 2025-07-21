@@ -6,11 +6,11 @@ from kevin_toolbox.computer_science.algorithm.cache_manager import Cache_Manager
 
 def _randomly_idx_redirector(idx, seq_len, attempts, rng, *args):
     if idx == 0:
-        return rng.randint(1, seq_len - 1)
+        return rng.randint(1, seq_len)
     elif idx == seq_len - 1:
-        return rng.randint(0, seq_len - 2)
+        return rng.randint(0, seq_len - 1)
     else:
-        return rng.choice([rng.randint(0, idx - 1), rng.randint(idx + 1, seq_len - 1)], size=1,
+        return rng.choice([rng.randint(0, idx), rng.randint(idx + 1, seq_len)], size=1,
                           p=[idx / (seq_len - 1), (seq_len - idx - 1) / (seq_len - 1)])[0]
 
 

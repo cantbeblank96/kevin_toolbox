@@ -52,23 +52,49 @@ def find_tables(text, b_compact_format=True):
         return table_ls, part_slices_ls, table_idx_ls
 
 
+# def _find_table(text):
+#     # 正则表达式匹配Markdown表格
+#     table_pattern = re.compile(r'\|([^\n]+)\|', re.DOTALL)
+#     table_matches = table_pattern.findall(text)
+#     if len(table_matches) < 2:
+#         # 因为一个合法的 markdown 表格需要含有表头的分隔线，所以行数至少应该为 2
+#         return None
+#
+#     # 去除表头的分隔线
+#     table_matches.pop(1)
+#     #
+#     tables = []  # 每个元素为一行
+#     for match in table_matches:
+#         # 分割每一行
+#         tables.append([i.strip() for i in match.split('|', -1)])
+#
+#     return {"matrix": tables, "orientation": None}
+
 def _find_table(text):
-    # 正则表达式匹配Markdown表格
-    table_pattern = re.compile(r'\|([^\n]+)\|', re.DOTALL)
-    table_matches = table_pattern.findall(text)
-    if len(table_matches) < 2:
+    # 按行分割文本
+    lines = text.splitlines()
+    table_rows = []
+    for line in lines:
+        # 移除行首尾空白
+        stripped_line = line.strip()
+        if not stripped_line:
+            continue  # 跳过空行
+        # 移除行首尾的可选竖线（如果存在）
+        if stripped_line.startswith('|'):
+            stripped_line = stripped_line[1:]
+        if stripped_line.endswith('|'):
+            stripped_line = stripped_line[:-1]
+        # 分割单元格并去除每个单元格的空白
+        row_cells = [cell.strip() for cell in stripped_line.split('|')]
+        table_rows.append(row_cells)
+
+    if len(table_rows) < 2:
         # 因为一个合法的 markdown 表格需要含有表头的分隔线，所以行数至少应该为 2
         return None
-
     # 去除表头的分隔线
-    table_matches.pop(1)
-    #
-    tables = []  # 每个元素为一行
-    for match in table_matches:
-        # 分割每一行
-        tables.append([i.strip() for i in match.split('|', -1)])
+    table_rows.pop(1)
 
-    return {"matrix": tables, "orientation": None}
+    return {"matrix": table_rows, "orientation": None}
 
 
 if __name__ == '__main__':

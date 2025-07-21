@@ -12,6 +12,7 @@ def read(input_path, **kwargs):
 
         参数：
             input_path:             <path> 文件夹或者 .tar 文件，具体结构参考 write()
+            b_keep_identical_relations: <boolean> 覆盖 record.json 中记录的同名参数，该参数的作用详见 write() 中的介绍。
     """
     assert os.path.exists(input_path)
 
@@ -42,7 +43,7 @@ def _read_unpacked_ndl(input_path, **kwargs):
 
     # 读取被处理的节点
     processed_nodes = []
-    if record_s:
+    if "processed" in record_s:
         for name, value in ndl.get_nodes(var=record_s["processed"], level=-1, b_strict=True):
             if value:
                 processed_nodes.append(name)
@@ -68,6 +69,8 @@ def _read_unpacked_ndl(input_path, **kwargs):
             ndl.set_value(var=var, name=name, value=bk.read(**value))
 
     #
+    if "b_keep_identical_relations" in kwargs:
+        record_s["b_keep_identical_relations"] = kwargs["b_keep_identical_relations"]
     if record_s.get("b_keep_identical_relations", False):
         from kevin_toolbox.nested_dict_list import value_parser
         var = value_parser.replace_identical_with_reference(var=var, flag="same", b_reverse=True)

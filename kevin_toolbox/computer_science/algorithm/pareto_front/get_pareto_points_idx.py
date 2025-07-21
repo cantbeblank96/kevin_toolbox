@@ -31,6 +31,8 @@ def get_pareto_points_idx(points, directions=None):
     """
     points = np.asarray(points)
     assert points.ndim == 2 and len(points) > 0
+    if directions is not None and not isinstance(directions, (list, tuple,)):
+        directions = [directions] * points.shape[-1]
     assert directions is None or isinstance(directions, (list, tuple,)) and len(directions) == points.shape[-1]
 
     # 计算排序的权重
