@@ -61,13 +61,13 @@ class Reservoir_Sampler:
 
     def get(self, **kwargs):
         """
-        返回当前水库中的数据列表（拷贝）。
+            返回当前水库中的数据列表（浅拷贝）。
         """
         return self.reservoir.copy()
 
     def clear(self):
         """
-        清空已有数据和状态，重置采样器。
+            清空已有数据和状态，重置采样器。
         """
         self.reservoir.clear()
         self.state = self._init_state()
