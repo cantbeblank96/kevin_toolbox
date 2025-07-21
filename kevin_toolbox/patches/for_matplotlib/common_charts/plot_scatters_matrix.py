@@ -25,7 +25,7 @@ def plot_scatters_matrix(data_s, title, x_name_ls, cate_name=None, output_dir=No
             output_path:        <str or None> 图片输出路径。
                         以上两个只需指定一个即可，同时指定时以后者为准。
                         当只有 output_dir 被指定时，将会以 title 作为图片名。
-                        若同时不指定，则直接调用 plt.show() 显示图像，而不进行保存。
+                        若同时不指定，则直接以 np.ndarray 形式返回图片，不进行保存。
                         在保存为文件时，若文件名中存在路径不适宜的非法字符将会被进行替换。
             cate_color_s:       <dict or None> 类别-颜色映射字典，将 cate_name 中的每个类别映射到具体颜色。
                                     默认为 None，自动生成颜色列表。
@@ -39,6 +39,10 @@ def plot_scatters_matrix(data_s, title, x_name_ls, cate_name=None, output_dir=No
                                     默认为 False，当设置为 True 时将会把函数参数保存成 [output_path].record.tar。
                                     后续可以使用 plot_from_record() 函数或者 Serializer_for_Registry_Execution 读取该档案，并进行修改和重新绘制。
                                     该参数仅在 output_dir 和 output_path 非 None 时起效。
+            b_show_plot:        <boolean> 是否使用 plt.show() 展示图片。
+                                    默认为 False
+            b_bgr_image:        <boolean> 以 np.ndarray 形式返回图片时，图片的channel顺序是采用 bgr 还是 rgb。
+                                    默认为 True
             diag_kind:          <str> 对角线图表的类型。
                                     支持：
                                         - "hist"（直方图）
@@ -49,6 +53,8 @@ def plot_scatters_matrix(data_s, title, x_name_ls, cate_name=None, output_dir=No
         "dpi": 200,
         "suffix": ".png",
         "b_generate_record": False,
+        "b_show_plot": False,
+        "b_bgr_image": True,
         "diag_kind": "kde"  # 设置对角线图直方图/密度图 {‘hist’, ‘kde’}
     }
     assert cate_name in data_s and len(set(x_name_ls).difference(set(data_s.keys()))) == 0
@@ -75,8 +81,8 @@ def plot_scatters_matrix(data_s, title, x_name_ls, cate_name=None, output_dir=No
     plt.subplots_adjust(top=0.95)
     plt.suptitle(f'{title}', y=0.98, x=0.47)
 
-    save_plot(plt=plt, output_path=_output_path, dpi=paras["dpi"], suffix=paras["suffix"])
-    return _output_path
+    return save_plot(plt=plt, output_path=_output_path, dpi=paras["dpi"], suffix=paras["suffix"],
+                     b_bgr_image=paras["b_bgr_image"], b_show_plot=paras["b_show_plot"])
 
 
 if __name__ == '__main__':

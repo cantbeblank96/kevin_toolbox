@@ -2,7 +2,7 @@ import inspect
 from kevin_toolbox.patches.for_matplotlib.variable import COMMON_CHARTS
 
 
-def save_record(_name, _output_path,_func=None, **kwargs):
+def save_record(_name, _output_path, _func=None, **kwargs):
     if _output_path is None:
         return None
 
