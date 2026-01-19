@@ -14,7 +14,7 @@ def read(input_path, **kwargs):
             input_path:             <path> 文件夹或者 .tar 文件，具体结构参考 write()
             b_keep_identical_relations: <boolean> 覆盖 record.json 中记录的同名参数，该参数的作用详见 write() 中的介绍。
     """
-    assert os.path.exists(input_path)
+    assert os.path.exists(input_path), f'input_path {input_path} does not exist'
 
     with tempfile.TemporaryDirectory(dir=os.path.dirname(input_path)) as temp_dir:
         if os.path.isfile(input_path) and input_path.endswith(".tar"):  # 解压
