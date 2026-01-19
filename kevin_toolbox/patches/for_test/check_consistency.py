@@ -4,7 +4,7 @@ import warnings
 import kevin_toolbox.nested_dict_list as ndl
 
 
-def check_consistency(*args, tolerance=1e-7, require_same_shape=True):
+def check_consistency(*args, tolerance=1e-7, require_same_shape=True, b_raise_error=True):
     """
         检查 args 中多个变量之间是否一致
             变量支持 python 的所有内置类型，以及复杂的 nested_dict_list 结构， array 等
@@ -16,9 +16,23 @@ def check_consistency(*args, tolerance=1e-7, require_same_shape=True):
             require_same_shape: <boolean> 是否强制要求 array 变量的形状一致。
                                     默认为 True，
                                     当设置为 False 时，不同形状的变量可能因为 numpy 的 broadcast 机制而在比较前自动 reshape 为相同维度，进而可能通过比较。
+            b_raise_error:      <boolean> 当检查到不一致时，是否引发报错
+                                    默认为 True
+                                    当设置为 False 时，将以 (<boolean>, <msg>) 的形式返回检查结果
     """
     assert len(args) >= 2
 
+    if b_raise_error:
+        _check_consistency(*args, tolerance=tolerance, require_same_shape=require_same_shape)
+    else:
+        try:
+            _check_consistency(*args, tolerance=tolerance, require_same_shape=require_same_shape)
+            return True, None
+        except Exception as e:
+            return False, e
+
+
+def _check_consistency(*args, tolerance, require_same_shape):
     # 复杂结构 ndl
     if isinstance(args[0], (list, dict,)):
         nodes_ls = [sorted(ndl.get_nodes(var=arg, level=-1), key=lambda x: x[0]) for arg in args]
