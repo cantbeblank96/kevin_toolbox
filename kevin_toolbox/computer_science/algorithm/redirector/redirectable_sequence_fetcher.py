@@ -1,36 +1,9 @@
-import random
-from kevin_toolbox.patches.for_logging import build_logger
-from kevin_toolbox.patches.for_numpy.random import get_rng, set_rng_state, get_rng_state
-from kevin_toolbox.computer_science.algorithm.cache_manager import Cache_Manager, Cache_Manager_wto_Strategy
-
-
-def _randomly_idx_redirector(idx, seq_len, attempts, rng, *args):
-    if idx == 0:
-        return rng.randint(1, seq_len)
-    elif idx == seq_len - 1:
-        return rng.randint(0, seq_len - 1)
-    else:
-        return rng.choice([rng.randint(0, idx), rng.randint(idx + 1, seq_len)], size=1,
-                          p=[idx / (seq_len - 1), (seq_len - idx - 1) / (seq_len - 1)])[0]
-
-
-idx_redirector_s = {
-    "decrease": lambda idx, *args: idx - 1,
-    "increase": lambda idx, *args: idx + 1,
-    "randomly": _randomly_idx_redirector,
-}
+from kevin_toolbox.computer_science.algorithm.redirector import Passive_Redirectable_Sequence_Fetcher
 
 EMPTY = object()
 
 
-def _round_idx(idx, st, ed):
-    if idx < st or idx >= ed:
-        idx = (idx - st) % (ed - st) + st
-    assert st <= idx < ed
-    return idx
-
-
-class Redirectable_Sequence_Fetcher:
+class Redirectable_Sequence_Fetcher(Passive_Redirectable_Sequence_Fetcher):
     """
         用于从给定 seq 中获取元素，通过跳转来处理获取失败的情况
 
@@ -69,7 +42,7 @@ class Redirectable_Sequence_Fetcher:
                 default_value:      <any> 重定向失败时返回的值。
                                         默认不指定，此时重定向失败后将引发报错。
                                         所谓重定向失败，就是在进行 redirect_max_attempts 次重定向后仍然无法成功获取值。
-                memory:             <int/Cache_Manager> 跳转记忆器。
+                memory:             <int/Cache_Manager/dict> 跳转记忆器。
                                         当给定值为 int 时，将以该值为 upper_bound 构建 Cache_Manager，
                                             特别地，当设定为 -1 时，表示容量无上限。
                                         默认为 None，表示不使用记忆器。
@@ -87,60 +60,17 @@ class Redirectable_Sequence_Fetcher:
                 seed:               <int>  随机种子
         """
         # 默认参数
-        paras = {
-            "seq": None,
-            "value_checker": None,
-            "idx_redirector": "randomly",
-            "memory": None,
-            #
-            "seq_len": None,
-            "redirect_max_attempts": 3,
-            "default_value": EMPTY,
-            "use_memory_after_failures": 3,
-            "memory_decay_rate": 0.1,
-            "logger": None,
-            "seed": 114514
-        }
-
-        # 获取参数
-        paras.update(kwargs)
-
-        # 校验参数
-        if paras["seq_len"] is None:
-            assert hasattr(paras["seq"], "__len__"), "cannot infer the range of idx from seq"
-            paras["seq_len"] = len(paras["seq"])
-        assert paras["seq_len"] >= 0
-        self.seq = paras["seq"]
-        if hasattr(paras["seq"], "__getitem__"):
-            self.seq = lambda idx: paras["seq"][idx]
+        kwargs.setdefault("seq", None)
+        kwargs.setdefault("value_checker", None)
+        kwargs.setdefault("default_value", EMPTY)
+        #
+        self.seq = kwargs["seq"]
+        if hasattr(kwargs["seq"], "__getitem__"):
+            self.seq = lambda idx: kwargs["seq"][idx]
         assert callable(self.seq)
-        assert paras["value_checker"] is None or callable(paras["value_checker"])
-        self.value_checker = paras["value_checker"]
-        assert paras["redirect_max_attempts"] >= 0
-        #
-        self.idx_redirector = idx_redirector_s[paras[
-            "idx_redirector"]] if paras["idx_redirector"] in idx_redirector_s else paras["idx_redirector"]
-        assert callable(self.idx_redirector)
-        #
-        self.memory = paras["memory"]
-        if paras["memory"] is not None:
-            if isinstance(paras["memory"], int):
-                self.memory = Cache_Manager(upper_bound=paras["memory"]
-                                            ) if paras["memory"] > 0 else Cache_Manager_wto_Strategy()
-            assert isinstance(self.memory, (Cache_Manager_wto_Strategy,))
-        #
-        self.logger = paras["logger"]
-        if paras["logger"] is not None:
-            if isinstance(paras["logger"], str):
-                paras["logger"] = dict(target=paras["logger"])
-            if isinstance(paras["logger"], dict):
-                paras["logger"].setdefault("level", "INFO")
-                self.logger = build_logger(name=f':Redirectable_Sequence_Fetcher:{id(self)}',
-                                           handler_ls=[paras["logger"]], )
-        #
-        self.rng = get_rng(seed=paras["seed"], rng=None)
-
-        self.paras = paras
+        self.value_checker = kwargs["value_checker"]
+        assert self.value_checker is None or callable(self.value_checker)
+        super().__init__(**kwargs)
 
     def fetch(self, idx):
         b_success = False
@@ -158,101 +88,24 @@ class Redirectable_Sequence_Fetcher:
         return res, b_success, error
 
     def redirectable_fetch(self, idx):
-        attempts = 0
-        new_idx = idx
-        old_idx = idx
+        new_idx = self.first_suggest(idx=idx)
 
-        # 尝试从 memory 中获取 new_idx
-        b_use_memory = False
-        if self.memory is not None and self.memory.has(key=idx):
-            v_s = self.memory.get(key=idx)
-            if "failures" in v_s and v_s["failures"] + 1 > self.paras["use_memory_after_failures"]:
-                v_s["failures"] -= self.paras["memory_decay_rate"]
-                attempts = self.paras["redirect_max_attempts"]
-                new_idx = v_s["final"]
-                b_use_memory = True
-                if self.logger is not None:
-                    self.logger.info(f"used memory for idx={idx}, jump to new_idx={new_idx}.")
-
-        # 从 seq 中获取值
-        res, b_success, error = None, False, None
-        while attempts < self.paras["redirect_max_attempts"] + 1:
+        while True:
             res, b_success, error = self.fetch(new_idx)
-            if b_success:
-                if self.memory is not None and self.memory.has(key=new_idx):
-                    v_s = self.memory.get(key=new_idx)
-                    v_s["failures"] -= 1
-                    if v_s["failures"] <= 1e-10:
-                        self.memory.pop(key=new_idx)
+            new_idx = self.notify_and_suggest(idx=new_idx, b_success=b_success, error=error)
+            if new_idx is None or b_success:
                 break
-            old_idx = new_idx
-            if self.paras["seq_len"] > 1:
-                new_idx = self.idx_redirector(new_idx, self.paras["seq_len"], attempts, self.rng)
-                new_idx = _round_idx(new_idx, st=0, ed=self.paras["seq_len"])
-            #
-            if self.memory is not None:
-                v_s = self.memory.get(key=old_idx, b_add_if_not_found=True, default_factory=dict)
-                v_s["next"] = new_idx
-            #
-            attempts += 1
-            if self.logger is not None:
-                self.logger.info(f"attempts {attempts}：")
-                self.logger.warn(f"failed to fetch {old_idx}, because of {error}.")
-                self.logger.info(f"redirected from {old_idx} to {new_idx}.")
 
         if not b_success:
-            if self.logger is not None:
-                self.logger.error(f"failed to fetch {idx} after {attempts} attempts, because of {error}.")
             if self.paras["default_value"] is EMPTY:
                 raise error
-            return self.paras["default_value"]
-        else:
-            if new_idx != idx and self.memory is not None:  # 经过了重定向
-                v_s = self.memory.get(key=idx)
-                v_s["final"] = new_idx
-                if not b_use_memory:
-                    v_s["failures"] = v_s.get("failures", 0) + 1
-            return res
+            else:
+                return self.paras["default_value"]
+
+        return res
 
     def __call__(self, idx):
-        if idx >= len(self) or idx < -len(self):
-            raise IndexError("Index out of range")
-        idx = _round_idx(idx, st=0, ed=len(self))
         return self.redirectable_fetch(idx)
 
     def __getitem__(self, idx):
         return self(idx)
-
-    def __len__(self):
-        return self.paras["seq_len"]
-
-    def clear(self):
-        if self.memory is not None:
-            self.memory.clear()
-        if self.logger is not None:
-            self.logger.info("invoked clear()")
-
-    # ---------------------- 用于保存和加载状态 ---------------------- #
-    def load_state_dict(self, state_dict):
-        """
-            加载状态
-        """
-        self.clear()
-        if self.logger is not None:
-            self.logger.info("invoked load_state_dict()")
-        if self.memory is not None:
-            self.memory.load_state_dict(state_dict=state_dict["memory"])
-        set_rng_state(state=state_dict["rng_state"], rng=self.rng)
-
-    def state_dict(self, b_deepcopy=True):
-        """
-            获取状态
-        """
-        temp = {
-            "memory": self.memory.state_dict(b_deepcopy=False) if self.memory is not None else None,
-            "rng_state": get_rng_state(rng=self.rng),
-        }
-        if b_deepcopy:
-            import kevin_toolbox.nested_dict_list as ndl
-            temp = ndl.copy_(var=temp, b_deepcopy=True, b_keep_internal_references=True)
-        return temp

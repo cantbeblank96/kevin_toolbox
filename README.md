@@ -68,6 +68,10 @@ pip install kevin-toolbox  --no-dependencies
     - cache_manager.cache
       - 【new feature】add Array_Cache，基于内存array的缓存结构。
         - 相较于基于dict的Memo_Cache，该类对于存储 Key 为非负整数（如索引 ID）的结构化数据更为友好。
+    - redirector
+      - 【new feature】add Passive_Redirectable_Sequence_Fetcher，辅助用户通过跳转来处理获取失败的情况。
+        - 相较于 Redirectable_Sequence_Fetcher 主动去管理给定的 seq，并负责获取元素，判断获取是否成功，本类仅起到记忆和建议的功能，并不管理任何 seq，需要用户主动告知获取是否成功。这给与用户更大的灵活性。
+      - refactor Redirectable_Sequence_Fetcher，改为依赖 Passive_Redirectable_Sequence_Fetcher 来实现功能。
 
 
 
