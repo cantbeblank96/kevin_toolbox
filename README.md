@@ -53,7 +53,11 @@ pip install kevin-toolbox  --no-dependencies
     - 【new feature】add Vars_Parser，解释以ndl命名格式指定位置下的变量。
     - refactor Env_Vars_Parser with Vars_Parser，将 Env_Vars_Parser 改为依赖 Vars_Parser 实现的形式。
       - 出于兼容以往版本的考虑，我们在该版本中仍保留 Env_Vars_Parser，但我们强烈建议你改为使用 Vars_Parser 以获得更灵活高效的体验。
-    - 
+  - patches.for_matplotlib
+    - common_charts
+      - 【new feature】add plot_heatmap()， 绘制矩阵热力图（Heatmap）。
+    - common_charts.utils
+      - modify save_record() 修改以支持 label_formatter 参数为函数对象或`"<eval>..."`形式包裹的函数的情况。
 
 
 

@@ -1,4 +1,5 @@
 import inspect
+import kevin_toolbox.nested_dict_list as ndl
 from kevin_toolbox.patches.for_matplotlib.variable import COMMON_CHARTS
 
 
@@ -25,6 +26,9 @@ def save_record(_name, _output_path, _func=None, **kwargs):
             kwargs_raw[param_name] = arg_values[param_name]
 
     kwargs_raw.update(kwargs)
+    kwargs_raw = ndl.traverse(var=ndl.copy_(var=kwargs_raw, b_deepcopy=True),
+                              match_cond=lambda _, __, v: callable(v),
+                              action_mode="replace", converter=lambda _, v: "<lambda func, skip>")
 
     from kevin_toolbox.computer_science.algorithm.registration import Serializer_for_Registry_Execution
     serializer = Serializer_for_Registry_Execution()

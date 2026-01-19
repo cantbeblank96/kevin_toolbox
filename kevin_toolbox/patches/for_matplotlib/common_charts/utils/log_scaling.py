@@ -1,11 +1,15 @@
 import numpy as np
 
 
-def log_scaling(x_ls, log_scale=None, ticks=None, tick_labels=None, b_replace_nan_inf_with_none=True, label_formatter=None):
+def log_scaling(x_ls, log_scale=None, ticks=None, tick_labels=None, b_replace_nan_inf_with_none=True,
+                label_formatter=None):
     original_x_ls = None
     if isinstance(x_ls, np.ndarray):
         original_x_ls = x_ls
         x_ls = x_ls.reshape(-1)
+    if isinstance(label_formatter, (str,)):
+        assert label_formatter.startswith("<eval>")
+        label_formatter = eval(label_formatter[6:])
     label_formatter = label_formatter or (lambda x: f"{x:.2e}")
     raw_x_ls, x_ls = x_ls, []
     none_idx_ls = []

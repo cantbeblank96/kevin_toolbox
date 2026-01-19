@@ -10,3 +10,5 @@ def cos_similar(v0, v1, axis=-1, keepdims=False, need_normalize=True):
 
 if __name__ == '__main__':
     print(cos_similar(v0=np.asarray([0, 0.1]), v1=np.asarray([0.3, 0.1])))
+    print(cos_similar(v0=np.asarray([[0, 0.1]]), v1=np.asarray([[0.3, 0.1],
+                                                                [0, 0.1]]), axis=1))

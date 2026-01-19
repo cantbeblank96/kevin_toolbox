@@ -54,3 +54,4 @@ from .plot_3d import plot_3d
 from .plot_from_record import plot_from_record
 # from .plot_raincloud import plot_raincloud
 from .plot_mean_std_lines import plot_mean_std_lines
+from .plot_heatmap import plot_heatmap
