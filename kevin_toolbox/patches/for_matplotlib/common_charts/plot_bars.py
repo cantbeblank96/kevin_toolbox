@@ -53,7 +53,9 @@ def plot_bars(data_s, title, x_name, output_dir=None, output_path=None, **kwargs
         "y_label": "value",
         "dpi": 200,
         "suffix": ".png",
-        "b_generate_record": False
+        "b_generate_record": False,
+        "b_show_plot": False,
+        "b_bgr_image": True,
     }
     paras.update(kwargs)
     #
