@@ -5,7 +5,7 @@ from kevin_toolbox.computer_science.algorithm.cache_manager.variable import CACH
 @CACHE_BUILDER_REGISTRY.register()
 class Memo_Cache(Cache_Base):
     """
-        基于内存的缓存结构
+        基于内存dict的缓存结构
     """
     name = ":in_memory:Memo_Cache"
 

@@ -49,7 +49,7 @@ class Cache_Base(ABC):
 
     @abstractmethod
     def _read_freely(self, key):
-        return self.read(key=key)
+        pass
 
     @abstractmethod
     def _write_freely(self, key, value):

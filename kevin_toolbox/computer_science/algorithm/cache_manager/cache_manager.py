@@ -46,20 +46,24 @@ class Cache_Manager(Cache_Manager_wto_Strategy):
                                             当设置为 float 时表示占 upper_bound 的比例
                                             默认为 0.5
                 strategy:               <str/dict/Strategy_Base> 管理策略
-                                            目前支持以下策略：
+                                            支持以下策略：
                                                 - ":by_initial_time:FIFO"     删除最后一次访问时间最久远的部分
                                                 - ":by_counts:LFU"            删除访问频率最低的部分
                                                 - ":by_last_time:LRU"          删除最后一次访问时间最久远的部分
                                                 - ":by_survival_time:LST"      删除访问频率最低的部分
                                             默认使用 LRU 策略
                 cache:                  <str/dict/Cache_Base> 缓存种类
+                                            支持以下值：
+                                                - ":in_memory:Array_Cache":     基于内存array的缓存结构
+                                                                                    至少需要指定 value_names 和 value_types 两个参数
+                                                - ":in_memory:Memo_Cache":      (默认)基于内存dict的缓存结构
         """
         # 默认参数
         paras = {
             "upper_bound": None,
             "refactor_size": 0.5,
             "strategy": ":by_last_time:LRU",
-            "cache": ":in_memory:Memo",
+            "cache": ":in_memory:Memo_Cache"
         }
 
         # 获取参数

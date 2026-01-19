@@ -58,6 +58,16 @@ pip install kevin-toolbox  --no-dependencies
       - 【new feature】add plot_heatmap()， 绘制矩阵热力图（Heatmap）。
     - common_charts.utils
       - modify save_record() 修改以支持 label_formatter 参数为函数对象或`"<eval>..."`形式包裹的函数的情况。
+  - computer_science.algorithm
+    - statistician
+      - 【new feature】add Latest_Accumulator，用于保留最近一次add的值的累积器。
+    - scheduler
+      - 【bug fix】fix bug in Strategy_Manager
+        - 将原来 line 218 中：先对 action_s 进行深拷贝再取出 p_value_func；改为先从 action_s 中取出 p_value_func 等待 p_value_func 进行可能的运算结束之后，再对 p_value_func 返回的结果深拷贝；前者在 p_value_func 为 callable 类实例且内部存在记忆变量时往往会因为对该实例本身进行深拷贝而产生意外结果，而后者对实例产生的结果再进行深拷贝就没有这个问题了。
+        - 增加 b_deepcopy_p_value 参数用于控制是否对 p_value_func 产生的结果进行深拷贝。
+    - cache_manager.cache
+      - 【new feature】add Array_Cache，基于内存array的缓存结构。
+        - 相较于基于dict的Memo_Cache，该类对于存储 Key 为非负整数（如索引 ID）的结构化数据更为友好。
 
 
 
