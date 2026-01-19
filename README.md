@@ -48,4 +48,15 @@ pip install kevin-toolbox  --no-dependencies
       - 【new feature】add plot_contour()，绘制等高线图。
       - 【new feature】add plot_mean_std_lines()，绘制均值和标准差折线图及其区域填充。
       - 【new feature】add plot_2d_matrix()，计算并绘制混淆矩阵。
+- v 1.4.14 （2026-01-19）【bug fix】【new feature】
+  - env_info.variable_
+    - 【new feature】add Vars_Parser，解释以ndl命名格式指定位置下的变量。
+    - refactor Env_Vars_Parser with Vars_Parser，将 Env_Vars_Parser 改为依赖 Vars_Parser 实现的形式。
+      - 出于兼容以往版本的考虑，我们在该版本中仍保留 Env_Vars_Parser，但我们强烈建议你改为使用 Vars_Parser 以获得更灵活高效的体验。
+    - 
 
+
+
+
+
+记得下个版本将 kevin dl 中的 enqueue_trials_without_duplicates 补充到 for optuna 下面。
