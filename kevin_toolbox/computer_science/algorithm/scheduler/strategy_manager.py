@@ -51,11 +51,14 @@ class Strategy_Manager:
                 override:           <boolean> 当输入的策略与现有策略发生冲突时，是否强制覆盖旧策略。
                                         将作为 self.add() 中 override 的默认值。
                                         默认为 False
+                b_deepcopy_p_value: <boolean> 在调用 self.cal() 使用策略计算出要修改的值后，是否先对该值进行一次深拷贝，再修改到 var 中
+                                        默认为 True，此时能有效避免当值为list或dict时导致的意外关联。
         """
         # 默认参数
         paras = {
             "strategy": tuple(),
             "override": False,
+            "b_deepcopy_p_value": True
         }
 
         # 获取参数
@@ -179,7 +182,7 @@ class Strategy_Manager:
 
         self.database[_trigger_name] = old_strategy
 
-    def cal(self, var, trigger_state):
+    def cal(self, var, trigger_state, **kwargs):
         """
             从 database 中读取 trigger_state 指定的触发器状态下的策略，并根据该策略修改目标变量 var 中的对应部分
 
@@ -192,6 +195,7 @@ class Strategy_Manager:
                     其中 action_s_all 是一个以 trigger_name 为键的 dict，下面各值为在该触发器状态下匹配上的策略
         """
         assert isinstance(trigger_state, (dict,)) and isinstance(var, (dict, list,))
+        b_deepcopy_p_value = kwargs.get("b_deepcopy_p_value", self.paras["b_deepcopy_p_value"])
 
         # 查找策略
         action_s_all = dict()
@@ -215,11 +219,13 @@ class Strategy_Manager:
         # 执行策略
         for t_name, action_s in sorted(action_s_all.items(), key=lambda x: x[0]):
             t_value = trigger_state[t_name]
-            for name, p_value in copy.deepcopy(action_s):
+            for name, p_value in action_s:
                 if callable(p_value):
                     raw_value = get_value(var=var, name=name)
                     p_value = p_value(raw_value, t_value)
-                set_value(var=var, name=name, value=p_value)
+                if not isinstance(p_value, (int, float)) and b_deepcopy_p_value:
+                    p_value = copy.deepcopy(p_value)
+                var = set_value(var=var, name=name, value=p_value)
 
         return var, action_s_all
 
