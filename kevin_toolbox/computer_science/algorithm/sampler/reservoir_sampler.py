@@ -1,20 +1,26 @@
+from kevin_toolbox.computer_science.algorithm.sampler import analog_resample
 from kevin_toolbox.patches.for_numpy.random import get_rng, get_rng_state, set_rng_state
 
 
 class Reservoir_Sampler:
-    """
-        水库采样器
-    """
-
     def __init__(self, **kwargs):
         """
+            水库采样
+
             参数：
-                capacity:                       <int> 水库的容量
+                target_nums:            <int> 采样数量
+                b_allow_duplicates:     <boolean> 是否允许重复采样。
+                                            默认为 False
+                b_keep_order:           <boolean> 返回的样本序列是否需要保持历史先后顺序。
+                                            默认为 False
+                    （注意：当 b_allow_duplicates 设置为 True 时， b_keep_order 无效。）
                 seed, rng:                      设定随机发生器
         """
         # 默认参数
         paras = {
-            "capacity": 1,
+            "target_nums": 1,
+            "b_allow_duplicates": False,
+            "b_keep_order": False,
             #
             "seed": None,
             "rng": None,
@@ -24,11 +30,11 @@ class Reservoir_Sampler:
         paras.update(kwargs)
 
         # 校验参数
-        assert paras["capacity"] >= 1
+        assert isinstance(paras["target_nums"], (int,)) and paras["target_nums"] >= 0
 
-        #
         self.paras = paras
-        self.reservoir = []
+
+        self.samples = []
         self.state = self._init_state()
         self.rng = get_rng(seed=paras["seed"], rng=paras["rng"])
 
@@ -42,34 +48,34 @@ class Reservoir_Sampler:
         )
 
     def add(self, item, **kwargs):
-        """
-            添加单个数据 item 到采样器中。
-                对于前 k 个数据，直接存入水库；之后以 k/（当前数据数）概率选择替换水库中的一个随机位置。
-        """
-        self.state["total_nums"] += 1
-        if self.state["total_nums"] <= self.paras["capacity"]:
-            self.reservoir.append(item)
+        if len(self.samples) < self.paras["target_nums"]:
+            # 对于前 target_nums 个 item，全部保留
+            self.samples.append(item)
         else:
-            # 生成一个 0 到 count-1 之间的随机整数
-            j = self.rng.randint(0, self.state["total_nums"] - 1)
-            if j < self.paras["capacity"]:
-                self.reservoir[j] = item
+            # 对于之后的 item，我们以 target_nums/total_nums+1 的概率保留第i个数，
+            # 并替换掉 samples 中的随机一个 item。
+            idx = self.rng.randint(0, self.state["total_nums"])
+            if idx < self.paras["target_nums"]:
+                if self.paras["b_keep_order"]:
+                    self.samples.pop(idx)
+                    self.samples.append(item)
+                else:
+                    self.samples[idx] = item
+        self.state["total_nums"] += 1
 
     def add_sequence(self, item_ls, **kwargs):
         for item in item_ls:
             self.add(item, **kwargs)
 
     def get(self, **kwargs):
-        """
-            返回当前水库中的数据列表（浅拷贝）。
-        """
-        return self.reservoir.copy()
+        res = self.samples
+        if self.paras["b_allow_duplicates"]:
+            res = analog_resample(samples=res, total_nums=self.state["total_nums"], rng=self.rng)
+
+        return res
 
     def clear(self):
-        """
-            清空已有数据和状态，重置采样器。
-        """
-        self.reservoir.clear()
+        self.samples.clear()
         self.state = self._init_state()
         self.rng = get_rng(seed=self.paras["seed"], rng=self.paras["rng"])
 
@@ -84,23 +90,22 @@ class Reservoir_Sampler:
         """
         self.clear()
         self.state.update(state_dict["state"])
-        self.reservoir.extend(state_dict["reservoir"])
+        self.samples.extend(state_dict["samples"])
         set_rng_state(state=state_dict["rng_state"], rng=self.rng)
 
     def state_dict(self, b_deepcopy=True):
         """
             获取状态
         """
-        temp = {"state": self.state, "reservoir": self.reservoir, "rng_state": get_rng_state(rng=self.rng)}
+        temp = {"state": self.state, "samples": self.samples, "rng_state": get_rng_state(rng=self.rng)}
         if b_deepcopy:
             import kevin_toolbox.nested_dict_list as ndl
             temp = ndl.copy_(var=temp, b_deepcopy=True, b_keep_internal_references=True)
         return temp
 
 
-# 测试示例
 if __name__ == "__main__":
-    sampler = Reservoir_Sampler(capacity=5, seed=12345)
+    sampler = Reservoir_Sampler(target_nums=5, seed=12345, b_keep_order=False)
     for i in range(1, 21):
         sampler.add(i)
     print("当前水库数据:", sampler.get())
